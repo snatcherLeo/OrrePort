@@ -856,4 +856,7 @@ body.light .ibtn.off:hover { background-color: #FFFFFF; border-color: #B8C2B6; }
 body.dark .ust.acc { color: #E8955A; } body.light .ust.acc { color: #C2522F; }
 body.dark .ust.err { color: #E0705E; } body.light .ust.err { color: #B5443A; }
 .checknow { cursor: pointer; text-decoration: underline; }
+/* About's green status line while its button is active: clickable too (2026-11-24, snatcherLeo), a hand on hover */
+.ustgo { cursor: pointer; }
+.ustgo:hover { text-decoration: underline; }
 body.dark .checknow { color: #C9DCC4; } body.light .checknow { color: #3F5A3A; }

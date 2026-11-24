@@ -1065,6 +1065,8 @@ enum { HIT_RAIL = 100, HIT_ROW = 1000, HIT_ROW_END = 4999, HIT_EVO = 5000, HIT_E
        HIT_HOME_ADD_DISC = 8313,
        // the removed-disc bar (2026-11-24): Discs (Settings › Discs), OK (hides it)
        HIT_DISC_GONE_OPEN = 8314, HIT_DISC_GONE_OK = 8315,
+       // Settings › About: the green status line under the version, the same action as its icon button (2026-11-24)
+       HIT_UPD_STATUS = 8316,
        // the Moves tab: the learnset groups, its rows, the preview's controls, and the faded later controls (hover
        // only: HIT_LATER + kLater*)
        HIT_LGROUP = 7500, HIT_PLAY = 7510, HIT_STEP_BACK = 7511, HIT_STEP_FWD = 7512, HIT_VIEW_STUDIO = 7513,
@@ -6816,6 +6818,15 @@ void draw_about(float rx, float ly, float rw) {
     text(tx("update.version", {{"version", ver}}), rx + 20, cy0 + 14, left - rx - 36, 22, 14, P.text, DWRITE_FONT_WEIGHT_MEDIUM);
     text(tx("update.shared_version"), rx + 20, cy0 + 36, left - rx - 36, 18, 12, P.mute);
     text(status, rx + 20, cy0 + 54, left - rx - 36, 18, 12, status_c, accent ? DWRITE_FONT_WEIGHT_MEDIUM : DWRITE_FONT_WEIGHT_NORMAL);
+    // *Added 2026-11-24 (after the laptop's update test: the green "Restart to update" line should be clickable too;
+    // OrrePort's About does the same, its "ustgo"):* while the icon button can act,
+    // the green line under the version does the same thing (Download, Try again or Restart now), underlined on hover with
+    // the hand pointer (does_something). Its own hit id (8316) so the UI Editor can list it
+    if (can_download || can_restart) {
+        const float sw2 = std::min(text_width(status, 12, DWRITE_FONT_WEIGHT_MEDIUM) + 2, left - rx - 36);
+        if (g.hover == HIT_UPD_STATUS) fill(rx + 20, cy0 + 71, sw2, 1, status_c);
+        hit({rx + 18, cy0 + 54, sw2 + 4, 18}, HIT_UPD_STATUS);
+    }
     // "Check now" under it (the project's and Studio's agreed design): the manual check, forced past the three-hour skip
     // (pc_update_check(2)), shown while checking is on and nothing is under way
     // ("Close OrrePort" in the same place while the update waits for it, 4.4; never while its game runs)
@@ -7760,6 +7771,7 @@ std::string hit_words(int id) {
         {HIT_DISC_SHOW + 1, "discs: European Open file location"}, {HIT_DISC_SHOW + 2, "discs: Japanese Open file location"},
         {HIT_UPD_DOWNLOAD, "update: Download"}, {HIT_UPD_NOTES, "update: What's new"}, {HIT_UPD_RESTART, "update: Restart now"},
         {HIT_UPD_RETRY, "update: Try again"}, {HIT_UPD_CHECK, "update: Check for updates"},
+        {HIT_UPD_STATUS, "update: the status line under the version"},
         {HIT_UPD_SW_AUTO, "update: Download automatically switch"}, {HIT_UPD_SW_CHECK, "update: Check for updates switch"},
         {HIT_UPD_GOBACK, "update: Go back"}, {HIT_UPD_GOBACK_YES, "update: Go back (confirmed)"}, {HIT_UPD_GOBACK_NO, "update: Go back cancelled"},
         {HIT_UPD_GOBACK_BG, "outside the Go back pop-up"},
@@ -8288,6 +8300,12 @@ void click(int id) {
         const int r = pc_apps_close(PC_APP_HUB, g_apps_root.c_str());
         logf(Level::Info, "apps", "Close OrrePort: %s", r == PC_APPS_CLOSE_ASKED ? "asked" : r == PC_APPS_CLOSE_GAME_RUNS ? "refused, its game is running" : "it isn't open");
         if (r == PC_APPS_CLOSE_GAME_RUNS) { g_game_running = true; repaint_all(); }
+    } else if (id == HIT_UPD_STATUS) {  // (About's green line: whatever its icon button would do now, draw_about)
+        const PcUpdateState s = g_upd.state;
+        if (s == PC_UPDATE_READY) { if (updates_can_restart()) click(HIT_UPD_RESTART); }
+        else if (s == PC_UPDATE_AVAILABLE) click(HIT_UPD_DOWNLOAD);
+        else if (s == PC_UPDATE_FAILED && g_upd.latest[0]) click(HIT_UPD_RETRY);
+        return;
     } else if (id == HIT_UPD_DOWNLOAD || id == HIT_UPD_RETRY) {  // (updates, 4.4: the shared module does the work)
         pc_update_download();
     } else if (id == HIT_UPD_NOTES) {

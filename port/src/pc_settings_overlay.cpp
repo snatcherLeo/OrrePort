@@ -492,7 +492,10 @@ std::string about_version_sub() {
     std::string line = about_status_line(st);
     if (st.state == PC_UPDATE_READY && !on && !about_in_hub()) line = tx("update.note.ready"); /* applies at the next start */
     const char* cls = on ? "ust acc" : st.state == PC_UPDATE_FAILED ? "ust err" : "ust";
-    std::string out = tx("update.shared_version") + "<br/><span class='" + cls + "'>" + line + "</span>";
+    /* *2026-11-24 (snatcherLeo, the laptop's update test: "The green indicator that also says "Restart to update" should also
+     * be clickable for this"):* while the button is active, its green line is a second way to press it (id ustgo) */
+    std::string out = tx("update.shared_version") + "<br/><span class='" + cls + (on ? " ustgo' id='ustgo'>" : "'>") +
+                      line + "</span>";
     const bool idle = st.state == PC_UPDATE_UP_TO_DATE || st.state == PC_UPDATE_FAILED || st.state == PC_UPDATE_IDLE;
     if (idle && pc_settings_int("update_check", 1) != 0 && st.current[0] != '\0')
         out += " · <span class='checknow' id='checknow'>" + tx("update.check_now") + "</span>";
@@ -561,6 +564,24 @@ std::string s_note_err;
  * strip" thousands of times as the hub's screen scale moved the strip's size every frame (verified from his log). */
 bool s_in_hub = false;
 bool about_in_hub() { return s_in_hub; }
+void refresh(); /* below */
+/* About's one button, by state (Studio's): Check for updates (now, past the three-hour wait), Download, Restart now (in
+ * the hub; in game the update applies at the next start, nothing is closed under the player). The version row's icon
+ * button and, since 2026-11-24, its green status line (id ustgo, about_version_sub) both press it. */
+void about_button_press() {
+    const PcUpdateStatus st = about_status();
+    if (st.state == PC_UPDATE_READY) {
+        if (st.other_running) s_note = s_note_err = tx("update.close_other", {{"program", "Studio"}});
+        else if (s_in_hub) about_exit_for_update();
+        else s_note = tx("update.note.ready");
+    } else if (st.state == PC_UPDATE_AVAILABLE || (st.state == PC_UPDATE_FAILED && st.latest[0])) {
+        pc_update_download();
+    } else if (pc_settings_int("update_check", 1) != 0) {
+        pc_update_check(2);
+    }
+    std::printf("[settings_overlay] About: %s\n", about_button_key(st).c_str());
+    refresh();
+}
 /* the game has started (pc_settings_overlay_frame, the game's frames only; Quit to hub restarts OrrePort, so it never
  * goes back to false) */
 bool s_game_running = false;
@@ -2551,20 +2572,7 @@ void choose() {
         }
         refresh();
     } else if (r.kind == ACTION && r.live == LIVE_UPD_VERSION) {
-        /* About's one button, by state (Studio's): Check for updates (now, past the three-hour wait), Download, Restart
-         * now (in the hub; in game the update applies at the next start, nothing is closed under the player) */
-        const PcUpdateStatus st = about_status();
-        if (st.state == PC_UPDATE_READY) {
-            if (st.other_running) s_note = s_note_err = tx("update.close_other", {{"program", "Studio"}});
-            else if (s_in_hub) about_exit_for_update();
-            else s_note = tx("update.note.ready");
-        } else if (st.state == PC_UPDATE_AVAILABLE || (st.state == PC_UPDATE_FAILED && st.latest[0])) {
-            pc_update_download();
-        } else if (pc_settings_int("update_check", 1) != 0) {
-            pc_update_check(2);
-        }
-        std::printf("[settings_overlay] About: %s\n", about_button_key(st).c_str());
-        refresh();
+        about_button_press();
     } else if (r.kind == ACTION && r.live == LIVE_UPD_BACK) {
         /* Go back: *changed 2026-11-23 (snatcherLeo: a pop-up that asks "are you sure", with a warning; "Yes use it"):* it
          * opens the pop-up (gb_answer does the rest); Studio open blocks it as before (the swap can't replace its
@@ -2936,6 +2944,10 @@ public:
             }
             if (id == "savebtn") {
                 s_report_save = 1; /* saved by the frame function once the picture is in */
+                return;
+            }
+            if (id == "ustgo") { /* About's green status line: the same as the version row's button */
+                about_button_press();
                 return;
             }
             if (id == "restartnow" && s_in_hub) { /* the Renderer row's "Restart now" (row_sub) */
