@@ -28,6 +28,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # without this, checkout leaves the workflow's own token in git's settings for every github.com address, and
+          # the push below uses it instead of BACKUP_TOKEN: that token can't see the backup repo ("Repository not
+          # found", the first run, 2026-11-24)
+          persist-credentials: false
       - name: Push them to the backup repo
         env:
           BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
