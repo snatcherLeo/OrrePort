@@ -13,6 +13,8 @@
 
 **[Download OrrePort for Windows](https://github.com/snatcherLeo/OrrePort/releases/latest)**
 
+![The OrrePort hub: add your disc, choose a save, press Play](docs/images/orreport-hub.png)
+
 **Status: first playtest (Beta 0.1).** Playable from New Game to the end of the story on Windows 10 and 11 (64-bit), with bugs
 still to find. Linux and macOS are planned. Your saves are kept with their earlier versions.
 
