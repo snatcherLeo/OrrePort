@@ -24,7 +24,7 @@ This is a playtest: keep a copy of any save you care about.
 
 Something wrong?
 Press F8 in the game, or use Report a problem on the hub: OrrePort makes a report you can share on the OrrePort
-Discord: [Discord invite link, added on release day]
+Discord: the invite link is on OrrePort's page, https://github.com/snatcherLeo/OrrePort
 
 Also here
 OrrePort Studio.exe opens OrrePort Studio, the editor beside the game (an early preview).

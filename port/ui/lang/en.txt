@@ -559,6 +559,8 @@ hub.add.heading = ADD YOUR DISC
 hub.add.drop = Drop your disc image onto this window
 hub.add.drop.which = Pokémon Colosseum, the USA disc (GC6E01) · ISO, GCM, CISO or RVZ
 hub.add.drop.copy = OrrePort copies it into its ROM folder; your file stays where it is.
+# after hub.add.drop.copy on the add-your-disc page, only when language discs are set up (snatcherLeo approved, 2026-11-24)
+hub.add.lang_kept = Your European and Japanese discs are still set up; they come back with the US disc.
 # big button (capitals)
 hub.add.browse = BROWSE FOR YOUR DISC
 hub.add.folder = Open the ROM folder
@@ -1021,7 +1023,7 @@ adds.smoothing = Frame smoothing
 adds.smoothing.sub = Smoother motion at 60, 120, 144, 165 or 240 frames a second, or your display’s rate.
 adds.smoothing.where = Settings › Graphics › Frame rate (Off to start)
 adds.smoothing.acc = Accurate mode: the same, checked to keep every random roll
-adds.renderer = Vulkan or Direct3D 12
+adds.renderer = Vulkan, Direct3D 12 or Direct3D 11
 adds.renderer.where = Settings › Graphics › Renderer (Vulkan to start)
 adds.volume = Volume
 adds.volume.sub = Master, music and sound effects apart.
@@ -1151,6 +1153,9 @@ settings.menu_bg.see_through = See-through
 settings.menu_bg.solid = Solid
 settings.renderer = Renderer
 settings.renderer.sub = Vulkan suits most PCs. Applies the next time OrrePort starts.
+# Settings › Graphics › Renderer, a second line once a different renderer is chosen than the one running; {renderer} is
+# its name (Vulkan, Direct3D 12, Direct3D 11). In the hub "Restart now" (update.restart) follows it as a link.
+settings.renderer.pending = {renderer} is used from the next start.
 settings.resolution = Internal resolution
 settings.resolution.sub = How sharply the game is drawn. Higher needs a stronger graphics card.
 # the choices: keep the " · " between the parts (the closed box shows the first and last part)

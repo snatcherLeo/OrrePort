@@ -100,6 +100,13 @@ studio.disc.choose_title = Elige la imagen de disco de Pokémon Colosseum
 studio.disc.filter = Imágenes de disco
 studio.disc.filter_all = Todos los archivos
 studio.disc.error = No se pudo leer el disco: {reason}. Elige otra imagen de disco.
+studio.disc.needed = Primero añade tu disco: el editor de Pokémon lo lee todo de él.
+studio.home.no_disc = Aún no hay disco: Studio lo lee todo de tu propio disco de Pokémon Colosseum.
+studio.home.add_disc = Añadir disco…
+studio.discs.gone_bar = El disco de EE. UU. se ha quitado de la carpeta de OrrePort. Studio lo sigue leyendo hasta que cierres Studio, así que no se pierde nada de lo que tienes abierto. Vuelve a añadirlo antes del próximo inicio.
+studio.discs.gone_open = Discos
+studio.discs.gone_ok = Aceptar
+studio.discs.remove_in_use = OrrePort está usando este disco ({disc}). Quítalo desde OrrePort o cierra OrrePort primero.
 
 # ---- La página del Pokémon (v2) ----
 studio.page.info = Pokémon {category}  ·  N.º {national} en la Pokédex Nacional  ·  N.º {own} en este juego  ·  {height}  ·  {weight}

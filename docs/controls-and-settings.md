@@ -56,7 +56,7 @@ All of these change only the picture, so all of them work in accurate mode.
 
 | Setting | What it does | Default |
 |---|---|---|
-| **Renderer** | **Vulkan** or **Direct3D 12**. Vulkan suits most PCs; if Vulkan doesn't start, OrrePort falls back to Direct3D 12 on its own. Applies the next time OrrePort starts. | Vulkan |
+| **Renderer** | **Vulkan**, **Direct3D 12** or **Direct3D 11**. Vulkan suits most PCs; if Vulkan doesn't start, OrrePort falls back to Direct3D 12 on its own. On Intel graphics choose **Direct3D 11**: with Vulkan the window can freeze when restored from maximized, and Direct3D 12 can draw small glitches there; Direct3D 11's first play can pause up to a minute while graphics are prepared. Applies the next time OrrePort starts; after a change the hub offers **Restart now**. | Vulkan |
 | **Internal resolution** | How sharply the game is drawn: **Match the window**, **Native** (640 × 480, the GameCube's), or **2×** to **8×** (8× is 5120 × 3840, for 5K). Higher needs a stronger graphics card. | Match the window |
 | **Frame rate** | Frame smoothing: extra pictures between the game's own frames, for smoother motion. **Off (original)** (the game's own rate), **Match** (your display's rate, shown as "Match (120 Hz)"; marked Recommended), or a fixed **60, 120, 144, 165** or **240 FPS**. Smoothest at your display's rate or half of it. The picture runs up to one game frame behind. A rate above your display's runs at your display's rate. | Off (original) |
 | **V-Sync** | On: each picture waits for your monitor. Steadier, with a little more delay. | Off |

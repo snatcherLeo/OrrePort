@@ -171,6 +171,7 @@ int us_disc_finish(const std::string& old, const char* why, bool remove) {
     std::fflush(stdout);
     std::fflush(stderr);
     pc_log_exit_clean(remove ? "restarting after the US disc's Remove" : "restarting after the US disc's Replace");
+    pc_update_pass_foreground(); /* the new copy comes back in front (snatcherLeo saw it come back behind, 2026-11-24) */
     _Exit(PC_UPDATE_EXIT_RESTART);
 }
 

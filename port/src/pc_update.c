@@ -749,6 +749,8 @@ void pc_update_shutdown(void) {
     WaitForSingleObject(s_thread, 3000);
 }
 
+void pc_update_pass_foreground(void) { AllowSetForegroundWindow(ASFW_ANY); } /* pc_update.h says why */
+
 #else /* not Windows yet: no updates (pc_update.h; the programs show nothing) */
 
 int pc_update_init(const char* root, const char* version, const char* lang) { (void)root; (void)version; (void)lang; return 0; }
@@ -759,5 +761,6 @@ void pc_update_set_playing(int playing) { (void)playing; }
 int pc_update_poll(PcUpdateStatus* out) { if (out) { memset(out, 0, sizeof *out); out->state = PC_UPDATE_OFF; } return 0; }
 int pc_update_request_rollback(void) { return 0; }
 void pc_update_shutdown(void) {}
+void pc_update_pass_foreground(void) {}
 
 #endif

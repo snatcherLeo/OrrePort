@@ -223,6 +223,9 @@ tools/decompctx.py -I include src/<path>.c` makes the context file for comparing
 - **Black wedges or other picture faults with Direct3D 12 at high resolutions.** Use Vulkan (the default:
   **Settings › Graphics › Renderer**). OrrePort tries Vulkan first and falls back to Direct3D 12 on its own if Vulkan
   doesn't start.
+- **Intel graphics: the window freezes ("Not responding") after it is restored from maximized.** A deadlock inside
+  Intel's Vulkan driver. Choose **Direct3D 11** in **Settings › Graphics › Renderer** (the hub offers **Restart
+  now**). Its first play can pause up to a minute while shaders are built; they are kept after that.
 - **A crash.** Read the newest file in `build-pc/firstlink/logs/`. Its first line names the build (commit, branch,
   date, and `+changes` if it was built with uncommitted changes); a crash report ends with the last room and game
   frame. Press **F8** in the game to save a report with the log, a picture and your note.

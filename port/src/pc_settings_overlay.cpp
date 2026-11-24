@@ -267,7 +267,12 @@ std::vector<RowDef> s_rows = {
      * samples), texture filtering None (anisotropy 1; was 16 until 2026-11-13, snatcherLeo: "should be on none for new users").
      * Automated runs keep anisotropy 16 whatever is saved (pc_platform.c), so recorded checks are unchanged. Renderer, MSAA and anisotropy are read at start-up (pc_platform.c), so their
      * texts say so. Volumes live (pc_audio.c: master as the output's gain, music and effects through a mixer hook). */
-    {2, SELECT, "settings.renderer", "settings.renderer.sub", {"Vulkan", "Direct3D 12"}, 0, LIVE_BACKEND},
+    /* *Direct3D 11 added 2026-11-24 (snatcherLeo: "A: an option"; port-gaps 90):* on Intel graphics it is the one renderer
+     * that neither freezes on a restore from maximized (Vulkan, gap 90) nor draws gap 76's glitches (Direct3D 12),
+     * verified on snatcherLeo's laptop. Its cost: Windows' old shader compiler builds the big ubershader slowly, up to 80 s the
+     * first time a variant is needed (cached after). Vulkan stays the default. Windows only, as is Direct3D 12; Linux
+     * and macOS would list Vulkan / Metal instead (likely). */
+    {2, SELECT, "settings.renderer", "settings.renderer.sub", {"Vulkan", "Direct3D 12", "Direct3D 11"}, 0, LIVE_BACKEND},
     /* the Graphics page as approved (snatcherLeo, 2026-11-13, mockup 45: "Yes, and for Native, do 640 x 480 480p ... Default
      * should be on "Match the Window""): Dolphin's pairing (n x for an n x 360-line screen, drawn taller and scaled
      * down) in our own words, up to 8x for 5K; Match the window for anything bigger. The box shows a short form
@@ -518,6 +523,7 @@ bool about_row(const RowDef& r) { return r.live == LIVE_UPD_VERSION || r.live ==
     std::fflush(stdout);
     std::fflush(stderr);
     pc_log_exit_clean("restarting for the update (Settings › About)");
+    pc_update_pass_foreground(); /* the new copy comes back in front (pc_update.h) */
     _Exit(PC_UPDATE_EXIT_RESTART);
 }
 bool s_adapter_running = false; /* the setup program is running (the row stays, saying so; the busy screen shows) */
@@ -768,11 +774,41 @@ int group_of(int index) {
     return -1;
 }
 
+/* The Renderer row (2026-11-24): its values 0 Vulkan, 1 Direct3D 12, 2 Direct3D 11, saved as settings.ini gpu_backend
+ * ("auto" or missing is Vulkan, pc_platform.c), and the value OrrePort started with, so the row can say a change
+ * waits for the next start and offer "Restart now" in the hub. Why (snatcherLeo, the laptop sitting): he switched the
+ * renderer and tested in the same run, so the "Direct3D 12" test ran on Vulkan without anything saying so. */
+int s_backend_at_start = -1;
+int backend_value(const std::string& code) { return code == "d3d12" ? 1 : code == "d3d11" ? 2 : 0; }
+const char* backend_code(int value) { return value == 1 ? "d3d12" : value == 2 ? "d3d11" : "vulkan"; }
+const char* backend_name(int value) { return value == 1 ? "Direct3D 12" : value == 2 ? "Direct3D 11" : "Vulkan"; }
+
+/* "Restart now" after a renderer change (the hub only: in game nothing is closed under the player). OrrePort exits
+ * with the launcher's "start again" code, as the US disc's Replace does (pc_hub_langdiscs.cpp); the launcher starts it
+ * again, which reads the new gpu_backend. Windows' launcher today; Linux and macOS would restart from their launch
+ * scripts the same way (likely). */
+[[noreturn]] void restart_for_renderer() {
+    std::printf("[settings_overlay] Renderer: restarting for %s\n", pc_settings_string("gpu_backend", "auto"));
+    pc_settings_save();
+    pc_update_shutdown();
+    std::fflush(stdout);
+    std::fflush(stderr);
+    pc_log_exit_clean("restarting for the new renderer (Settings › Graphics)");
+    pc_update_pass_foreground(); /* the new copy comes back in front (pc_update.h) */
+    _Exit(PC_UPDATE_EXIT_RESTART);
+}
+
 /* a row's description: its own second line; a row without one (the Fast-forward row, whose group says it) gives its
  * group's line in the side menu's help box (for_help), and no second line on the page */
 std::string row_sub(int index, bool for_help) {
     const RowDef& r = s_rows[index];
     if (r.locked && r.lock_reason != nullptr) return tx(r.lock_reason);
+    if (r.live == LIVE_BACKEND && s_backend_at_start >= 0 && r.value != s_backend_at_start) {
+        /* a change waiting for the next start; in the hub a "Restart now" link (id restartnow, the click handler) */
+        std::string out = tx(r.sub) + "<br/>" + tx("settings.renderer.pending", {{"renderer", backend_name(r.value)}});
+        if (s_in_hub && !for_help) out += " · <span class='checknow' id='restartnow'>" + tx("update.restart") + "</span>";
+        return out;
+    }
     if (r.live == LIVE_FRAME_RATE) return frame_rate_sub(r, for_help); /* the monitor's notes (step 3.4) */
     if (about_row(r)) return about_sub(r); /* About: the version's status, the version to go back to */
     if (r.sub != nullptr) return tx(r.sub);
@@ -2691,7 +2727,7 @@ void apply_live(RowDef& r) {
         pc_settings_set_int("ui_menu_solid", r.value);
         pc_settings_save();
     } else if (r.live == LIVE_BACKEND) {
-        pc_settings_set_string("gpu_backend", r.value == 1 ? "d3d12" : "vulkan");
+        pc_settings_set_string("gpu_backend", backend_code(r.value));
         pc_settings_save();
     } else if (r.live == LIVE_RES) {
         pc_settings_set_int("render_scale", r.value); /* 0 the window's size, 1-8 times 640 x 480 */
@@ -2901,6 +2937,9 @@ public:
             if (id == "savebtn") {
                 s_report_save = 1; /* saved by the frame function once the picture is in */
                 return;
+            }
+            if (id == "restartnow" && s_in_hub) { /* the Renderer row's "Restart now" (row_sub) */
+                restart_for_renderer();
             }
             if (id == "checknow") { /* About's "Check now": the manual check, past the three-hour wait */
                 pc_update_check(2);
@@ -3509,7 +3548,10 @@ void init() {
     /* Graphics and Audio from settings.ini (the same keys and defaults pc_platform.c, pc_textures.cpp and pc_audio.c
      * read at start-up) */
     if (RowDef* r = live_row(LIVE_BACKEND)) {
-        r->value = std::string(pc_settings_string("gpu_backend", "auto")) == "d3d12" ? 1 : 0;
+        r->value = backend_value(pc_settings_string("gpu_backend", "auto"));
+        if (s_backend_at_start < 0) {
+            s_backend_at_start = r->value; /* the first read is the start's: only this menu changes the key */
+        }
     }
     if (RowDef* r = live_row(LIVE_RES)) {
         const int scale = pc_settings_int("render_scale", 0);

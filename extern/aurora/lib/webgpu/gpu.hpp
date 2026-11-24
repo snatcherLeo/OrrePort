@@ -81,6 +81,8 @@ Viewport calculate_present_viewport(uint32_t surface_width, uint32_t surface_hei
 /* OrrePort: where the game picture goes: as calculate_present_viewport, fitted below the top strip that
  * aurora_set_present_inset_top keeps free (0: the whole surface). The UI layer keeps the whole surface. */
 void set_present_inset_top(uint32_t pixels) noexcept;
+/* OrrePort (2026-11-24, port-gaps 90): aurora_set_resize_workaround's bits (aurora.h) */
+void set_resize_workaround(uint32_t bits) noexcept;
 Viewport calculate_game_present_viewport(uint32_t surface_width, uint32_t surface_height, uint32_t content_width,
                                          uint32_t content_height) noexcept;
 const TextureWithSampler& resample_present_source(const wgpu::CommandEncoder& encoder, const Viewport& viewport);

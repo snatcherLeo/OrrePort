@@ -101,6 +101,13 @@ studio.disc.choose_title = ポケモンコロシアムのディスクイメー�
 studio.disc.filter = ディスクイメージ
 studio.disc.filter_all = すべてのファイル
 studio.disc.error = ディスクを読み込めませんでした：{reason}。別のディスクイメージを選んでください。
+studio.disc.needed = 先にディスクを追加してください：ポケモンエディターはすべてをディスクから読み込みます。
+studio.home.no_disc = ディスクがまだありません：Studio はすべてをあなた自身のポケモンコロシアムのディスクから読み込みます。
+studio.home.add_disc = ディスクを追加…
+studio.discs.gone_bar = 北米版ディスクが OrrePort のフォルダーから取り除かれました。Studio を閉じるまで読み込みを続けるので、開いているものは失われません。次に起動する前に、もう一度追加してください。
+studio.discs.gone_open = ディスク
+studio.discs.gone_ok = OK
+studio.discs.remove_in_use = OrrePort がこのディスク（{disc}）を使用中です。OrrePort から取り除くか、先に OrrePort を閉じてください。
 
 # ---- ポケモンのページ（v2） ----
 studio.page.info = {category}ポケモン  ·  全国図鑑 No.{national}  ·  このゲームでは No.{own}  ·  {height}  ·  {weight}

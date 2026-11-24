@@ -36,6 +36,7 @@
 #include "pc_text.h"     /* every word in the player's language (ui/lang/<code>.txt) */
 #include "pc_hub_saves.h" /* the Saves page (step 2.1) */
 #include "pc_hub_langdiscs.h" /* the Language discs link and panel (2.2 step 8, piece 2) */
+#include "pc_region_text.h"   /* pc_lang_discs_list: the no-disc page says the language discs are kept */
 #include "pc_saves.h"     /* the save slots: the card shows the one Play starts */
 #include "pc_autosave.h"  /* the card names the autosave when PLAY will start it (2026-11-21) */
 #include "pc_options.h"   /* GameCube-accurate mode: an .orresave is offered a GameCube copy instead of playing */
@@ -912,6 +913,7 @@ void upd_go() {
         std::fflush(stdout);
         std::fflush(stderr);
         pc_log_exit_clean("restarting for the update (the hub's Restart now)");
+        pc_update_pass_foreground(); /* the new copy comes back in front (pc_update.h) */
         _Exit(PC_UPDATE_EXIT_RESTART);
     }
 }
@@ -1061,7 +1063,17 @@ void drop_texts(const std::string& title, const std::string& sub, const std::str
 }
 
 void default_drop_texts() {
-    drop_texts(tx("hub.add.drop"), tx("hub.add.drop.which"), tx("hub.add.drop.copy"));
+    /* 2026-11-24 (snatcherLeo, the laptop sitting: with the US disc removed "none of the discs show up in hub", and he wasn't
+     * sure his European and Japanese discs were still there; the line approved the same night): when language discs
+     * are set up, the page says they are kept. Counted once per page (nod reads each disc's ID), not every frame. */
+    static int s_lang_kept = -1;
+    if (s_lang_kept < 0) {
+        PcLangDisc found[2];
+        s_lang_kept = pc_lang_discs_list("GC6", found, 2);
+    }
+    std::string copy = tx("hub.add.drop.copy");
+    if (s_lang_kept > 0) copy += " " + tx("hub.add.lang_kept");
+    drop_texts(tx("hub.add.drop"), tx("hub.add.drop.which"), copy);
 }
 
 /* Copy (the default) or Move the offered disc into ROM\ */
@@ -3863,6 +3875,11 @@ extern "C" int pc_hub_run(void) {
             } else if (std::strcmp(test_saves, "settings_whatadds") == 0) {
                 pc_settings_overlay_open_in_hub(); /* 5.13: About › What OrrePort adds */
                 pc_settings_overlay_test_whatadds();
+            } else if (std::strcmp(test_saves, "hang") == 0) {
+                /* 2026-11-24: the main thread held for 13 s, so the hang watch (10 s) fires once and its report (every
+                 * thread's stack since the laptop's restore freeze, pc_crash_win32.c) can be checked; the hub then
+                 * carries on */
+                SDL_Delay(13000);
             } else {
                 hub_saves_drop(test_saves);
             }

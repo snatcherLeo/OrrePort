@@ -278,6 +278,17 @@ extern "C" void pc_window_cloak(int on) {
     if (SUCCEEDED(set(hwnd, 13 /* DWMWA_CLOAK */, &cloak, sizeof(cloak)))) {
         s_cloaked = on;
         std::printf("[window] %s\n", on ? "cloaked until the hub is drawn" : "shown");
+        const char* window_mode = std::getenv("ORRE_WINDOW");
+        const bool automated = std::getenv("ORRE_TEST_RUN") != nullptr || std::getenv("ORRE_PAD_SCRIPT") != nullptr ||
+                               (window_mode != nullptr && std::strcmp(window_mode, "minimized") == 0);
+        if (!on && !IsIconic(hwnd) && !automated) {
+            /* (never a minimized window or an automated test run: those must not take the keyboard from the player)
+             * 2026-11-24: to the front as it appears. After a restart the closing copy allowed it
+             * (pc_update_pass_foreground); on a normal start the program just opened is allowed anyway; when Windows
+             * says no (the player clicked elsewhere meanwhile), it only flashes the taskbar button. */
+            const BOOL front = SetForegroundWindow(hwnd);
+            std::printf("[window] to the front: %s\n", front ? "yes" : "no (Windows kept another window in front)");
+        }
     }
 #else
     (void)on;

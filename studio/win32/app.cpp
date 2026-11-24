@@ -64,7 +64,8 @@ namespace {
 enum : UINT { WM_LIST_LOADED = WM_APP + 1, WM_MODEL_LOADED = WM_APP + 2, WM_SPIN_STOPPED = WM_APP + 20, WM_VIEW_FRAMED = WM_APP + 21,
               WM_MOVE_ENDED = WM_APP + 22, WM_VIEW_SHARED = WM_APP + 30,  // (30: a frame is in the shared texture)
               WM_VIEW_MOVED = WM_APP + 33,  // (33: the model was turned, zoomed or reset by the mouse: the page redraws)
-              WM_DISC_OP_DONE = WM_APP + 40 };  // (40: Settings › Discs' copy or move finished; lp: its result)
+              WM_DISC_OP_DONE = WM_APP + 40,   // (40: Settings › Discs' copy or move finished; lp: its result)
+              WM_DISCS_READ = WM_APP + 41 };   // (41: the ROM folders' watch read them in the background; lp: the rows)
 // TIMER_PLAYHEAD: redraws the Moves tab's timeline while its animation plays (30 a second, the animation's own rate)
 // TIMER_TABGROW: redraws the tab bar while a new tab grows in (about 60 a second, for kTabGrowMs)
 enum : UINT_PTR { TIMER_WATCH = 1, TIMER_SHOT = 2, TIMER_TOAST = 3, TIMER_REVEAL = 4, TIMER_FLASH = 5, TIMER_PLAYHEAD = 9,
@@ -453,6 +454,7 @@ struct App : WinState {
     std::vector<std::string> disc_lines;  // which discs were opened ("[disc]" log lines, repeated in a report's about.txt)
     bool disc_forced = false;  // the disc came from --disc, ORRE_DISC or (older layout) studio.ini: the ROM watch leaves it
     bool loading = false;
+    bool load_stays = false;   // the disc being read is the first one added while Studio is open: stay on the page shown
     // command-line options (screenshot tests and comparisons)
     std::wstring screenshot;
     int select_at_start = 1;
@@ -1059,6 +1061,10 @@ enum { HIT_RAIL = 100, HIT_ROW = 1000, HIT_ROW_END = 4999, HIT_EVO = 5000, HIT_E
        HIT_OPEN_ORREPORT = 8310, HIT_UPD_CLOSE_OTHER = 8311,
        // outside the "Go back" pop-up (draw_goback; takes the clicks so nothing behind it acts)
        HIT_UPD_GOBACK_BG = 8312,
+       // Home's no-disc strip (2026-11-24): its Add disc… button
+       HIT_HOME_ADD_DISC = 8313,
+       // the removed-disc bar (2026-11-24): Discs (Settings › Discs), OK (hides it)
+       HIT_DISC_GONE_OPEN = 8314, HIT_DISC_GONE_OK = 8315,
        // the Moves tab: the learnset groups, its rows, the preview's controls, and the faded later controls (hover
        // only: HIT_LATER + kLater*)
        HIT_LGROUP = 7500, HIT_PLAY = 7510, HIT_STEP_BACK = 7511, HIT_STEP_FWD = 7512, HIT_VIEW_STUDIO = 7513,
@@ -2599,6 +2605,7 @@ float page_width() {
     return std::max(200.0f, rc.right / g.scale - kRail - kList);
 }
 
+bool disc_gone_bar();  // (the US disc in use was removed: Settings › Discs, below)
 Layout layout() {
     RECT rc;
     GetClientRect(g.hwnd, &rc);
@@ -2615,8 +2622,9 @@ Layout layout() {
         L.list = {kRail, kTabBar, 0, L.h - kTabBar};
         L.page = {kRail, kTabBar, std::max(200.0f, L.w - kRail), L.h - kTabBar};
     }
-    // the bar after an unexpected close takes a strip at the page's top, so it covers nothing (draw_crash_bar)
-    if (g.crash_bar && !g.report_open && !g_windows.empty() && g_windows.front().hwnd == g.hwnd) {
+    // the bar after an unexpected close takes a strip at the page's top, so it covers nothing (draw_crash_bar); the
+    // removed-disc bar uses the same strip (draw_disc_bar; the crash bar first when both would show)
+    if ((g.crash_bar && !g.report_open && !g_windows.empty() && g_windows.front().hwnd == g.hwnd) || disc_gone_bar()) {
         constexpr float kCrashBar = 64;
         L.page.y += kCrashBar;
         L.page.h -= kCrashBar;
@@ -6135,8 +6143,33 @@ void draw_home(const Layout& L) {
     text(rname, rbx + 20, by, rnw + 4, bh, 14, P.text, DWRITE_FONT_WEIGHT_MEDIUM);
     text(rkeys, rbx + 20 + rnw + 14, by, rkw + 4, bh, 12, P.faint);
     hit({rbx, by, rbw, bh}, HIT_SET_REPORT);
+    // *Added 2026-11-24 (5.9's laptop sitting: with no disc, Home said nothing; only Settings › Discs showed "Not
+    // added"):* while there is no disc, a strip under the buttons says so, with Add disc… (the US row's Add: the hub's
+    // checks and words, then Settings › Discs for Copy / Move). While the disc is read it says so instead, and a disc
+    // that couldn't be read gives its reason. It goes once a disc is in use. Drawn for every system (only the file
+    // dialog behind the button is Windows'; Linux / macOS: their own dialog, likely)
+    float strip = 0;
+    if (!g.disc) {
+        const float sw = std::min(700.0f, C.w - 80), sx = std::round(C.x + (C.w - sw) / 2), sy = by + bh + 24, sh = 64;
+        round_fill(sx, sy, sw, sh, 12, P.card);
+        round_line(sx, sy, sw, sh, 12, P.accent_line);
+        const std::wstring line = g.loading ? tx("studio.disc.reading")
+                                  : g.load_error.empty() ? tx("studio.home.no_disc")
+                                                         : tx("studio.disc.error", {{"reason", widen(g.load_error)}});
+        float tw = sw - 40;
+        if (!g.loading) {
+            const std::wstring b = tx("studio.home.add_disc");
+            const float abw = text_width(b, 14, DWRITE_FONT_WEIGHT_SEMI_BOLD) + 36, abx = sx + sw - abw - 12, aby = sy + 12;
+            round_fill(abx, aby, abw, 40, 10, g.hover == HIT_HOME_ADD_DISC ? alpha(P.accent, 0.85f) : P.accent);
+            text(b, abx, aby, abw, 40, 14, P.on_accent, DWRITE_FONT_WEIGHT_SEMI_BOLD, DWRITE_TEXT_ALIGNMENT_CENTER);
+            hit({abx, aby, abw, 40}, HIT_HOME_ADD_DISC);
+            tw = abx - sx - 20 - 16;
+        }
+        text(line, sx + 20, sy, tw, sh, 13, P.text, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_TEXT_ALIGNMENT_LEADING, true);
+        strip = sh + 24;
+    }
     // the update line under them (4.4), only while there is one to tell about
-    draw_update_line(C.x + C.w / 2, by + bh + 28, std::min(560.0f, C.w - 80));
+    draw_update_line(C.x + C.w / 2, by + bh + 28 + strip, std::min(560.0f, C.w - 80));
 }
 
 // ---- Settings (2026-11-19): a page of panes, Appearance first ----
@@ -6188,6 +6221,9 @@ struct DiscsUi {
     bool msg_err = false;
     HWND shown_in = nullptr;       // the window showing the pane (discs_left: leaving it clears the result line)
     bool gone_logged = false;      // "the US disc was removed" already said in the log
+    bool wait_logged = false;      // "a disc image is still being copied in" already said for this copy
+    bool gone_hidden = false;      // the removed-disc bar's OK or Discs was clicked (shown again after the next removal)
+    bool bar_shown = false;        // the removed-disc bar as last laid out (discs_apply lays the windows out on a change)
 };
 DiscsUi g_discs;
 std::vector<OrreDisc*> g_retired_discs;
@@ -6236,20 +6272,41 @@ std::wstring discs_signature() {
     }
     return s;
 }
-// the rows read again, and what changed acted on: a new US disc is loaded, a changed Japanese disc is opened afresh
-void discs_scan(bool act) {
-    // the shared rule with the program file checked (orre_disc_find_checked): a modified disc put into the folder by hand
-    // is never used, the newest original is, and the refused one is named in its row. Logged only when a row changes
-    // (a disc being copied in by hand changes the folder every second until it is done)
+// The rows as the folders hold them: the shared rule with the program file checked (orre_disc_find_checked): a modified
+// disc put into the folder by hand is never used, the newest original is, and the refused one is named in its row.
+// Reads every disc image in the folders (each one opened, its program file fingerprinted), so it may take a while on a
+// slow drive: the watch runs it on a worker thread (discs_watch); it touches no window state, so it is safe there
+struct DiscsRead { std::wstring path[kDiscRows], bad[kDiscRows]; unsigned gen = 0; bool act = false; };
+DiscsRead discs_read(const std::wstring (&folders)[kDiscRows]) {
+    DiscsRead r;
     for (int k = 0; k < kDiscRows; ++k) {
         char out[2048], refused[2048];
-        orre_disc_find_checked(narrow(disc_folder(k)).c_str(), kDiscIds[k], out, sizeof out, refused, sizeof refused);
-        const std::wstring now = widen(out), bad = widen(refused);
-        if (bad != g_discs.bad[k] && !bad.empty())
+        orre_disc_find_checked(narrow(folders[k]).c_str(), kDiscIds[k], out, sizeof out, refused, sizeof refused);
+        r.path[k] = widen(out);
+        r.bad[k] = widen(refused);
+    }
+    return r;
+}
+// a reading's generation: every reading done on the window's thread counts one up, so a background reading started
+// before it (and so older) is dropped when it arrives instead of putting back what the folders held before
+unsigned g_discs_gen = 0;
+bool g_discs_reading = false;  // (a background reading is running: the watch starts no second one)
+void discs_apply(const DiscsRead& r, bool act);
+// the rows read again, and what changed acted on: a new US disc is loaded, a changed Japanese disc is opened afresh
+void discs_scan(bool act) {
+    std::wstring folders[kDiscRows];
+    for (int k = 0; k < kDiscRows; ++k) folders[k] = disc_folder(k);
+    ++g_discs_gen;
+    discs_apply(discs_read(folders), act);
+}
+void discs_apply(const DiscsRead& r, bool act) {
+    // logged only when a row changes (a disc being copied in by hand changes the folder every second until it is done)
+    for (int k = 0; k < kDiscRows; ++k) {
+        if (r.bad[k] != g_discs.bad[k] && !r.bad[k].empty())
             logf(Level::Warn, "disc", "%s folder: %s is a %s whose program file isn't the original release's: not used",
-                 k == 0 ? "ROM" : "ROM Other Regions", narrow(file_name(bad)).c_str(), kDiscIds[k]);
-        g_discs.path[k] = now;
-        g_discs.bad[k] = bad;
+                 k == 0 ? "ROM" : "ROM Other Regions", narrow(file_name(r.bad[k])).c_str(), kDiscIds[k]);
+        g_discs.path[k] = r.path[k];
+        g_discs.bad[k] = r.bad[k];
     }
     if (!act) return;
     const std::wstring& us = g_discs.path[0];
@@ -6257,6 +6314,11 @@ void discs_scan(bool act) {
         if (!us.empty() && _wcsicmp(us.c_str(), g.disc_path.c_str()) != 0) {
             logf(Level::Info, "disc", "ROM folder: the US disc is now %s; reading it", narrow(file_name(us)).c_str());
             if (g.disc) save_session(L"");  // (the reload brings the tabs back from it)
+            // the first disc while Studio is open (added in Settings › Discs, by the hub, or copied in by hand): Studio
+            // stays on the page it shows, so Settings' "US disc added." stays in sight (5.9's laptop sitting,
+            // 2026-11-24: Studio used to jump into the Pokémon editor here, which wasn't wanted). A disc switched for
+            // another one keeps the earlier behaviour: its tabs come back
+            else g.load_stays = true;
             g.disc_path = us;
             g.load_error.clear();
             start_loading();  // (the old disc is kept open until Studio closes: WM_LIST_LOADED retires it)
@@ -6265,7 +6327,21 @@ void discs_scan(bool act) {
             logf(Level::Info, "disc", "ROM folder: %s; Studio keeps reading the one it has open until it closes",
                  g_discs.bad[0].empty() ? "the US disc was removed" : "the US disc there isn't the original");
         }
-        if (!us.empty()) g_discs.gone_logged = false;
+        if (!us.empty()) g_discs.gone_logged = false, g_discs.gone_hidden = false;
+    }
+    // the removed-disc bar came or went: every window lays out again (it takes a strip above the page, and the 3D view,
+    // a child window, moves with the page)
+    const bool bar = disc_gone_bar();
+    if (bar != g_discs.bar_shown) {
+        g_discs.bar_shown = bar;
+        if (bar) logf(Level::Info, "disc", "the removed-disc bar is shown: Studio keeps reading the disc it has open");
+        else if (!g_discs.path[0].empty()) logf(Level::Info, "disc", "the removed-disc bar went: a US disc is back in the ROM folder");
+        const HWND back = g.hwnd;
+        for (size_t k = 0; k < g_windows.size(); ++k) {
+            activate(g_windows[k].hwnd);
+            place_children();
+        }
+        activate(back);
     }
     if (g.region_disc_arg.empty() && g.jp_tried && _wcsicmp(g_discs.path[2].c_str(), g.jp_path.c_str()) != 0) {
         logf(Level::Info, "disc", "ROM Other Regions folder: the Japanese disc %s", g_discs.path[2].empty() ? "was removed" : "changed");
@@ -6276,14 +6352,68 @@ void discs_scan(bool act) {
     }
     repaint_all();
 }
-// once a second (perf_timer): the folders read again only when they changed, and not while Studio's own copy runs
+// Is a disc image in the folders still being written (a copy into them by hand, File Explorer's or another program's)?
+// Why (5.9's laptop sitting, 2026-11-24): the hub froze when a disc was copied into ROM\ by hand while it was open,
+// reading the half-written file on its window's thread. A file open for writing refuses a reader that doesn't share
+// writing (ERROR_SHARING_VIOLATION), so this asks for read access sharing only reading: it fails while the copy holds
+// the file and works once it is done. Readers (Studio's own open disc, the hub's, Dolphin's) don't block it. ".part"
+// files are skipped (the apps' own copies in progress; no scan uses them). Windows only (share modes); Linux / macOS
+// have no such lock: there the watch would wait until the file's size and time stop changing for a second or two
+// (likely), the same idea
+bool discs_being_written(const std::wstring (&folders)[kDiscRows]) {
+    for (int k = 0; k < 2; ++k) {  // (rows 1 and 2 share ROM Other Regions)
+        WIN32_FIND_DATAW fd;
+        HANDLE h = FindFirstFileW((folders[k] + L"\\*").c_str(), &fd);
+        if (h == INVALID_HANDLE_VALUE) continue;
+        bool writing = false;
+        do {
+            if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+            const size_t n = wcslen(fd.cFileName);
+            if (n > 5 && _wcsicmp(fd.cFileName + n - 5, L".part") == 0) continue;
+            HANDLE f = CreateFileW((folders[k] + L"\\" + fd.cFileName).c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE,
+                                   nullptr, OPEN_EXISTING, 0, nullptr);
+            if (f != INVALID_HANDLE_VALUE) CloseHandle(f);
+            else if (GetLastError() == ERROR_SHARING_VIOLATION) writing = true;
+        } while (!writing && FindNextFileW(h, &fd));
+        FindClose(h);
+        if (writing) return true;
+    }
+    return false;
+}
+// once a second (perf_timer): the folders read again only when they changed, and not while Studio's own copy runs.
+// *Changed 2026-11-24 (the hub's freeze above):* the reading runs on a worker thread (discs_read opens every image),
+// and waits while an image is still being written; the folders' new state is only taken once it is read, so the next
+// second looks again
 void discs_watch() {
-    if (g_discs.busy >= 0 || g.loading) return;
+    if (g_discs.busy >= 0 || g.loading || g_discs_reading) return;
     std::wstring s = discs_signature();
     if (s == g_discs.sig) return;
+    std::wstring folders[kDiscRows];
+    for (int k = 0; k < kDiscRows; ++k) folders[k] = disc_folder(k);
+    if (discs_being_written(folders)) {  // (not yet: the copy is still going; said once per copy)
+        if (!g_discs.wait_logged) logf(Level::Info, "disc", "ROM folders: a disc image is still being copied in; read once it is done");
+        g_discs.wait_logged = true;
+        return;
+    }
+    g_discs.wait_logged = false;
     const bool first = g_discs.sig.empty();
     g_discs.sig = std::move(s);
-    discs_scan(!first);
+    g_discs_reading = true;
+    const unsigned gen = g_discs_gen;
+    HWND hwnd = g.hwnd;
+    std::thread([folders, gen, first, hwnd] {
+        auto* r = new DiscsRead(discs_read(folders));
+        r->gen = gen;
+        r->act = !first;
+        if (!PostMessageW(hwnd, WM_DISCS_READ, 0, (LPARAM)r)) delete r;
+    }).detach();
+}
+// the worker's reading, back on the window's thread: used unless a reading on this thread came after it
+void discs_read_done(DiscsRead* r) {
+    std::unique_ptr<DiscsRead> res(r);
+    g_discs_reading = false;
+    if (r->gen != g_discs_gen) return;  // (older than what the rows show now)
+    discs_apply(*r, r->act);
 }
 // Windows' Recycle Bin (FOF_ALLOWUNDO; FOF_WANTNUKEWARNING still asks when the drive has none, so nothing is deleted for
 // good without the user's word)
@@ -6297,11 +6427,16 @@ bool recycle(const std::wstring& path) {
     op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_WANTNUKEWARNING | FOF_SILENT | FOF_NOERRORUI;
     return SHFileOperationW(&op) == 0 && !op.fAnyOperationsAborted;
 }
+void discs_check(int row, const std::wstring& p);
 // Add or Replace: pick a file, read its game id, and offer Copy / Move in its row
 void discs_add(int row) {
     g_discs.confirm = -1;
     const std::wstring p = pick_disc_file();
-    if (p.empty()) return;
+    if (!p.empty()) discs_check(row, p);
+}
+// the picked file checked for that row (the hub's checks and words), then its Copy / Move question
+void discs_check(int row, const std::wstring& p) {
+    g_discs.confirm = -1;
     // *Updated 2026-11-23 (snatcherLeo: "Yes, refuse all three, use the hub's wording. Hub and Studio should share exact
     // wording for these things"):* the messages are OrrePort's own lines (disc.*, hub.lang.*, check.*: lang_load_shared),
     // the US row's as the hub's US disc says them, the language rows' as its language-disc panel does; and a Colosseum
@@ -6448,8 +6583,14 @@ void discs_remove(int row) {
     const std::wstring p = g_discs.path[row].empty() ? g_discs.bad[row] : g_discs.path[row], disc = tx(kDiscNames[row]);
     if (p.empty()) return;
     const bool ok = recycle(p);
-    logf(ok ? Level::Info : Level::Warn, "disc", "Remove %s: %s", narrow(file_name(p)).c_str(), ok ? "in the Recycle Bin" : "couldn't be moved to the Recycle Bin");
-    discs_say(row, tx(ok ? "discs.removed" : "discs.remove_failed", {{"disc", disc}}), !ok);
+    // *Added 2026-11-24 (5.9's laptop sitting, the two-way test):* with OrrePort open, Remove failed, because OrrePort
+    // holds the image open without letting it be moved (its own Remove lets go first: the hub restarts). The plain "couldn't
+    // be moved" didn't say why or what to do, so while OrrePort or its game runs from this folder the line says so (the
+    // wording approved through Main: "OrrePort is using the US disc. Remove it from OrrePort, or close OrrePort first.")
+    const bool held = !ok && (g_hub_open || g_game_running);
+    logf(ok ? Level::Info : Level::Warn, "disc", "Remove %s: %s", narrow(file_name(p)).c_str(),
+         ok ? "in the Recycle Bin" : held ? "couldn't be moved to the Recycle Bin (OrrePort is open, likely holding it)" : "couldn't be moved to the Recycle Bin");
+    discs_say(row, tx(ok ? "discs.removed" : held ? "studio.discs.remove_in_use" : "discs.remove_failed", {{"disc", disc}}), !ok);
     g_discs.sig = discs_signature();
     discs_scan(true);
 }
@@ -6927,6 +7068,37 @@ void draw_crash_bar(const Layout& L) {
     const float b2 = button(x + w - 10 - b1 - 8, tx("report.crash_dismiss"), HIT_CRASH_DISMISS, false);
     text(tx("report.crash_bar", {{"program", L"Studio"}}), x + 16, y, w - b1 - b2 - 50, h, 13, P.text, DWRITE_FONT_WEIGHT_MEDIUM);
 }
+// The US disc Studio is using was removed from the ROM folder while it runs (by the hub's Remove, or by hand). *Added
+// 2026-11-24* (5.9's laptop sitting, check 4's two-way test: the hub removed the US disc, and Studio went on as before
+// with only Settings' row saying "Not added", which left the question of what Studio should be doing). Studio keeps
+// the image open (its handle shares deleting, so Windows lets the file go to the Recycle Bin or be deleted while Studio
+// goes on reading it: verified 2026-11-23 for a delete by hand, likely the same for the Recycle Bin), so nothing open is
+// closed or lost; a calm bar in every window says so, with "Discs" (Settings › Discs) and "OK" (hides it until the
+// disc comes back and goes again). It goes by itself when a US disc is back (a different file is read, tabs kept, as
+// before). Drawn for every system; whether another system's file handle survives a delete the same way is for its port
+// to check (Linux and macOS keep an open file readable after unlinking it: likely)
+bool disc_gone_bar() {
+    return g.disc && !g.disc_forced && g_discs.path[0].empty() && !g_discs.gone_hidden && !g.report_open;
+}
+void draw_disc_bar(const Layout& L) {
+    if (!disc_gone_bar() || (g.crash_bar && !g_windows.empty() && g_windows.front().hwnd == g.hwnd)) return;
+    const Palette& P = g.pal;
+    const float x = L.page.x + 16, w = L.page.w - 32, y = kTabBar + 10, h = 44;  // (the strip layout() leaves)
+    round_fill(x, y, w, h, 10, P.card);
+    round_line(x, y, w, h, 10, hexc(0xE8955A));
+    auto button = [&](float right, const std::wstring& label, int id, bool main) {
+        const float bw = text_width(label, 12.5f, DWRITE_FONT_WEIGHT_SEMI_BOLD) + 28;
+        const bool hov = g.hover == id;
+        round_fill(right - bw, y + 7, bw, h - 14, 8, main ? (hov ? alpha(P.accent, 0.25f) : P.accent_bg) : (hov ? P.hover : P.bg));
+        round_line(right - bw, y + 7, bw, h - 14, 8, main ? P.accent_line : P.line2);
+        text(label, right - bw, y + 7, bw, h - 14, 12.5f, main ? P.accent2 : P.text2, DWRITE_FONT_WEIGHT_SEMI_BOLD, DWRITE_TEXT_ALIGNMENT_CENTER);
+        hit({right - bw, y + 7, bw, h - 14}, id);
+        return bw;
+    };
+    const float b1 = button(x + w - 10, tx("studio.discs.gone_ok"), HIT_DISC_GONE_OK, false);
+    const float b2 = button(x + w - 10 - b1 - 8, tx("studio.discs.gone_open"), HIT_DISC_GONE_OPEN, true);
+    text(tx("studio.discs.gone_bar"), x + 16, y, w - b1 - b2 - 50, h, 13, P.text, DWRITE_FONT_WEIGHT_MEDIUM, DWRITE_TEXT_ALIGNMENT_LEADING, true);
+}
 // The update's "Go back" pop-up (*2026-11-23*, snatcherLeo after his update hand check: "it should be a pop-up instead, and it
 // asks users are they sure (and a new warning message about this)"; the words approved the same day, "Yes use it"): a
 // card over the dimmed window, as Report a problem's is. The title asks; a line says both programs go back and Studio
@@ -7188,6 +7360,7 @@ void paint_top(const Layout& L) {
     if (!g.palette_open && !g.report_open && !g.goback_open) draw_hover_card(L);
     draw_toast(L);
     draw_crash_bar(L);  // (after an unexpected close: offers a report)
+    draw_disc_bar(L);  // (the US disc in use was removed from the ROM folder)
     draw_goback(L);  // (the update's "Go back" pop-up)
     draw_report(L);  // (Report a problem's panel: over everything but the developer view)
     if (g.dev_view) draw_dev_view(L);
@@ -7495,7 +7668,14 @@ void open_editor(int ed, bool new_tab = false) {
     const WinState::Place place = g.places[ed];
     int page = place.page;
     if (ed == 0) {
-        if (!g.disc) return;
+        // with no disc there is no Pokémon to open: Home, where the no-disc strip has Add disc…, and a short note
+        // (5.9's laptop sitting, 2026-11-24: the click used to do nothing at all)
+        if (!g.disc) {
+            if (!on_home()) open_page(kHome);
+            show_toast(tx(g.loading ? "studio.disc.reading" : "studio.disc.needed"));
+            logf(Level::Info, "disc", "the Pokémon editor needs a disc: %s", g.loading ? "it is still being read" : "Home's strip shown");
+            return;
+        }
         if (page < 0 || page >= (int)g.all.size()) page = g.last_mon >= 0 ? g.last_mon : g.shown.empty() ? -1 : g.shown.front();
         if (page < 0) return;
     } else if (page_editor(page) != ed) {
@@ -7551,7 +7731,8 @@ void log_place() {
 // a click's target in words (the ids in the HIT_ enum)
 std::string hit_words(int id) {
     static const std::pair<int, const char*> kNamed[] = {
-        {HIT_INSPECTOR, "inspector"}, {HIT_SPIN, "spin"}, {HIT_RESET, "reset view"}, {HIT_CHOOSE_DISC, "choose disc"},
+        {HIT_INSPECTOR, "inspector"}, {HIT_SPIN, "spin"}, {HIT_RESET, "reset view"}, {HIT_CHOOSE_DISC, "choose disc"}, {HIT_HOME_ADD_DISC, "Home's Add disc"},
+        {HIT_DISC_GONE_OPEN, "removed-disc bar: Discs"}, {HIT_DISC_GONE_OK, "removed-disc bar: OK"},
         {HIT_MOTION, "motion"}, {HIT_MODEL, "model"}, {HIT_OPEN_EDITOR, "open editor"}, {HIT_IDLE, "Idle"},
         {HIT_STANDING, "Standing pose"}, {HIT_NORMAL, "Normal"}, {HIT_SHINY, "Shiny"}, {HIT_COPY, "copy"},
         {HIT_CREATE_MOD, "Create a mod"}, {HIT_PARTICLES, "Particles switch"}, {HIT_LIGHTING, "Game lighting switch"},
@@ -7753,6 +7934,12 @@ void click(int id) {
         close_report();
     } else if (id == HIT_REP_OPEN) {
         open_folder(reports_dir(), g.report_file);
+    } else if (id == HIT_DISC_GONE_OPEN || id == HIT_DISC_GONE_OK) {
+        // (Discs: Settings › Discs, where the US row says the same and has Add…; both hide the bar in every window)
+        g_discs.gone_hidden = true;
+        if (id == HIT_DISC_GONE_OPEN) { g.settings_pane = 1; open_page(kSettings); }
+        place_children();
+        repaint_all();
     } else if (id == HIT_CRASH_REPORT || id == HIT_CRASH_DISMISS) {
         g.crash_bar = false;
         g.report_prev = id == HIT_CRASH_REPORT;
@@ -8070,11 +8257,15 @@ void click(int id) {
         return;
     } else if (id == HIT_RESET) {
         g.viewer.reset_view();
-    } else if (id == HIT_CHOOSE_DISC) {
-        // the "choose a disc" page: Settings › Discs, its US row's Add (the disc goes into the ROM folder, the hub's way)
+    } else if (id == HIT_CHOOSE_DISC || id == HIT_HOME_ADD_DISC) {
+        // the "choose a disc" page and Home's no-disc strip: the US row's Add, then Settings › Discs for its Copy / Move
+        // question and the "US disc added." line (the disc goes into the ROM folder, the hub's way, with the hub's checks
+        // and words: discs_check). *Changed 2026-11-24:* the file dialog comes first, so Cancel leaves you where you were
+        const std::wstring p = pick_disc_file();
+        if (p.empty()) return;
         g.settings_pane = 1;
         open_page(kSettings);
-        discs_add(0);
+        discs_check(0, p);
     } else if (id >= HIT_DISC_ADD && id < HIT_DISC_ADD + kDiscRows) {
         discs_add(id - HIT_DISC_ADD);
     } else if (id >= HIT_DISC_REMOVE && id < HIT_DISC_REMOVE + kDiscRows) {
@@ -9901,6 +10092,8 @@ LRESULT CALLBACK wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_LIST_LOADED: {
             std::unique_ptr<ListResult> r(reinterpret_cast<ListResult*>(lp));
             g.loading = false;
+            const bool stay = g.load_stays;  // (discs_scan: the first disc added while open; no jump to a Pokémon)
+            g.load_stays = false;
             // a disc switched while Studio runs (Settings › Discs or the ROM folder's watch, 4.4): the old one stays open,
             // not closed, since a background read may still use it (closed at exit); its list's pictures are let go
             if (g.disc && wp && g.disc != reinterpret_cast<OrreDisc*>(wp)) {
@@ -9929,8 +10122,10 @@ LRESULT CALLBACK wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 startup_mark("Pokémon list read");
                 log_note_step("reading the Pokémon list", r->ms);
                 filter();
-                const bool restored = restore_session();
-                if (!restored) {  // (where snatcherLeo left off, else Bulbasaur or --select's Pokémon)
+                // (a disc added while open: the page shown stays, Home, Settings or an editor; the Pokémon editor opens
+                // on its first Pokémon when its icon is clicked)
+                const bool restored = !stay && restore_session();
+                if (!restored && !stay) {  // (where you left off, else Bulbasaur or --select's Pokémon)
                     int start = 0;
                     for (int i = 0; i < (int)g.all.size(); ++i) if (g.all[i].index == g.select_at_start) start = i;
                     select(start);
@@ -10035,6 +10230,9 @@ LRESULT CALLBACK wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0;
         case WM_DISC_OP_DONE:
             discs_done(reinterpret_cast<DiscOpResult*>(lp));
+            return 0;
+        case WM_DISCS_READ:
+            discs_read_done(reinterpret_cast<DiscsRead*>(lp));
             return 0;
         case WM_MODEL_LOADED: {
             std::unique_ptr<ModelResult> r(reinterpret_cast<ModelResult*>(lp));
@@ -10575,6 +10773,15 @@ int run(HINSTANCE inst, int argc, wchar_t** argv) {
     ShowWindow(hwnd, !g.screenshot.empty() ? SW_SHOWNOACTIVATE : maximized ? SW_SHOWMAXIMIZED : SW_SHOWNORMAL);
     start_loading();
     if (g.disc_path.empty()) InvalidateRect(hwnd, nullptr, FALSE);
+    // a screenshot test with no disc (2026-11-24, Home's no-disc strip): no list or model will arrive, so its
+    // --click-after-model steps (pauses included) run now and the shot follows them; a disc added by those steps is read
+    // as a user's would be
+    if (g.disc_path.empty() && !g.screenshot.empty()) {
+        paint();
+        next_test_click(hwnd);
+        g.shot_pending = true;
+        SetTimer(hwnd, TIMER_SHOT, 700, nullptr);
+    }
     MSG m;
     while (GetMessageW(&m, nullptr, 0, 0)) {
         TranslateMessage(&m);

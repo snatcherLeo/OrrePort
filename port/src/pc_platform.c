@@ -997,6 +997,11 @@ int pc_platform_start(int argc, char** argv, const char* disc) {
         pc_startup_mark("graphics start (Aurora)");
         aurora_initialize(argc, argv, &config);
         pc_startup_mark("Aurora ready (pipeline cache, RmlUi)");
+        /* port-gaps 90 (2026-11-24): a test key, not a setting. settings.ini "test_resize_workaround" = the bits of
+         * aurora_set_resize_workaround (1 wait for the GPU, 2 a new surface, 4 hold 250 ms; combinable), for trying
+         * workarounds for the Intel Vulkan driver's freeze after a restore from maximized on snatcherLeo's laptop. 0 or missing:
+         * Aurora's usual resize. Every OS reads it; only Windows' Intel driver is known to need it (likely). */
+        aurora_set_resize_workaround((uint32_t)pc_settings_int("test_resize_workaround", 0));
         if (automated_run() && main_window() != NULL) {
             /* the check for window_created's minimize (2026-11-15): an automated run's window should already be
              * minimized here, shown since Aurora's show_window */

@@ -8,6 +8,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <thread> /* OrrePort: the resize workaround's hold (port-gaps 90) */
 #include <utility>
 #include <vector>
 
@@ -1358,6 +1359,33 @@ static void clear_new_frame_buffers() {
   }
 }
 
+/* OrrePort (2026-11-24, port-gaps 90): the resize workarounds under test (aurora_set_resize_workaround, aurora.h).
+ * snatcherLeo's laptop (Intel Iris Xe, Vulkan) deadlocked inside Intel's driver after a restore from maximized: the render
+ * worker in Instance::ProcessEvents waits on a driver thread that waits on a lock. Each bit changes the resize in one
+ * way, so one test build can try them all on the laptop; the one that works becomes the fix (for Intel's Vulkan
+ * driver only, or for everyone if it costs nothing), the others go. Windows' Intel driver only, as far as is known
+ * (likely); Linux's Mesa and macOS's Metal take other paths. */
+static std::atomic_uint32_t g_resizeWorkaround = 0;
+
+void set_resize_workaround(uint32_t bits) noexcept {
+  g_resizeWorkaround.store(bits, std::memory_order_relaxed);
+  if (bits != 0) {
+    Log.info("Resize workaround (port-gaps 90 test): {}{}{}", (bits & 1) != 0 ? "wait for the GPU; " : "",
+             (bits & 2) != 0 ? "(2, a new surface: dropped, ignored) " : "", (bits & 4) != 0 ? "hold 250 ms" : "");
+  }
+}
+
+/* bit 1: waits (up to 2 s) until the GPU has finished everything submitted so far. Called on the main thread with the
+ * render worker idle (resize_swapchain synchronizes first), so nothing else is in Dawn while it waits. */
+static void wait_gpu_idle(const char* when) {
+  bool done = false;
+  const auto future = g_queue.OnSubmittedWorkDone(wgpu::CallbackMode::WaitAnyOnly,
+                                                  [&](wgpu::QueueWorkDoneStatus, wgpu::StringView) { done = true; });
+  const auto status = g_instance.WaitAny(future, 2000000000);
+  Log.info("Resize workaround: GPU idle {} ({})", when,
+           status == wgpu::WaitStatus::Success && done ? "done" : magic_enum::enum_name(status));
+}
+
 static void resize_swapchain_internal(uint32_t width, uint32_t height, uint32_t nativeWidth, uint32_t nativeHeight,
                                       bool force) {
   if (!g_surface || !g_device || width == 0 || height == 0 || nativeHeight == 0 || nativeWidth == 0) {
@@ -1380,6 +1408,14 @@ static void resize_swapchain_internal(uint32_t width, uint32_t height, uint32_t 
   g_graphicsConfig.surfaceConfiguration.height = nativeHeight;
   auto surfaceConfiguration = g_graphicsConfig.surfaceConfiguration;
   surfaceConfiguration.device = g_device;
+  const uint32_t workaround = g_resizeWorkaround.load(std::memory_order_relaxed); /* port-gaps 90 (above) */
+  if ((workaround & 1) != 0) {
+    wait_gpu_idle("before the change");
+  }
+  /* bit 2 (a new surface instead of reconfiguring) was tried and dropped the same night: on the RTX every try lost the
+   * device with VK_ERROR_NATIVE_WINDOW_IN_USE_KHR (the old swap chain still held the window), even after Unconfigure,
+   * releasing the old surface, a GPU-idle wait and a device tick. Something else still holds the old surface (likely a
+   * surface texture kept for a later present); not chased further while bits 1 and 4 are untested on the laptop. */
   {
     window::SurfaceLock surfaceLock;
     g_surface.Configure(&surfaceConfiguration);
@@ -1393,6 +1429,14 @@ static void resize_swapchain_internal(uint32_t width, uint32_t height, uint32_t 
   ++g_frameBufferGeneration;
   clear_new_frame_buffers();
   g_CopyBindGroup = create_copy_bind_group(present_source());
+  if ((workaround & 1) != 0) {
+    wait_gpu_idle("after the change"); /* the clears above included */
+  }
+  if ((workaround & 4) != 0) {
+    /* bit 4: nothing new reaches the worker or the driver for 250 ms (the main thread is here, the presenter paused),
+     * time for the driver's own threads to finish with the old swap chain (a guess at the race) */
+    std::this_thread::sleep_for(std::chrono::milliseconds{250});
+  }
 }
 
 bool refresh_surface(bool recreate) {

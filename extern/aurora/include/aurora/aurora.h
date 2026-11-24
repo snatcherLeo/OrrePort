@@ -177,6 +177,11 @@ void aurora_set_timescale(float scale);
  * space below (for a menu bar that is always shown). Only the game picture moves; overlays still get the whole
  * window. 0 (the default) is the whole window. */
 void aurora_set_present_inset_top(uint32_t pixels);
+/** OrrePort (2026-11-24, port-gaps 90, a test switch for now): ways to steer a window resize around the Intel Vulkan
+ * driver's deadlock after a restore from maximized. Bits, combinable: 1 wait until the GPU has finished all submitted
+ * work before and after the swap chain changes; 2 (a new surface) tried and dropped, ignored; 4 hold the
+ * render worker 250 ms after the change. 0 (the default) is Aurora's usual resize. */
+void aurora_set_resize_workaround(uint32_t bits);
 /** OrrePort (2026-11-16, a test switch, never a setting): at the end of the current frame, writes the game picture at
  * full resolution as two binary PPM files: `<pathPrefix>_render.ppm` (the frame buffer at the render size, before it
  * is scaled to the window) and `<pathPrefix>_window.ppm` (the same after the present resampler, at the size it takes

@@ -326,6 +326,8 @@ studio.disc.filter = Disc images
 studio.disc.filter_all = All files
 # {reason} says what went wrong, in plain words
 studio.disc.error = The disc couldn't be read: {reason}. Choose another disc image.
+# (a toast when the Pokémon editor's icon is clicked with no disc yet; Studio shows Home, whose strip has Add disc…)
+studio.disc.needed = Add your disc first: the Pokémon editor reads everything from it.
 
 # ---- forms: the Forms card below Evolution on the Overview (short: each name sits under a 48-pixel thumbnail) ----
 studio.card.forms = FORMS
@@ -359,6 +361,11 @@ studio.home.open_orreport = Open OrrePort
 studio.home.orreport_opened = OrrePort is opened
 # (a toast when the button can't find OrrePort.exe beside Studio, for example in a development build)
 studio.home.orreport_missing = OrrePort isn't in this folder, so it couldn't be started.
+# Home's strip while there is no disc yet (2026-11-24), beside its button (the button opens the file dialog, then
+# Settings › Discs); the line wraps onto two lines in a narrow window
+studio.home.no_disc = No disc yet: Studio reads everything from your own Pokémon Colosseum disc.
+# short
+studio.home.add_disc = Add disc…
 # Settings: the page's (and its tab's) name, on Home's gear button too. short
 studio.settings.title = Settings
 # Settings: its keyboard shortcut, shown beside Home's gear button (keep the keys as Windows names them). short
@@ -385,6 +392,14 @@ studio.settings.discs = Discs
 # is using was removed or deleted from the ROM folder while Studio was open
 studio.discs.shared = Shared with OrrePort
 studio.discs.in_use_gone = The disc Studio is using is no longer in the ROM folder. Studio keeps using it until you close it; add a US disc here before the next start.
+# the bar over every window when that happens (2026-11-24), with two buttons: "Discs" opens Settings › Discs, "OK"
+# hides the bar. The bar is one line on a wide window, two on a narrow one; the buttons short
+studio.discs.gone_bar = The US disc was removed from OrrePort's folder. Studio keeps reading it until you close Studio, so nothing you have open is lost. Add it again before the next start.
+studio.discs.gone_open = Discs
+studio.discs.gone_ok = OK
+# under a row when Remove fails while OrrePort is open from the same folder (it holds the disc's file); {disc} is the
+# row's name ("US disc", "European disc", "Japanese disc"), the US row's line as approved on 2026-11-24
+studio.discs.remove_in_use = OrrePort is using the {disc}. Remove it from OrrePort, or close OrrePort first.
 # (a picked file that doesn't fit its row: those lines are OrrePort's own, read from its language files so both
 # programs say them word for word (snatcherLeo, 2026-11-23): disc.unreadable, disc.archive, disc.wrong, disc.wrong.region,
 # disc.name.*, disc.languages.*, hub.lang.us_disc, hub.lang.not_lang, hub.lang.unreadable, hub.lang.already,

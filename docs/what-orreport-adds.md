@@ -82,7 +82,7 @@ This list is for **OrrePort Beta 0.1**. It grows with each update.
 | **Higher resolutions**, up to 8× the original (5K) | Settings › Graphics | the same |
 | **Anti-aliasing and texture filtering** (up to 16× anisotropic) | Settings › Graphics | the same |
 | **Frame smoothing:** smoother motion at 60, 120, 144, 165 or 240 frames a second, or your display's rate | Settings › Graphics › Frame rate (Off to start) | the same: checked to keep every random roll |
-| **Vulkan or Direct3D 12** | Settings › Graphics › Renderer (Vulkan to start) | the same |
+| **Vulkan, Direct3D 12 or Direct3D 11** | Settings › Graphics › Renderer (Vulkan to start) | the same |
 | **Volume:** master, music and sound effects apart | Settings › Audio | the same |
 
 Widescreen is coming in a later update.

@@ -90,6 +90,14 @@ int pc_update_request_rollback(void);
 /* At exit: stops the module's thread (a download in progress keeps its .part and resumes next time). */
 void pc_update_shutdown(void);
 
+/* Just before exiting with PC_UPDATE_EXIT_RESTART (2026-11-24, the laptop sitting: after the US disc's Remove the
+ * restarted hub came back behind other windows): lets the next program take the foreground. Windows gives the
+ * foreground only to the program in front or one it allows; the launcher that starts the new copy is never in front,
+ * so the closing program, which is, allows any program (AllowSetForegroundWindow(ASFW_ANY); it lapses at the next
+ * input). The new copy then brings its window forward as it uncloaks it (pc_window_icon.cpp). Windows only; Linux and
+ * macOS window managers have no such lock (likely: nothing to do). */
+void pc_update_pass_foreground(void);
+
 #ifdef __cplusplus
 }
 #endif

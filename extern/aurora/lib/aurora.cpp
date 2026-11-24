@@ -1631,6 +1631,13 @@ void aurora_set_resampler(AuroraSampler sampler) {
 }
 void aurora_set_timescale(float scale) { aurora::time::set_scale(scale); }
 void aurora_set_present_inset_top(uint32_t pixels) { aurora::webgpu::set_present_inset_top(pixels); }
+void aurora_set_resize_workaround(uint32_t bits) {
+#ifdef AURORA_ENABLE_GX
+  aurora::webgpu::set_resize_workaround(bits);
+#else
+  (void)bits;
+#endif
+}
 void aurora_orre_request_frame_dump(const char* pathPrefix) {
 #ifdef AURORA_ENABLE_GX
   std::lock_guard lock{aurora::g_orreDumpLock};

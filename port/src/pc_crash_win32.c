@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
+#include <tlhelp32.h> /* the hang watch's list of every thread (report_other_threads) */
 #include <dbghelp.h> /* the minidump's types only; the function is loaded at run time (pc_crash_set_dump_path) */
 
 /* The exe's preferred image base, as addr2line uses it, read from the exe FILE once at install (Studio's finding,
@@ -586,6 +587,7 @@ void pc_crash_print_stack(const char* reason) {
 static volatile const unsigned* s_heartbeat;
 static unsigned s_stall_seconds;
 static HANDLE s_watched;
+static DWORD s_watched_id; /* its thread id, for the all-threads report (report_other_threads) */
 
 static volatile LONG s_sample_requests;
 
@@ -616,6 +618,91 @@ static void sample_once(unsigned left) {
         fprintf(stderr, "\n[pc_crash] stack sample (%u left), heartbeat %u:\n", left, *s_heartbeat);
         print_captured(pcs, n);
     }
+}
+
+/* Every other thread's stack at a hang, after the main thread's (2026-11-24, the laptop sitting): the hub froze
+ * twice on snatcherLeo's laptop (Intel Iris Xe, Vulkan) right after its window was restored from maximized, and the main
+ * thread's stack only showed it waiting (once for Dawn's device lock inside CreateTexture, once for a free frame slot
+ * from Aurora's render worker). What it waits on is in another thread (most likely the render worker, inside the
+ * driver's GetCurrentTexture / Present), so the report now shows them all, each with its name where it has one
+ * (Aurora's "Aurora render worker"). Same rule as the main thread's: each thread is captured while it is stopped,
+ * with nothing that takes a lock, and everything is printed after all of them run again (capture_stack says why).
+ * The thread list is taken before anything is stopped. At most PC_CRASH_MAX_THREADS threads; the watchdog itself and
+ * the main thread (already printed) are skipped.
+ * Windows only (Toolhelp's thread list, SuspendThread, GetThreadDescription from Windows 10 1607, looked up at run
+ * time so older systems print no names). Linux would need each thread's stack another way (a signal sent to each
+ * thread with tgkill, its handler capturing its own stack); macOS, task_threads + thread_get_state (guess, neither
+ * written; pc_crash_posix.c prints only the main thread's). */
+#define PC_CRASH_MAX_THREADS 64
+typedef HRESULT(WINAPI* GetThreadDescriptionFn)(HANDLE, PWSTR*);
+static DWORD s_thread_ids[PC_CRASH_MAX_THREADS];
+static DWORD64 s_thread_pcs[PC_CRASH_MAX_THREADS][PC_CRASH_MAX_FRAMES];
+static int s_thread_frames[PC_CRASH_MAX_THREADS];
+
+static void report_other_threads(void) {
+    /* the main thread's id from when the watch started (s_watched_id): GetThreadId on s_watched fails, its handle
+     * has no query right, and the main thread was printed twice in the first test (2026-11-24) */
+    const DWORD pid = GetCurrentProcessId(), self = GetCurrentThreadId(), main_id = s_watched_id;
+    GetThreadDescriptionFn describe =
+        (GetThreadDescriptionFn)(void*)GetProcAddress(GetModuleHandleA("kernel32.dll"), "GetThreadDescription");
+    THREADENTRY32 te;
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    int count = 0, i;
+    if (snap == INVALID_HANDLE_VALUE) {
+        return;
+    }
+    te.dwSize = sizeof(te);
+    if (Thread32First(snap, &te)) {
+        do {
+            if (te.th32OwnerProcessID == pid && te.th32ThreadID != self && te.th32ThreadID != main_id &&
+                count < PC_CRASH_MAX_THREADS) {
+                s_thread_ids[count++] = te.th32ThreadID;
+            }
+            te.dwSize = sizeof(te);
+        } while (Thread32Next(snap, &te));
+    }
+    CloseHandle(snap);
+    /* capture: one thread stopped at a time, nothing that locks while it is stopped */
+    for (i = 0; i < count; i++) {
+        HANDLE t = OpenThread(THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT, FALSE, s_thread_ids[i]);
+        s_thread_frames[i] = 0;
+        if (t == NULL) {
+            continue;
+        }
+        if (SuspendThread(t) != (DWORD)-1) {
+            CONTEXT ctx;
+            memset(&ctx, 0, sizeof(ctx));
+            ctx.ContextFlags = CONTEXT_FULL;
+            if (GetThreadContext(t, &ctx)) {
+                s_thread_frames[i] = capture_stack(ctx, s_thread_pcs[i]);
+            }
+            ResumeThread(t);
+        }
+        CloseHandle(t);
+    }
+    /* print, everything running again */
+    fprintf(stderr, "[pc_crash] hang watch: the other %d thread(s):\n", count);
+    for (i = 0; i < count; i++) {
+        char name[128] = "";
+        int f;
+        if (describe != NULL) {
+            HANDLE t = OpenThread(THREAD_QUERY_LIMITED_INFORMATION, FALSE, s_thread_ids[i]);
+            PWSTR wide = NULL;
+            if (t != NULL) {
+                if (SUCCEEDED(describe(t, &wide)) && wide != NULL) {
+                    WideCharToMultiByte(CP_UTF8, 0, wide, -1, name, (int)sizeof(name), NULL, NULL);
+                    LocalFree(wide);
+                }
+                CloseHandle(t);
+            }
+        }
+        fprintf(stderr, "[pc_crash] thread %lu%s%s%s:\n", (unsigned long)s_thread_ids[i], name[0] ? " \"" : "", name,
+                name[0] ? "\"" : "");
+        for (f = 0; f < s_thread_frames[i]; f++) {
+            print_address(f == 0 ? "at" : "called from", s_thread_pcs[i][f]);
+        }
+    }
+    fflush(stderr);
 }
 
 static DWORD WINAPI watchdog_main(LPVOID unused) {
@@ -658,6 +745,7 @@ static DWORD WINAPI watchdog_main(LPVOID unused) {
                                 "open message box does this too); main thread:\n",
                         still, last);
                 print_captured(pcs, n);
+                report_other_threads();
                 if (pc_crash_report_hook != NULL) {
                     pc_crash_report_hook();
                 }
@@ -673,6 +761,7 @@ void pc_crash_watchdog(volatile const unsigned* heartbeat, unsigned seconds) {
     }
     s_heartbeat = heartbeat;
     s_stall_seconds = seconds ? seconds : 5;
+    s_watched_id = GetCurrentThreadId();
     DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &s_watched,
                     THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT, FALSE, 0);
     CreateThread(NULL, 0, watchdog_main, NULL, 0, NULL);
