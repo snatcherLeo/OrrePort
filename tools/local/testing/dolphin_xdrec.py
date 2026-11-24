@@ -39,7 +39,22 @@ START_STATE = os.environ.get("PLAYREC_STATE", "")
 WATCH_FRAMES = int(os.environ.get("PLAYREC_FRAMES", "0"))           # watch: stop after this many frames (0 = never)
 PERIODIC = int(os.environ.get("PLAYREC_PERIODIC", str(5 * 60 * 60)))  # record: frames between periodic states
 HASH_EVERY = int(os.environ.get("PLAYREC_HASH_EVERY", "3600"))       # watch: frames between RAM hashes (0 = end only)
+HASH_FROM = int(os.environ.get("PLAYREC_HASH_FROM", "0"))            # watch: no periodic hash before this frame (to
+                                                                     # look closely at one stretch)
 RAM_BASE, RAM_SIZE = 0x80000000, 0x01800000                          # the GameCube's 24 MB of main RAM
+# Ranges left out of the hash (PLAYREC_HASH_SKIP=<from>-<to>[,...], hex). Why: the first XD test sitting's replays
+# (2026-11-24) differed in only two words over 38,000 frames, inside XD's _memcardStatusBuf (0x80478B00, 0x210 bytes,
+# from the XD decomp's symbols): the memory card's status, whose file time comes from how Dolphin builds the card for
+# each run (guess), not from the game's play. playrec.py passes XD's range by default. Skipped words are hashed as zero
+SKIP = [tuple(int(x, 16) for x in r.split("-")) for r in os.environ.get("PLAYREC_HASH_SKIP", "").split(",") if "-" in r]
+
+
+def read8(a):
+    """8 bytes of RAM for the hash, zero inside a skipped range"""
+    for lo, hi in SKIP:
+        if lo <= a < hi:
+            return b"\0" * 8
+    return memory.read_u64(a).to_bytes(8, "big")
 
 # the combos, by Dolphin's button names (the same names dolphin_playrec.py sends with set_gc_buttons)
 MARK = ("L", "R", "Z")
@@ -93,23 +108,49 @@ def ram_sha1():
     Colosseum: dolphin_playrec.py's save-block probe), so 64-bit reads, about 3 million per hash (seconds each; guess
     until timed on the test sitting). The emulator waits for the frame hook, so a slow hash only slows the replay."""
     h = hashlib.sha1()
-    if hasattr(memory, "read_bytes"):
+    if hasattr(memory, "read_bytes") and not SKIP:
         step = 0x100000
         for a in range(RAM_BASE, RAM_BASE + RAM_SIZE, step):
             h.update(bytes(memory.read_bytes(a, step)))
     elif hasattr(memory, "read_u64"):
         for a in range(RAM_BASE, RAM_BASE + RAM_SIZE, 8):
-            h.update(memory.read_u64(a).to_bytes(8, "big"))
+            h.update(read8(a))
     else:
         for a in range(RAM_BASE, RAM_BASE + RAM_SIZE, 4):
             h.update(memory.read_u32(a).to_bytes(4, "big"))
     return h.hexdigest()
 
 
+BLOCKS = os.environ.get("PLAYREC_HASH_BLOCKS") == "1"   # also a CRC per 64 KB block (blocks.csv), to see WHERE two
+                                                        # replays differ (2026-11-24: the first XD sitting's replays did)
+blocks_log = open(os.path.join(OUT, "blocks.csv"), "w") if MODE == "watch" and BLOCKS else None
+
+
+def ram_blocks():
+    import zlib
+    out = []
+    for b in range(RAM_SIZE // 0x10000):
+        base = RAM_BASE + b * 0x10000
+        crc = 0
+        for a in range(base, base + 0x10000, 8):
+            crc = zlib.crc32(read8(a), crc)
+        out.append("%08x" % crc)
+    return out
+
+
 def write_hash():
     try:
         hash_log.write("%d,%s\n" % (frame, ram_sha1()))
         hash_log.flush()
+        if blocks_log:
+            blocks_log.write("%d,%s\n" % (frame, " ".join(ram_blocks())))
+            blocks_log.flush()
+        # PLAYREC_DUMP_BLOCKS=<hex address>[,...]: those 64 KB blocks raw, dump_<addr>_<frame>.bin, to compare word by word
+        for s in filter(None, os.environ.get("PLAYREC_DUMP_BLOCKS", "").split(",")):
+            base = int(s, 16) & ~0xFFFF
+            with open(os.path.join(OUT, "dump_%08X_%d.bin" % (base, frame)), "wb") as g:
+                for a in range(base, base + 0x10000, 8):
+                    g.write(memory.read_u64(a).to_bytes(8, "big"))
     except Exception as e:
         if not st["hash_err"]:
             st["hash_err"] = True
@@ -154,7 +195,7 @@ def held(p, combo):
 
 
 def finish(reason):
-    if MODE == "watch":
+    if MODE == "watch" and not (HASH_EVERY and frame % HASH_EVERY == 0):   # (that frame's hash is written already)
         write_hash()
     w("end", reason=reason, frames=frame)
     json.dump({"last_frame": frame, "reason": reason, "mode": MODE, "marks": st["marks"], "game": "xd",
@@ -165,7 +206,10 @@ def finish(reason):
         pad_log.flush()
     if hash_log:
         hash_log.flush()
-    time.sleep(2)
+    # (2026-11-24) a replay waits 8 s before closing: Dolphin writes a card folder's saves to disk a moment after the
+    # game saves, on its own thread, and an unthrottled replay that saved near its end was closed before that write
+    # (its card came out empty); the wait lets the card be compared with the sitting's
+    time.sleep(8 if MODE == "watch" else 2)
     os._exit(0)
 
 
@@ -213,7 +257,7 @@ def on_frame():
             save_state("t%07d" % frame, "periodic")
     elif MODE == "watch":
         # a hash every HASH_EVERY frames, so a difference between two replays is placed within that many frames
-        if HASH_EVERY and frame % HASH_EVERY == 0:
+        if HASH_EVERY and frame % HASH_EVERY == 0 and frame >= HASH_FROM:
             write_hash()
         if WATCH_FRAMES and frame >= WATCH_FRAMES:
             finish("watch complete")

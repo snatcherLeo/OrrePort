@@ -79,6 +79,41 @@ def critical(config_dir):
     return {f"{s}.{k}": d.get((s, k), "(default)") for s, k in CRITICAL}
 
 
+XD_CARD = "MemoryCardA.USA.raw"   # XD's card: one fixed card image in the profile's GC folder (xd_card_use)
+
+
+def xd_card_use(user, raw):
+    """Point a Dolphin settings folder's slot A at one card IMAGE (SlotA = 1, MemcardAPath = raw) instead of the card
+    folder (Dolphin's default). Why (2026-11-24, the first XD test sitting): with the card folder, Dolphin builds the
+    card afresh in every run, and a movie that starts from a save state then meets a card the state didn't know; the
+    replays parted from the recording at the in-game save (XD's card status differed from the first card check on). A
+    card image keeps its own header, so the recording and every replay see the same card. Edits only that folder's
+    Config/Dolphin.ini (a sitting's replay copy, or the XD profile); the [Core] lines are replaced or added."""
+    ini = os.path.join(user, "Config", "Dolphin.ini")
+    lines = open(ini, encoding="utf-8").read().splitlines() if os.path.exists(ini) else []
+    want = {"SlotA": "1", "MemcardAPath": raw.replace("\\", "/")}
+    out, sec, done = [], "", set()
+    for line in lines:
+        s = line.strip()
+        if s.startswith("[") and s.endswith("]"):
+            if sec == "Core":
+                out += [f"{k} = {v}" for k, v in want.items() if k not in done]
+                done.update(want)
+            sec = s[1:-1]
+        elif sec == "Core" and "=" in s and s.split("=", 1)[0].strip() in want:
+            k = s.split("=", 1)[0].strip()
+            line = f"{k} = {want[k]}"
+            done.add(k)
+        out.append(line)
+    if sec == "Core":
+        out += [f"{k} = {v}" for k, v in want.items() if k not in done]
+        done.update(want)
+    if not done:
+        out += ["[Core]"] + [f"{k} = {v}" for k, v in want.items()]
+    os.makedirs(os.path.dirname(ini), exist_ok=True)
+    open(ini, "w", encoding="utf-8").write("\n".join(out) + "\n")
+
+
 def game_ini_overrides(user):
     """The replay-critical settings a game's own INI files set over Dolphin.ini (Dolphin applies Sys/GameSettings/<GXX>
     .ini, then <GXXE01>.ini, then the user folder's GameSettings/<GXXE01>.ini). Why: XD's built-in GXX.ini turns MMU on
@@ -331,6 +366,22 @@ def cmd_setup(a):
     print(f"made {user}\nreplay-critical settings: {json.dumps(critical(os.path.join(user, 'Config')), indent=1)}")
 
 
+def cmd_xd_card(a):
+    """XD only: make the profile's card image once (xd_card_use's why): a blank formatted 251-block card from
+    blank_gc_card.py (*changed 2026-11-24:* Dolphin makes an image only on a game's first write, too late for a movie,
+    so a 600-frame boot made none). Refuses if the image exists (it is never replaced)."""
+    sys.path.insert(0, HERE)          # (python -I leaves the script's own folder off the import path)
+    import blank_gc_card
+    user = a.user or os.path.join(a.root, "dolphin-user")
+    raw = os.path.join(user, "GC", XD_CARD)
+    if os.path.isfile(raw):
+        sys.exit(f"{raw} exists already; nothing changed")
+    with open(raw, "xb") as f:
+        f.write(blank_gc_card.blank_card(251))
+    xd_card_use(user, raw)
+    print(f"card image: {raw} ({os.path.getsize(raw)} bytes); slot A points at it")
+
+
 def cmd_start(a):
     user = a.user or os.path.join(a.root, "dolphin-user")
     if not os.path.isdir(user):
@@ -340,6 +391,15 @@ def cmd_start(a):
     out = os.path.join(section_dir(a.root, a.section),
                        "%03d_%s" % (n, datetime.datetime.now().strftime("%Y%m%d_%H%M")))
     os.makedirs(out)
+    if GAME == "xd":
+        # XD records on one card image (xd_card_use); it must exist before the movie starts, or Dolphin would make a new
+        # one in each run (playrec.py --game xd card makes it once)
+        raw = os.path.join(user, "GC", XD_CARD)
+        if not os.path.isfile(raw):
+            shutil.rmtree(out)
+            sys.exit(f"no XD card image at {raw}: run `playrec.py --game xd card` once first")
+        xd_card_use(user, raw)
+        shutil.copy2(raw, os.path.join(out, "card_start.raw"))
     shutil.copytree(os.path.join(user, "Config"), os.path.join(out, "settings"))
     if os.path.isdir(os.path.join(user, CARD_REL)):
         shutil.copytree(os.path.join(user, CARD_REL), os.path.join(out, "card_start"))
@@ -396,6 +456,8 @@ def cmd_start(a):
             os.remove(playing)
     if os.path.isdir(os.path.join(user, CARD_REL)):
         shutil.copytree(os.path.join(user, CARD_REL), os.path.join(out, "card_end"))
+    if GAME == "xd" and os.path.isfile(os.path.join(user, "GC", XD_CARD)):
+        shutil.copy2(os.path.join(user, "GC", XD_CARD), os.path.join(out, "card_end.raw"))
     sj = os.path.join(out, "sitting.json")
     if not os.path.exists(sj):                    # window closed without the end combo: last frame from the log
         last = 0
@@ -770,6 +832,12 @@ def cmd_replay(a):
         shutil.copytree(os.path.join(sit, "card_start"), card)
     else:
         os.makedirs(card)
+    if GAME == "xd" and os.path.isfile(os.path.join(sit, "card_start.raw")):
+        # the replay's own copy of the sitting's start card image, so the profile's card is never written by a replay
+        raw = os.path.join(user, "GC", XD_CARD)
+        os.makedirs(os.path.dirname(raw), exist_ok=True)
+        shutil.copy2(os.path.join(sit, "card_start.raw"), raw)
+        xd_card_use(user, raw)
     gcpad = os.path.join(user, "Config", "GCPadNew.ini")
     if os.path.exists(gcpad):
         os.remove(gcpad)                              # no real controller during a replay
@@ -861,16 +929,45 @@ def cmd_replay(a):
         # PLAYREC_FRAMES set by the caller (2026-11-06) ends the replay sooner, for shots of one scene in a long
         # sitting; the event check after it then reports the events past the cap as missing
         cap = last + 600
+        xd_env = {}
+        if GAME == "xd":
+            # XD (2026-11-24, the first test sitting): stop at the movie's own end (its header's field count), not 600
+            # frames past it: after the movie no input is played, and two replays differed there in two heap blocks
+            # (cause not found; the recorded stretch itself matched). And leave the memory card's status buffer out of
+            # the RAM hash (dolphin_xdrec.py SKIP: the card's file time differs per run, the game's play doesn't)
+            with open(os.path.join(sit, dtms[0]), "rb") as f:
+                cap = min(cap, struct.unpack("<Q", f.read(0x15)[0x0D:0x15])[0])
+            xd_env["PLAYREC_HASH_SKIP"] = os.environ.get("PLAYREC_HASH_SKIP", "80478B00-80478D10")
         if os.environ.get("PLAYREC_FRAMES", "").isdigit() and int(os.environ["PLAYREC_FRAMES"]) > 0:
             cap = min(cap, int(os.environ["PLAYREC_FRAMES"]))
         run_dolphin(user, out, "watch", movie=os.path.join(sit, dtms[0]), speed=a.speed,
-                    extra_env={"PLAYREC_FRAMES": str(cap), "PLAYREC_PROBES": a.probe or ""})
+                    extra_env={"PLAYREC_FRAMES": str(cap), "PLAYREC_PROBES": a.probe or "", **xd_env})
         log = os.path.join(user, "Logs", "dolphin.log")
         if os.path.exists(log):
             shutil.copy2(log, os.path.join(out, "dolphin.log"))   # PLAYREC_OSREPORT=1
+        if GAME == "xd" and os.path.isdir(card):
+            # the card the replay wrote, kept to compare with the sitting's own card_end: the save a replay writes is
+            # the plainest proof it played the same game (2026-11-24)
+            shutil.copytree(card, os.path.join(out, "card_end"))
+        if GAME == "xd" and os.path.isfile(os.path.join(user, "GC", XD_CARD)):
+            shutil.copy2(os.path.join(user, "GC", XD_CARD), os.path.join(out, "card_end.raw"))
         shutil.rmtree(user, ignore_errors=True)
         if GAME == "xd":
-            sys.exit(xd_compare(sit, out))
+            rc = xd_compare(sit, out)
+            a_raw, b_raw = os.path.join(out, "card_end.raw"), os.path.join(sit, "card_end.raw")
+            if os.path.isfile(a_raw) and os.path.isfile(b_raw):
+                same = open(a_raw, "rb").read() == open(b_raw, "rb").read()
+                print(f"  card image: {'IDENTICAL to the sitting' if same else 'differs from the sitting'}")
+                if not same:
+                    rc = rc or 1
+            mine, theirs = os.path.join(out, "card_end"), os.path.join(sit, "card_end")
+            if os.path.isdir(mine) and os.path.isdir(theirs) and (os.listdir(mine) or os.listdir(theirs)):
+                names = sorted(set(os.listdir(mine)) | set(os.listdir(theirs)))
+                for n in names:
+                    a, b = os.path.join(mine, n), os.path.join(theirs, n)
+                    same = os.path.isfile(a) and os.path.isfile(b) and open(a, "rb").read() == open(b, "rb").read()
+                    print(f"  save file {n}: {'IDENTICAL to the sitting' if same else 'differs from the sitting'}")
+            sys.exit(rc)
         check_aligned(sit, out)
         return
     if GAME == "xd":
@@ -1333,6 +1430,7 @@ def main():
     sub = p.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("setup"); s.add_argument("--keep-card", action="store_true")
     sub.add_parser("settings")
+    sub.add_parser("card", help="XD only: make the profile's card image once (before the first sitting)")
     s = sub.add_parser("start"); s.add_argument("--state"); s.add_argument("--note")
     s.add_argument("--section", required=True,
                    help="the playthrough section this sitting plays (S01-S16, BM for battle mode, TEST)")
@@ -1391,7 +1489,11 @@ def main():
     a.root = os.path.abspath(a.root)
     if a.user:
         a.user = os.path.abspath(a.user)
-    if a.cmd == "setup":
+    if a.cmd == "card":
+        if GAME != "xd":
+            sys.exit("`card` is for XD (--game xd); Colosseum's sittings use the card folder")
+        cmd_xd_card(a)
+    elif a.cmd == "setup":
         cmd_setup(a)
     elif a.cmd == "settings":                         # Dolphin on snatcherLeo's folder, no game, no recorder
         subprocess.call([DOLPHIN, "-u", a.user or os.path.join(a.root, "dolphin-user")], cwd=DOLPHIN_DIR)

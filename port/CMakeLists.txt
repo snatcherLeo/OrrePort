@@ -114,6 +114,7 @@ if (AURORA_ENABLE_RMLUI)
   target_sources(orre_platform_vi PRIVATE src/pc_settings_overlay.cpp src/pc_report.cpp src/pc_window_icon.cpp
                  src/pc_hub.cpp src/pc_svg.cpp src/pc_controls_ui.cpp src/pc_pad_shape.cpp src/pc_disc_label.cpp
                  src/pc_hub_saves.cpp # the hub's Saves page (step 2.1; pc_hub_saves.h)
+                 src/pc_whatadds.cpp # Settings › About › What OrrePort adds (5.13; ui/adds.txt)
                  src/pc_hub_langdiscs.cpp) # the hub's Language discs (2.2 step 8, piece 2; pc_hub_langdiscs.h)
   target_compile_definitions(orre_platform_vi PRIVATE ORRE_SETTINGS_OVERLAY=1)
   # The hub's and the Settings overlay's text shaped by HarfBuzz and ordered by SheenBidi (2026-11-16; hub_text/

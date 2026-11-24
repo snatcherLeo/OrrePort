@@ -401,6 +401,14 @@ body.light #whatdlg { background-color: #FFFFFF; border-color: #D5DCD4; color: #
 body.dark .awi { color: #9AA39E; } body.light .awi { color: #55615A; }
 body.dark .awh.k0, body.dark .awh.k1 { color: #E0B45C; } body.dark .awh.k2 { color: #A9C3A3; }
 body.light .awh.k0, body.light .awh.k1 { color: #8A6420; } body.light .awh.k2 { color: #4E6B49; }
+/* About › "What OrrePort adds" (5.13) in the same window: each change's name in bold, its detail, then a small status
+ * line (where to find it · what accurate mode does); a note is a plain paragraph (pc_whatadds.cpp) */
+.adr { display: block; padding: 6dp 0dp 6dp 14dp; }
+.adt { display: block; font-size: 15dp; font-weight: bold; line-height: 21dp; }
+.ads { display: block; font-size: 14dp; line-height: 20dp; }
+.adm { display: block; font-size: 12.5dp; line-height: 18dp; margin-top: 2dp; }
+.adn { display: block; padding: 4dp 0dp 4dp 14dp; font-size: 14.5dp; line-height: 21dp; }
+body.dark .adm { color: #9AA39E; } body.light .adm { color: #55615A; }
 /* the one locked style (orreport-design-overview.md 4.1; 2.12): a small lock and the amber "off in accurate mode" tag in
  * place of the control; the lock's shackle and body are two boxes (no font needs a lock symbol). The row is greyed by
  * .row.disabled; the tag keeps full colour so it reads */

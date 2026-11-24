@@ -1,0 +1,93 @@
+# "What OrrePort adds" (Settings › About): the order of its sections and rows (5.13, 2026-11-24).
+#
+# Why a data file: every list OrrePort adds to the game's look is data the UI Editor can later change (snatcherLeo,
+# 2026-11-15), not order hard-coded in the program. The words are ui/lang keys (adds.*), so the list reads in every
+# language; pc_whatadds.cpp turns this file into the window's list. Keep it in step with the public page
+# (docs/public-repo/what-orreport-adds.md in the private repo; docs/what-orreport-adds.md in the public one).
+#
+# One entry per line ("#" starts a note):
+#   section <id>                     a heading: adds.sec.<id>
+#   row <id> <sub> <where> <acc>     a change: its name adds.<id>, then
+#                                      <sub>   sub = a detail line adds.<id>.sub, - = none
+#                                      <where> always = adds.where.always, own = adds.<id>.where, - = none
+#                                      <acc>   off / same / look = adds.acc.<that>, own = adds.<id>.acc, - = none
+#   note <id>                        a plain paragraph: adds.<id>
+
+section saves
+row pc_menu sub always off
+row autosave sub always off
+row scene_save sub always own
+row stuck_continue sub always own
+row people_back sub always off
+row fast_load - always own
+row saves_page sub always same
+row versions sub always same
+row import sub always same
+row gcopy sub always same
+row load_menu sub always own
+row save_region sub always look
+row save_file_words sub always look
+
+section names
+row long_names sub always own
+row keyboard sub always own
+row ime sub always off
+row fit_names sub always own
+row rewrap sub always off
+row sharp_text sub always look
+row frenzy sub always look
+
+section menus
+row start_close sub always off
+row main_menu sub always off
+row pc_wrap - always off
+row pc_exit sub always off
+row yes_first sub always off
+row one_question sub always off
+row name_back sub always off
+row options_back sub always off
+row use_only sub always off
+row keep_using sub always off
+row tm_learned sub always off
+row scents sub always off
+row relic sub always off
+row portraits sub always off
+row right_stick sub own off
+row infinite_tms sub own off
+row controller sub own own
+
+section speed
+row speed sub own same
+row ff sub own same
+row speed_badge sub own same
+row speed_music sub own same
+
+section look
+row resolution sub own same
+row aa sub own same
+row smoothing sub own own
+row renderer - own same
+row volume sub own same
+note widescreen
+
+section langs
+row six_langs sub own own
+row lang_everything sub always look
+row jp_look sub always same
+row species_names sub always same
+row own_screens sub always same
+
+section cheats
+note cheats
+
+section app
+row hub sub - -
+row settings_play sub - -
+row updates sub - -
+row report sub - -
+row portable sub - -
+row studio sub - -
+row debug_menu sub - -
+
+section later
+note later

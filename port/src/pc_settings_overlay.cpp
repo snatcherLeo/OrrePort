@@ -39,6 +39,7 @@ bool pc_svg_render(const std::string& svg, int width, int& height, std::vector<u
                    const std::vector<std::string>& skip_fills);
 /* pc_hub_saves.cpp: GameCube-accurate mode's "What it turns off" list as RML (General's link shows it too; 2.12) */
 std::string hub_accurate_list_rml();
+std::string pc_whatadds_rml(); /* pc_whatadds.cpp: the "What OrrePort adds" list (5.13) */
 
 #include "pc_pad_shape.h" /* the menu shortcut and Player 1's read filter */
 #include "pc_speed.h"     /* the speed badge's number (pc_speed_badge_serial) */
@@ -116,7 +117,8 @@ enum Live {
     LIVE_UPD_VERSION, /* About: "OrrePort 0.1.1", its status, and Check for updates / Download / Restart now */
     LIVE_UPD_BACK,    /* About: Go back to <previous version> (only once one is kept) */
     LIVE_LOGS,        /* About: the logs folder (where both programs' logs are), Open folder */
-    LIVE_FRAME_RATE   /* Graphics: Frame rate, frame smoothing's choice (step 3.4, 2026-11-18; pc_smooth.c) */
+    LIVE_ADDS,        /* About: "What OrrePort adds" (5.13): its list in the "What it turns off" window */
+    LIVE_FRAME_RATE  /* Graphics: Frame rate, frame smoothing's choice (step 3.4, 2026-11-18; pc_smooth.c) */
 };
 const char* const kIconColour = "rust"; /* the O's one colour (snatcherLeo, 2026-11-11: the signature red, "Rust") */
 /* the window's title, as in mockups 11 and 13 (snatcherLeo, 2026-11-10, comparing the trial's title bar with the mockup:
@@ -398,6 +400,9 @@ std::vector<RowDef> s_rows = {
     {6, TOGGLE, "update.auto", "update.auto_help", {}, 0, LIVE_UPD_AUTO},
     {6, TOGGLE, "update.check_setting", "update.check_help", {}, 1, LIVE_UPD_CHECK},
     {6, ACTION, "update.go_back", "update.go_back_help", {"update.go_back_button"}, 0, LIVE_UPD_BACK},
+    /* What OrrePort adds (5.13, 2026-11-24; the approved public page, in the app): every change from the original game,
+     * in the "What it turns off" window (pc_whatadds.cpp builds it from ui/adds.txt). UI id: adds.link */
+    {6, OPEN, "adds.link", "adds.link.sub", {"&#8250;"}, 0, LIVE_ADDS},
     {6, ACTION, "settings.logs", "settings.logs.sub", {"settings.logs.open"}, 0, LIVE_LOGS},
 };
 
@@ -588,6 +593,7 @@ bool s_fqNoAsk = false;
 /* General › "What it turns off" (2.12): GameCube-accurate mode's list, a window over the page (#whatdlg); Up / Down
  * scroll it, A, B or a click outside close it. The same list as the hub's Saves page (hub_accurate_list_rml) */
 bool s_what = false;
+bool s_what_adds = false; /* the window shows "What OrrePort adds" (About, 5.13) instead of "What it turns off" */
 bool s_quit_noask = false;
 Uint64 s_quit_fade_since = 0; /* Quit to hub's fade-out: when it began; 0 none */
 /* the menu bar in game (snatcherLeo, 2026-11-13, mockup 46: "I like the mockup, very good, just don't have logo and shift File
@@ -1241,8 +1247,9 @@ void refresh() {
     if (Rml::Element* e = s_doc->GetElementById("whatdlg")) {
         static bool shown = false;
         if (s_what && !shown) {
-            e->SetInnerRML("<span class='fqt'>" + tx("accurate.what_off.title") + "</span><div id='whatlist'>" +
-                           hub_accurate_list_rml() + "</div><span class='fqbtns'><span class='fqb f' id='what-close'>" +
+            e->SetInnerRML("<span class='fqt'>" + tx(s_what_adds ? "adds.title" : "accurate.what_off.title") +
+                           "</span><div id='whatlist'>" + (s_what_adds ? pc_whatadds_rml() : hub_accurate_list_rml()) +
+                           "</div><span class='fqbtns'><span class='fqb f' id='what-close'>" +
                            "<span class='fring'></span>" + tx("common.back") + "</span></span>");
         } else if (!s_what && shown) {
             e->SetInnerRML("");
@@ -2132,7 +2139,9 @@ void bar_rml() {
         if (s_bar_menu == BAR_CHEATS) {
             /* mockup 63 v2 (snatcherLeo, 2026-11-13): the switches, EXP and Put in the PC, the debug menu at the bottom */
             const bool allowed = pc_cheats_allowed() != 0;
-            d = "<div class='mhd'>" + rml_escape(tx(allowed ? "cheats.header" : "cheats.header.accurate")) + "</div>";
+            /* (one header: cheats are allowed in accurate mode too since 2026-11-20, pc_cheats.c; its "Cheats are off
+             * in GameCube-accurate mode" line was removed 2026-11-24 as it could never show) */
+            d = "<div class='mhd'>" + rml_escape(tx("cheats.header")) + "</div>";
             if (allowed) {
                 for (int i = 0; i < PC_CHEAT_SWITCH_COUNT; ++i) {
                     d += bar_item(("mi-cheat-" + std::to_string(i)).c_str(), rml_escape(tx(pc_cheat_name_key(i))),
@@ -2431,8 +2440,10 @@ void choose() {
         refresh();
         return;
     }
-    if (r.live == LIVE_ACC_WHAT) { /* "What it turns off": its list over the page (2.12) */
+    if (r.live == LIVE_ACC_WHAT || r.live == LIVE_ADDS) { /* "What it turns off" (2.12) or "What OrrePort adds" (5.13):
+                                                            * its list over the page, in the same window */
         s_what = true;
+        s_what_adds = r.live == LIVE_ADDS;
         refresh();
         return;
     }
@@ -3689,6 +3700,17 @@ extern "C" void pc_settings_overlay_test_whatoff(void) {
     s_tab = 0;
     s_cats = false;
     s_what = true;
+    s_what_adds = false;
+    refresh();
+}
+
+/* the same for About › "What OrrePort adds" (ORRE_HUB_TEST_SAVES=settings_whatadds; 5.13), for a picture */
+extern "C" void pc_settings_overlay_test_whatadds(void) {
+    if (!s_open) return;
+    s_tab = 6;
+    s_cats = false;
+    s_what = true;
+    s_what_adds = true;
     refresh();
 }
 

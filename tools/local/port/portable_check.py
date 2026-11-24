@@ -58,6 +58,9 @@ def main():
     ap.add_argument("--pad", help="a pad script file (ORRE_PAD_SCRIPT=@file:...)")
     ap.add_argument("--env", nargs="*", default=[], help="extra NAME=VALUE for the run")
     ap.add_argument("--log", help="the run's console output (default: <root>_run.log beside the folder)")
+    # --disc (2026-11-24, the release zip's check): the disc image by path (the game's own --disc), read in place, for a
+    # fresh folder whose ROM\ is empty; finding a disc in ROM\ is what the hand sitting tests
+    ap.add_argument("--disc", help="a disc image to start with (passed as --disc; nothing is copied)")
     a = ap.parse_args()
     root = os.path.abspath(a.root)
     exe = os.path.join(root, "app", "orrecolo.exe")
@@ -79,7 +82,7 @@ def main():
     before = listing(root)
     log = open(log_path, "w", encoding="utf-8", buffering=1)
     log.write(f"[portable_check] PATH={env['PATH']}\n")
-    p = subprocess.Popen([exe], cwd=root, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+    p = subprocess.Popen([exe] + (["--disc", os.path.abspath(a.disc)] if a.disc else []), cwd=root, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                          encoding="utf-8", errors="replace", bufsize=1)
     lines = queue.Queue()
     threading.Thread(target=lambda: [lines.put(l) for l in p.stdout] and None or lines.put(None), daemon=True).start()

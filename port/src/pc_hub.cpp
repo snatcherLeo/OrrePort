@@ -67,6 +67,7 @@ int pc_ui_load_fonts(void);                                        /* pc_setting
 void pc_settings_overlay_open_in_hub(void);                        /* pc_settings_overlay.cpp: the gear */
 void pc_settings_overlay_open_in_hub_disc_art(void);               /* ... on Appearance, from the disc art page */
 void pc_settings_overlay_test_whatoff(void);                       /* ... its "What it turns off" list (test hook) */
+void pc_settings_overlay_test_whatadds(void);                      /* ... About's "What OrrePort adds" (test hook) */
 int pc_settings_overlay_is_open(void);
 void pc_settings_overlay_hub_frame(void);
 int pc_ui_theme_is_dark(void);                                     /* Appearance > Theme, live */
@@ -3859,6 +3860,9 @@ extern "C" int pc_hub_run(void) {
             } else if (std::strcmp(test_saves, "settings_whatoff") == 0) {
                 pc_settings_overlay_open_in_hub(); /* the same list from Settings */
                 pc_settings_overlay_test_whatoff();
+            } else if (std::strcmp(test_saves, "settings_whatadds") == 0) {
+                pc_settings_overlay_open_in_hub(); /* 5.13: About › What OrrePort adds */
+                pc_settings_overlay_test_whatadds();
             } else {
                 hub_saves_drop(test_saves);
             }

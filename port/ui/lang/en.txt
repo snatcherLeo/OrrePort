@@ -884,6 +884,181 @@ settings.tab.about = About
 settings.logs = Logs folder
 settings.logs.sub = Where OrrePort and Studio keep a log of each run. A report adds the newest one by itself.
 settings.logs.open = Open folder
+
+# ---- "What OrrePort adds" (Settings › About; 5.13, the approved page docs/public-repo/what-orreport-adds.md) ----
+# Everything OrrePort changes from the original game, one row each. The order and sections come from ui/adds.txt (the
+# UI Editor can change them); each row has a name (adds.<id>, bold), a detail line (adds.<id>.sub), and a status line:
+# where to find it (adds.where.always, or the row's own adds.<id>.where) and what GameCube-accurate mode does
+# (adds.acc.off / .same / .look, or the row's own adds.<id>.acc). Keep it in step with the public page.
+# the About row that opens it, and its second line (short)
+adds.link = What OrrePort adds
+adds.link.sub = Everything OrrePort changes from the original game, in one list.
+# the window's title and the text under it
+adds.title = What OrrePort adds
+adds.intro = Everything OrrePort changes from the original Pokémon Colosseum. If it isn’t here, the game plays exactly as it does on a GameCube. Anything listed is built in, so there’s no need to make a mod for it. This list is for OrrePort Beta 0.1 and grows with each update.
+# the status line's two parts (shown together, "Always on · Accurate mode: off")
+adds.where.always = Always on
+adds.acc.off = Accurate mode: off
+adds.acc.same = Accurate mode: the same
+adds.acc.look = Accurate mode: the same (look only)
+# the section headings (capitals, like the other lists' headings)
+adds.sec.saves = SAVING AND YOUR SAVES
+adds.sec.names = NAMES AND TEXT
+adds.sec.menus = MENUS AND CONTROLS
+adds.sec.speed = SPEED
+adds.sec.look = LOOK AND SOUND
+adds.sec.langs = LANGUAGES
+adds.sec.cheats = CHEATS
+adds.sec.app = THE ORREPORT APP
+adds.sec.later = NOT IN THIS VERSION
+# Saving and your saves
+adds.pc_menu = PC MENU anywhere
+adds.pc_menu.sub = The pause menu gets a PC MENU entry, so you can save, and use the PC, wherever you are.
+adds.autosave = Autosave
+adds.autosave.sub = OrrePort keeps an extra save of its own while you play, once a room has settled, or after a few quiet minutes. It never writes over your own save and never saves in the middle of a scene; your own save is still what Continue loads. To play the autosave, choose Play the autosave on the hub.
+adds.scene_save = Saving in the middle of a scene is made safe
+adds.scene_save.sub = A PC MENU save made where a scene could leave you stuck gives you a notice and keeps you safe.
+adds.scene_save.acc = Accurate mode: off (there is no PC MENU)
+adds.stuck_continue = A stuck Continue offers a way out
+adds.stuck_continue.sub = If continuing a save ever hangs, the game offers to go back to your autosave (when there’s a newer one) and returns to the main menu to load it.
+adds.stuck_continue.acc = Accurate mode: off (accurate mode has no autosave)
+adds.people_back = Continuing a PC MENU save puts people back as the story left them
+adds.people_back.sub = Someone lying on the floor stays there.
+adds.fast_load = Fast loading and saving
+adds.fast_load.acc = Accurate mode: the console’s own timing
+adds.saves_page = The Saves page on the hub
+adds.saves_page.sub = Every save in one list, with Play, Rename, Duplicate, Delete (to the Recycle Bin) and Show in folder.
+adds.versions = Earlier versions of every save
+adds.versions.sub = The last 10 versions are kept, so you can go back, and undo going back.
+adds.import = Import any save
+adds.import.sub = Drop a .gci, an .orresave or a whole memory card (.raw) onto the Saves page.
+adds.gcopy = Make a GameCube copy
+adds.gcopy.sub = A save with OrrePort’s longer names can be copied as a .gci any GameCube or Dolphin loads.
+adds.load_menu = LOAD on the game’s main menu
+adds.load_menu.sub = Choose any of your saves from inside the game.
+adds.load_menu.acc = Accurate mode: on, listing only the saves set to accurate mode
+adds.save_region = The region of each save
+adds.save_region.sub = Shown in the game’s save list (US, PAL or JPN).
+adds.save_file_words = “Save file” instead of “memory card”
+adds.save_file_words.sub = In the game’s messages.
+# Names and text
+adds.long_names = Longer names
+adds.long_names.sub = Up to 12 letters for you, Rui, nicknames and boxes. A GameCube-length version is kept too, so the save still works on a console.
+adds.long_names.acc = Accurate mode: off: the game’s own lengths (7 for you and Rui, 10 for nicknames, 8 for boxes)
+adds.keyboard = OrrePort’s naming keyboard
+adds.keyboard.sub = Type with your PC keyboard, click with the mouse, and the controller’s X / B / START act as Shift, Delete and Enter.
+adds.keyboard.acc = Accurate mode: off: the game’s own name screen
+adds.ime = Typing with your system’s input method
+adds.ime.sub = Japanese, Chinese, Korean and others.
+adds.fit_names = Long names fitted
+adds.fit_names.sub = Into the spots that were made for short ones (the Continue screen, the trainer card).
+adds.fit_names.acc = Accurate mode: off (names stay short there)
+adds.rewrap = Dialogue re-wrapped
+adds.rewrap.sub = When a long name makes a line too wide.
+adds.sharp_text = Sharper letters
+adds.sharp_text.sub = The game’s own font redrawn at any resolution, with extra letters (and emoji in names) from an open font.
+adds.frenzy = FRENZY PLANT shown with its right name
+adds.frenzy.sub = The original shows SOLID PLANT.
+# Menus and controls
+adds.start_close = Start closes the pause menu
+adds.start_close.sub = And its cursor wraps round from bottom to top.
+adds.main_menu = Main Menu on the PC screen
+adds.main_menu.sub = Go back to the title’s main menu from the PC.
+adds.pc_wrap = The PC menu’s cursor wraps round
+adds.pc_exit = Leaving a PC screen is quicker
+adds.pc_exit.sub = Shorter fades.
+adds.yes_first = Continue and New Game start on YES
+adds.yes_first.sub = New Game starts on YES only when the save has no story yet; a save with a story keeps NO, to protect it.
+adds.one_question = One question after you load a save
+adds.one_question.sub = “Continue your story now?”, and Continue’s help line names the save.
+adds.name_back = B on your name menu
+adds.name_back.sub = In New Game, B goes back to the main menu. Rui still has to be named.
+adds.options_back = B keeps your choices
+adds.options_back.sub = On the Options screen (Sound, Rumble, Language), the way Done does.
+adds.use_only = “Use” only where it can do something
+adds.use_only.sub = The bag and battle menus offer Use only for items that can be used there; READ on the Ein Files, CHECK on key items that can’t be used, and TOSS on TMs and HMs.
+adds.keep_using = Keep using an item
+adds.keep_using.sub = After you use or give an item from the bag, the party list stays open while you have more, and moves on to your next stack of the same item.
+adds.tm_learned = TMs show LEARNED
+adds.tm_learned.sub = On the party list, for Pokémon that already know the move.
+adds.scents = Scents remember the last one
+adds.scents.sub = The cursors stay where you left them, with Vivid Scent first.
+adds.relic = Relic Forest shortcuts
+adds.relic.sub = PURIFY in the party menu and the Time Flute anywhere in the Relic Forest.
+adds.portraits = The party screen shows every portrait at once
+adds.portraits.sub = Instead of them popping in one by one.
+adds.right_stick = The right stick works like the left one
+adds.right_stick.sub = In story mode: walking, running, battles and menus (not in Battle Mode or Battle Now).
+adds.right_stick.where = Switch: Settings › Enhancements › Tweaks
+adds.infinite_tms = Infinite TMs
+adds.infinite_tms.sub = Teaching a TM keeps it, as HMs already do.
+adds.infinite_tms.where = Switch: Settings › Enhancements › Tweaks (on to start)
+adds.controller = Your controller, your way
+adds.controller.sub = Button mapping, the stick’s range and dead zone, and the official GameCube adapter.
+adds.controller.where = Settings › Controls
+adds.controller.acc = Accurate mode: the GameCube’s stick range, dead zone at most 10
+# Speed
+adds.speed = Game speed and Battles speed
+adds.speed.sub = From normal up to 5×.
+adds.speed.where = Switch: Settings › Enhancements › Speed (normal to start)
+adds.ff = A fast-forward button
+adds.ff.sub = Hold it, or press it to switch; 2× to 5×.
+adds.ff.where = Switch: Settings › Enhancements › Speed
+adds.speed_badge = The speed badge
+adds.speed_badge.sub = “▶▶ 3×” shown for a moment when the speed changes.
+adds.speed_badge.where = Switch: Settings › Enhancements › Speed
+adds.speed_music = Music when faster
+adds.speed_music.sub = Music at its normal tempo, or faster with the game.
+adds.speed_music.where = Switch: Settings › Enhancements › Speed
+# Look and sound
+adds.resolution = Higher resolutions
+adds.resolution.sub = Up to 8× the original (5K).
+adds.resolution.where = Settings › Graphics
+adds.aa = Anti-aliasing and texture filtering
+adds.aa.sub = Up to 16× anisotropic.
+adds.aa.where = Settings › Graphics
+adds.smoothing = Frame smoothing
+adds.smoothing.sub = Smoother motion at 60, 120, 144, 165 or 240 frames a second, or your display’s rate.
+adds.smoothing.where = Settings › Graphics › Frame rate (Off to start)
+adds.smoothing.acc = Accurate mode: the same, checked to keep every random roll
+adds.renderer = Vulkan or Direct3D 12
+adds.renderer.where = Settings › Graphics › Renderer (Vulkan to start)
+adds.volume = Volume
+adds.volume.sub = Master, music and sound effects apart.
+adds.volume.where = Settings › Audio
+adds.widescreen = Widescreen is coming in a later update
+# Languages
+adds.six_langs = Six languages
+adds.six_langs.sub = English, German, French, Italian, Spanish and Japanese. English plays from your US disc; the others need your own European or Japanese disc as well.
+adds.six_langs.where = Settings › General › Language
+adds.six_langs.acc = Accurate mode: the same (it plays as that language’s console would)
+adds.lang_everything = Everything in the game’s language
+adds.lang_everything.sub = From that language’s disc: the text, the words drawn as pictures, the credits, the title demo, Battle Mode’s round titles, the title logo.
+adds.jp_look = The Japanese release’s own look
+adds.jp_look.sub = In Japanese: its title picture, logo and outfits.
+adds.species_names = Pokémon that were never nicknamed
+adds.species_names.sub = They show their species name in the language you play, even in saves imported from another region.
+adds.own_screens = OrrePort’s own screens
+adds.own_screens.sub = The hub, Settings and menus, in all six languages.
+# Cheats (one paragraph)
+adds.cheats = The Cheats menu in the menu bar: instant win, instant catch, infinite money, items never run out, EXP from off to several times normal, and topping up a few useful items in the PC. Every cheat is off until you turn it on, and each switch is noted in a log. Cheats work in accurate mode too: there, accurate means “as on a GameCube while no cheat is on”. A cheat changes how the game plays while it’s on, so a run played with one won’t match a console run.
+# The OrrePort app
+adds.hub = The hub
+adds.hub.sub = Add your disc (OrrePort checks it), choose a save, change settings, and press PLAY.
+adds.settings_play = Settings during play
+adds.settings_play.sub = The menu bar, or a quick Settings menu over the game, which can pause it.
+adds.updates = Updates, only when you say so
+adds.updates.sub = OrrePort tells you when a new version is out; nothing is downloaded or installed until you choose to, and each update is checked as genuine before it installs. Your saves and settings are never touched.
+adds.report = Report a problem
+adds.report.sub = Press F8 in the game, or use the hub’s Report a problem. OrrePort makes a report with what’s needed to find the bug, and opens its folder. If OrrePort closed unexpectedly, it offers to make a report the next time it starts.
+adds.portable = One portable folder
+adds.portable.sub = Everything, saves included, stays in the folder you unzipped. Nothing is installed in Windows.
+adds.studio = OrrePort Studio, an early preview
+adds.studio.sub = The editor that comes with OrrePort. Its editors arrive in later updates.
+adds.debug_menu = The debug menu
+adds.debug_menu.sub = Off by default, for testers and developers.
+# Not in this version (one line)
+adds.later = Widescreen, mods, more boxes, items above 99 and the OrreBank come in later updates.
 # under each category on the first screen: what is set now; {values} are the choices as shown in the rows
 settings.summary.general = {window} · {pause}
 settings.summary.pauses = Game pauses
@@ -1527,8 +1702,6 @@ menu.cheats = Cheats
 # ---- The Cheats menu (in the menu bar, between File and Help) ----
 # the line at the top of the open Cheats menu
 cheats.header = Each one works at once and switches off any time you want. Every switch is noted in a user log.
-# shown instead of the header in GameCube-accurate mode, where cheats can't be used
-cheats.header.accurate = Cheats are off in GameCube-accurate mode.
 cheats.instant_win = Instant win
 # small grey text beside Instant win (short)
 cheats.instant_win.sub = one attack knocks out

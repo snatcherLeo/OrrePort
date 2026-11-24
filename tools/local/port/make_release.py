@@ -6,7 +6,9 @@ update.sig (its Ed25519 signature, made by build-pc/orre_sign.exe with snatcherL
 app\\ only (never launchers, saves, mods or settings).
 
     python -I tools/local/port/make_release.py <app folder> <version> <out folder> <secret key file> [notes file]
-        [--full <clean OrrePort folder>]
+        [--full <clean OrrePort folder>] [--full-only]
+    (--full-only: just the first-download zip, no secret key; the key argument is then left out)
+    The clean folder: tools/local/port/make_release_folder.py <new folder>
 
 <app folder>: the staged program folder to ship (the play folder's app\\). <notes file>: optional, "notes.<lang> = ..."
 lines (one per language, "\\n" for a line break); English is required when given. The secret key never leaves its file
@@ -49,6 +51,11 @@ def personal_files(folder):
 
 def main():
     args = sys.argv[1:]
+    # --full-only (2026-11-24, for the laptop sitting): only the first-download zip from --full, no update zip, no
+    # update.txt and no signing, so no secret key is needed (the laptop sitting tests the download, not the updater)
+    full_only = "--full-only" in args
+    if full_only:
+        args.remove("--full-only")
     full = None
     if "--full" in args:
         i = args.index("--full")
@@ -57,10 +64,14 @@ def main():
             return 2
         full = args[i + 1]
         del args[i:i + 2]
-    if len(args) not in (4, 5):
+    if full_only and (full is None or len(args) != 3):
+        print("--full-only needs: <app folder> <version> <out folder> --full <clean folder>")
+        return 2
+    if not full_only and len(args) not in (4, 5):
         print(__doc__)
         return 2
-    app, version, out, key = args[:4]
+    app, version, out = args[:3]
+    key = args[3] if len(args) > 3 else None
     notes = open(args[4], encoding="utf-8").read().strip() + "\n" if len(args) == 5 else ""
     if not os.path.isdir(app):
         print(f"no app folder at {app}")
@@ -82,6 +93,8 @@ def main():
                     p = os.path.join(root, f)
                     z.write(p, "OrrePort/" + os.path.relpath(p, full).replace(os.sep, "/"))
         print(f"first download: {fname} ({os.path.getsize(os.path.join(out, fname)) / 1048576:.1f} MB)")
+        if full_only:
+            return 0
     name = f"OrrePort-{version}-Windows-update.zip"
     zpath = os.path.join(out, name)
     # deflate: the game's program is ~280 MB and compresses well; the updater unpacks with zlib (pc_update.c)
