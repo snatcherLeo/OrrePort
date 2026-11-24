@@ -1,4 +1,9 @@
-<p align="center"><img src="docs/images/orreport-logo.svg" alt="OrrePort: PC Port and Modding Suite" width="640"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="docs/images/orreport-logo-light.svg">
+    <img src="docs/images/orreport-logo.svg" alt="OrrePort: PC Port and Modding Suite" width="640">
+  </picture>
+</p>
 
 # OrrePort
 
