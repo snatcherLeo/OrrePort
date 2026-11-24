@@ -1,0 +1,10 @@
+# P10 (sitting 020_20261022_0116): logged resyncs for the second pass (2026-10-29; match ledger, P10 rows).
+#
+# 1. Wes placed where the console had him four frames before the A press that ends the walk away from the PC
+#    terminal (room 0x391's second visit, after the box; console frame 67776, the A at 67780). The PC's walk ends
+#    about 5 units short ((24.77, -43.56) against (29.85, -45.70)), the A then reaches nothing and the room's next
+#    entry (the console's warp at 67819, then the save) never comes. The last stick steps after the placement turn him
+#    as on the console. Values from replay_1/pos.csv; absolute PC frame from the reference run p2_P10b (the pad's
+#    step 6440 fires at its frame 68424). Apply with:
+#    pad_resync.py <run>/sitting.pad P10_020.txt --log <p2_P10b>/run.log  (pads made with p2_P10b's settings)
+@68425 npc 0 28.7962 0 -45.6985  # console frame 67776

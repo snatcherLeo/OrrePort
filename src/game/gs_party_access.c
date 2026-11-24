@@ -1,0 +1,427 @@
+/**
+ * @file gs_party_access.c
+ * @brief Debug-menu helpers for the 0x8000CA34-0x8000D290 split.
+ */
+
+#include "dolphin/types.h"
+
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 menuIsCheck(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuClose(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuOpenCustom(s32, ...);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuSetPosition(s32, s32, s32);
+#endif
+extern void d2presentOpen(int r3);
+extern void darkPokemonSetAllFlag14(void);
+extern void darkPokemonSetAllFlag12(void);
+extern void darkPokemonSetAllFlag16(void);
+extern void memoDataSetMemoFlag(u32);
+extern void memoInitDebug(u32);
+extern void std078_flagSetFalse(u32);
+extern void dnaKeyCodeCheck(u32, u32, u32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void floorBattleEndTerminateScripts(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 floorGetCurrentContext(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 GSthreadCreate(s32, u32, s32, s32, s32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 savedataGetStatus(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 heroBiosGetPokemonPtr(u32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 pokemonCheckValid(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuPokemonStatusOpenWazaForget(u32, s32);
+#endif
+extern void std098_mapWarpToMenuRoom(u32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuPokemonOpen(s32, s32, s32);
+#endif
+extern void GSthreadSetArgs(u32, s32, ...);
+extern u32 evolutionOpen(u32, u32, u32, u16*, u32, u8*);
+extern void menuShopOpen(u32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuNameEntryOpen(u32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 heroGetStatus(u8*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fadeSet(u32, f32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fadeCheck(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void _threadSwitch(void);
+#endif
+extern u8 lbl_804673F8[];
+extern u32 lbl_80266770[];
+extern u32 lbl_80266700[];
+extern u32 lbl_802666E0[];
+extern f32 lbl_8047B6E8;
+
+/* Retail retains this otherwise-unreferenced debug-menu entry-point group. */
+/* RULE-EXCEPTION(user-approved): local compiler-control pragma (force_active on; peephole off) needed for the byte match of the code it covers - see docs/RULE_EXCEPTIONS.md */
+#pragma force_active on
+#pragma peephole off
+
+/* 0x8000CA34 */
+s32 fn_8000CA34(void) {
+    u32 r;
+    r = menuIsCheck(0x9);
+    if ((u8)r != 0) {
+        menuClose(0x9);
+    } else {
+        menuOpenCustom(0x9, 0, 0, 0, 1, 0);
+        menuSetPosition(0x9, 0xC, 0xA);
+    }
+    return 0;
+}
+
+#ifndef PCPORT
+typedef struct {
+    s8 b80 : 1;
+    s8 b40 : 1;
+    s8 b20 : 1;
+    s8 b10 : 1;
+    s8 b08 : 1;
+    s8 b04 : 1;
+    s8 b02 : 1;
+    s8 b01 : 1;
+} PartyFlags8;
+
+typedef struct {
+    u8 pad_00[0x08];
+    PartyFlags8 modeFlags;
+    u8 pad_09[0x86B];
+    s32 activeFlag;
+} BattleAnimState;
+#endif
+
+
+/* 0x8000CAA4 */
+s32 fn_8000CAA4(void) {
+#ifdef PCPORT
+    lbl_804673F8[8] ^= 0x10;
+#else
+    PartyFlags8* p = &((BattleAnimState*)lbl_804673F8)->modeFlags;
+    p->b10 ^= 1;
+#endif
+    return 0;
+}
+
+/* 0x8000CAD0 */
+s32 fn_8000CAD0(void) {
+#ifdef PCPORT
+    lbl_804673F8[8] ^= 0x20;
+#else
+    PartyFlags8* p = &((BattleAnimState*)lbl_804673F8)->modeFlags;
+    p->b20 ^= 1;
+#endif
+    return 0;
+}
+
+/* 0x8000CAFC */
+s32 fn_8000CAFC(void) {
+#ifdef PCPORT
+    lbl_804673F8[8] ^= 0x40;
+#else
+    PartyFlags8* p = &((BattleAnimState*)lbl_804673F8)->modeFlags;
+    p->b40 ^= 1;
+#endif
+    return 0;
+}
+
+/* 0x8000CB28 */
+s32 fn_8000CB28(void) {
+#ifdef PCPORT
+    lbl_804673F8[8] ^= 0x80;
+#else
+    PartyFlags8* p = &((BattleAnimState*)lbl_804673F8)->modeFlags;
+    p->b80 ^= 1;
+#endif
+    return 0;
+}
+
+/* 0x8000CB54 */
+/* dbgMenuD2PresentOpenCB: the thread dbgMenuMenuTestD2Present starts; opens the D2 present screen. */
+/* NAME-T3 fn_8000CB54 */
+void dbgMenuD2PresentOpenCB(int arg) { /* thread entry: the thread's first argument */
+    d2presentOpen(arg); /* the caller's argument, still in r3 / r4 (assembly: not written before the call) */
+}
+
+/* 0x8000CB74 */
+u32 dbgMenuMenuTestD2Present(u32 arg) {
+    u32 table[6];
+    u32 idx = 0;
+    u32 val;
+    u32 r;
+    u32 *p = lbl_80266770;
+    table[0] = p[0];
+    table[1] = p[1];
+    table[2] = p[2];
+    table[3] = p[3];
+    table[4] = p[4];
+    table[5] = p[5];
+    for (idx = 0; idx < 3; idx++) {
+        if ((s32)arg == (s32)table[idx * 2]) {
+            break;
+        }
+    }
+    val = table[idx * 2 + 1];
+    r = PC_PTR32_IMPLICIT(GSthreadCreate(1, floorGetCurrentContext(), 0x4000, 1, 1, PC_PTR32((void(*)(void))dbgMenuD2PresentOpenCB)));
+    GSthreadSetArgs(r, 1, val);
+    return 0;
+}
+
+/* 0x8000CC3C */
+/* Debug-menu entries (the menu table that used them is gone; each just calls one routine): */
+/* NAME-T3 fn_8000CC3C */
+s32 dbgMenuDarkPokemonSetAllFlag14(void) {
+    darkPokemonSetAllFlag14();
+    return 1;
+}
+
+/* 0x8000CC60 */
+/* NAME-T3 fn_8000CC60 */
+s32 dbgMenuDarkPokemonSetAllFlag12(void) {
+    darkPokemonSetAllFlag12();
+    return 1;
+}
+
+/* 0x8000CC84 */
+/* NAME-T3 fn_8000CC84 */
+s32 dbgMenuDarkPokemonSetAllFlag16(void) {
+    darkPokemonSetAllFlag16();
+    return 1;
+}
+
+/* 0x8000CCA8 */
+/* NAME-T3 fn_8000CCA8 */
+s32 dbgMenuSetMemoFlag(void) {
+    memoDataSetMemoFlag(0);
+    return 1;
+}
+
+/* 0x8000CCD0 */
+/* NAME-T3 fn_8000CCD0 */
+s32 dbgMenuMemoInitDebug(void) {
+    memoInitDebug(0);
+    return 1;
+}
+
+/* 0x8000CCF8 */
+s32 fn_8000CCF8(void) {
+    std078_flagSetFalse(0x3F0);
+    return 1;
+}
+
+/* 0x8000CD20 */
+/* NAME-T3 fn_8000CD20 */
+s32 dbgMenuCheckDnaKeyCode(void) {
+    dnaKeyCodeCheck(0x99, 0x9C, 0x9F);
+    return 0;
+}
+
+/* 0x8000CD50 */
+void testEvolution__Fv(void) {
+    typedef struct {
+        u8 work[20];
+        u16 left;
+        u16 right;
+        u8 reserved[32];
+    } GSpartyEvolutionArgs;
+
+    u32 val1, val2;
+    volatile GSpartyEvolutionArgs locals;
+
+    val1 = heroGetStatus(NULL, 3, 0);
+    if ((u8)pokemonCheckValid(PC_PTR(val1)) == 0) { return; }
+    val2 = heroGetStatus(NULL, 3, 1);
+    if ((u8)pokemonCheckValid(PC_PTR(val2)) == 0) { return; }
+    fadeSet(3, lbl_8047B6E8);
+    fadeCheck(1);
+    locals.left = 1;
+    locals.right = 2;
+    evolutionOpen(val1, val2, 1, (u16*)&locals.left, 2, (u8*)locals.work);
+    fadeSet(2, lbl_8047B6E8);
+    fadeCheck(1);
+}
+
+/* 0x8000CE18 */
+s32 dbgMenuMenuTestEvolution(void) {
+    u32 r;
+    r = (u32)floorGetCurrentContext();
+    GSthreadCreate(1, r, 0x4000, 1, 1, PC_PTR32(testEvolution__Fv));
+    return 0;
+}
+
+/* 0x8000CE5C */
+/* RULE-EXCEPTION(user-approved): local compiler-control pragma (peephole off) needed for the byte match of the code it covers - see docs/RULE_EXCEPTIONS.md */
+#pragma peephole off
+u32 dbgMenuMenuTestWazaMenu(void) {
+    u32 val;
+    val = savedataGetStatus(0, 2);
+    if (val == 0) { return 0; }
+    val = PC_PTR32_IMPLICIT(heroBiosGetPokemonPtr(val, 0));
+    if ((u8)pokemonCheckValid(PC_PTR(val)) == 0) { return 0; }
+    menuPokemonStatusOpenWazaForget(val, 0x25);
+    return 0;
+}
+
+/* 0x8000CED0 */
+/* RULE-EXCEPTION(user-approved): local compiler-control pragma (peephole off; peephole off; peephole off; peephole off; peephole off; peephole off; peephole off; peephole off) needed for the byte match of the code it covers - see docs/RULE_EXCEPTIONS.md */
+#pragma peephole off
+#pragma peephole off
+#pragma peephole off
+#pragma peephole off
+#pragma peephole off
+#pragma peephole off
+#pragma peephole off
+#pragma peephole off
+/* dbgMenuOpenPcBoxMenu: warps to menu room 0x391, pcbox_menu (the PC box). */
+/* NAME-T3 fn_8000CED0 */
+s32 dbgMenuOpenPcBoxMenu(void) {
+    std098_mapWarpToMenuRoom(0x391);
+    return 0;
+}
+
+/* 0x8000CEF8 */
+/* RULE-EXCEPTION(user-approved): local compiler-control pragma (peephole off) needed for the byte match of the code it covers - see docs/RULE_EXCEPTIONS.md */
+#pragma peephole off
+u32 dbgMenuMenuTestPokemonMenu(s32 arg) {
+    switch (arg) {
+        case 0x110:
+            menuPokemonOpen(1, 0, 0);
+            break;
+        case 0x111:
+            menuPokemonOpen(2, 0, 0);
+            break;
+        default:
+            menuPokemonOpen(2, 0, 0);
+            break;
+    }
+    return 0;
+}
+
+/* 0x8000CF68 */
+/* dbgMenuMenuTestShopMenu: like dbgMenuMenuTestPokemonMenu / NameEntryMenu, looks the menu key up in a 14-entry
+ * table and opens that shop (menuShopOpen). */
+/* NAME-T2 fn_8000CF68 */
+u32 dbgMenuMenuTestShopMenu(u32 arg) {
+    typedef struct {
+        u32 key;
+        u32 value;
+    } GSpartyKeyValuePair;
+    struct StatCopyBlk { GSpartyKeyValuePair data[14]; };
+    GSpartyKeyValuePair local[14];
+    u32 val;
+    GSpartyKeyValuePair *p;
+    u32 idx;
+    int i;
+    int j;
+    *(struct StatCopyBlk*)local = *(struct StatCopyBlk*)lbl_80266700;
+    p = local;
+    idx = 0;
+    for (i = 0; i < 2; i++) {
+        for (j = 0; j < 6; j++) {
+            if ((s32)arg == (s32)p[j].key) { goto idx_done; }
+            idx++;
+        }
+        if ((s32)arg == (s32)p[6].key) { goto idx_done; }
+        p += 7;
+        idx++;
+    }
+idx_done:
+    if ((s32)idx >= 14) {
+        return 0;
+    }
+    val = local[idx].value;
+    menuShopOpen(val);
+    return 0;
+}
+
+/* 0x8000D05C */
+u32 dbgMenuMenuTestNameEntryMenu(u32 arg) {
+    typedef struct {
+        u32 data[8];
+    } NameEntryTable;
+    NameEntryTable table;
+    u32 idx;
+    u32 val;
+    table = *(NameEntryTable*)lbl_802666E0;
+    for (idx = 0; idx < 4; idx++) {
+        if ((s32)arg == (s32)table.data[idx * 2]) {
+            break;
+        }
+    }
+    if ((s32)idx >= 4) {
+        return 0;
+    }
+    val = table.data[idx * 2 + 1];
+    menuNameEntryOpen(val, 0);
+    return 0;
+}
+
+/* 0x8000D11C */
+s32 dbgMenuWazaDebugStop(void) {
+    s32 v = ((BattleAnimState*)lbl_804673F8)->activeFlag;
+    if (v != 0) {
+        floorBattleEndTerminateScripts();
+    }
+    return 0;
+}
+
+/* 0x8000D154 */
+s32 fn_8000D154(void) {
+    u32 r;
+    r = menuIsCheck(0xCF);
+    if ((u8)r != 0) {
+        menuClose(0xCF);
+    } else {
+        menuOpenCustom(0xCF, 0, 0, 0, 1, 0);
+        menuSetPosition(0xCF, 0xC, 0xA);
+    }
+    return 0;
+}
+
+/* 0x8000D1C4 */
+s32 fn_8000D1C4(void) {
+    u32 r;
+    r = menuIsCheck(0x78);
+    if ((u8)r != 0) {
+        menuClose(0x78);
+    } else {
+        menuOpenCustom(0x78, 0, 0, 0, 1, 0);
+        menuSetPosition(0x78, 0xC, 0xA);
+    }
+    return 0;
+}
+
+/* 0x8000D234 */
+s32 dbgMenuWazaDebugStart(void) {
+    u32 r;
+    r = menuIsCheck(0x13);
+    if ((u8)r != 0) {
+        menuClose(0x13);
+    }
+    if (((BattleAnimState*)lbl_804673F8)->activeFlag == 0) {
+        std098_mapWarpToMenuRoom(0x3E7);
+        _threadSwitch();
+    }
+    return 0;
+}

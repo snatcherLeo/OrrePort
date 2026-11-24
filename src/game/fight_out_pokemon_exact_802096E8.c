@@ -1,0 +1,914 @@
+/**
+ * @file fight_out_pokemon_exact_802096E8.c
+ * @brief Exact fightWaza/fightItem accessor island, address range
+ *        0x802096E8-0x8020A8E0, 64 functions.
+ *
+ * OutPokemon/Pokemon field accessors, sequence/status writers, and
+ * damage-calc support the seq/waza layers call into (statusGetStatus,
+ * fadeEffectGetRandom callers, etc). Corresponds to XD's
+ * fight.cpp fightOutPokemon+fightPokemon cluster (0x80200644-0x80208288).
+ */
+
+#include "game/colosseum.h"
+#include "game/trainer.h"
+#include "game/pokemon.h"
+
+typedef struct ColosseumEventRow6 {
+    u8 mode;
+    u8 field_01;
+    u16 eventIndex;
+    u16 nextIndex;
+} ColosseumEventRow6;
+
+typedef struct ColosseumEventSubRow {
+    u8 valueMode;
+    u8 scaleMode;
+    s16 scaleNumerator;
+    s16 scaleDenominator;
+    u16 minValue;
+    u16 maxValue;
+} ColosseumEventSubRow;
+
+typedef struct ColosseumEventPairRow {
+    u8 resultFuncId;
+    u8 field_01;
+    u16 firstLinkIndex;
+    ColosseumEventSubRow slots[2];
+} ColosseumEventPairRow;
+
+typedef struct StatusIdTable7 {
+    u16 id[7];
+} StatusIdTable7;
+
+/* =========================================================================
+ * External declarations
+ * ========================================================================= */
+
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32   pokemonSetStatus();
+#endif
+extern void  pokemonGrowBasisStatus();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32   itemGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  joutaiDataBiosGetStatus(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  pokemonIsJoutaiDataId(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  joutaiIsJoutaiDataId(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  pokemonGetSoubiItemDataId(void);
+#endif
+extern void* fightActionGetPri(void* p);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 wazaGetStatus();
+#endif
+
+/* SDA table pointers for event data arrays */
+extern u32 lbl_80478D38;   /* Event table count */
+extern ColosseumEventRow6 lbl_80478D30[]; /* Event table base (6 bytes per entry) */
+extern u32 lbl_80478D28; /* Pair-row table count */
+extern ColosseumEventPairRow lbl_80375A08[]; /* 0x18-byte pair rows */
+
+/* Retail marks every function in this physical island active. */
+#pragma force_active on
+
+/* Address: 0x802096E8 | Size: 0xe0 | Ghidra import */
+u32 fightWazaIsHit(void* ctx)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 joutaiDataBiosGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 joutaiIsJoutaiDataId();
+#endif
+  u16 sVar2;
+  u32 uVar1;
+  u8 cVar3;
+
+  sVar2 = joutaiDataBiosGetStatus(0x40);
+  if (sVar2 != 0x2a) {
+    cVar3 = 0;
+  }
+  else {
+    cVar3 = joutaiIsJoutaiDataId(ctx,0x40);
+  }
+  if (cVar3 == 1) {
+    uVar1 = 0;
+  }
+  else {
+    sVar2 = joutaiDataBiosGetStatus(0x43);
+    if (sVar2 != 0x2a) {
+      cVar3 = 0;
+    }
+    else {
+      cVar3 = joutaiIsJoutaiDataId(ctx,0x43);
+    }
+    if (cVar3 == 1) {
+      uVar1 = 0;
+    }
+    else {
+      sVar2 = joutaiDataBiosGetStatus(0x45);
+      if (sVar2 != 0x2a) {
+        cVar3 = 0;
+      }
+      else {
+        cVar3 = joutaiIsJoutaiDataId(ctx,0x45);
+      }
+      if (cVar3 == 1) {
+        uVar1 = 0;
+      }
+      else {
+        uVar1 = 1;
+      }
+    }
+  }
+  return uVar1;
+}
+
+/* 0x802097C8 | size: 0x54 | small */
+void fightWazaWriteJoutaiDataId(u32 param_1, u32 param_2, u32 param_3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 joutaiDataBiosGetStatus(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void joutaiWriteJoutaiDataId(u32, u32, u32);
+#endif
+    if ((joutaiDataBiosGetStatus(param_2) & 0xFFFF) == 0x2A) {
+        joutaiWriteJoutaiDataId(PC_PTR(param_1), param_2, param_3);
+    }
+}
+
+/* Address: 0x8020981C | Size: 0x54 | Ghidra import */
+u32 fightWazaCheckWriteJoutaiDataId(void* ctx, u32 param)
+
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 joutaiDataBiosGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 joutaiCheckWriteJoutaiDataId();
+#endif
+  u16 sVar2;
+  u32 uVar1;
+
+  sVar2 = joutaiDataBiosGetStatus(param);
+  if (sVar2 != 0x2a) {
+    uVar1 = 0;
+  }
+  else {
+    uVar1 = joutaiCheckWriteJoutaiDataId(ctx,param);
+  }
+  return uVar1;
+}
+
+/* Address: 0x80209870 | Size: 0x9c | Ghidra import */
+u32 fightWazaIsJoutaiSousai(void* ctx)
+
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 joutaiDataBiosGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 joutaiIsJoutaiDataId();
+#endif
+  u16 sVar1;
+  u8 cVar2;
+
+  sVar1 = joutaiDataBiosGetStatus(0x41);
+  if (sVar1 != 0x2a) {
+    cVar2 = 0;
+  }
+  else {
+    cVar2 = joutaiIsJoutaiDataId(ctx,0x41);
+  }
+  if (cVar2 == 1) {
+    sVar1 = joutaiDataBiosGetStatus(0x42);
+    if (sVar1 != 0x2a) {
+      cVar2 = 0;
+    }
+    else {
+      cVar2 = joutaiIsJoutaiDataId(ctx,0x42);
+    }
+    if (cVar2 == 1) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+/* 0x8020990C | size: 0x54 */
+u32 fightWazaIsJoutaiDataId(void* ctx, u32 param) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 joutaiDataBiosGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 joutaiIsJoutaiDataId();
+#endif
+    if ((joutaiDataBiosGetStatus(param) & 0xFFFF) != 0x2A) {
+        return 0;
+    }
+    return joutaiIsJoutaiDataId(ctx, param);
+}
+
+/* 0x80209960 | size: 0x4C | small */
+void fightWazaInitJoutaiDataId(void* ctx, u32 param) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 joutaiDataBiosGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void joutaiInitJoutaiDataId();
+#endif
+    if ((joutaiDataBiosGetStatus(param) & 0xFFFF) == 0x2a) {
+        joutaiInitJoutaiDataId(ctx, param);
+    }
+}
+
+/* Address: 0x802099AC | Size: 0x270 | Ghidra import */
+void fightWazaCreate(void* p1, s8 p2, u32 p3, u16 p4, u8 p5) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 joutaiDataBiosGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void joutaiWriteJoutaiDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void joutaiInitAry();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void wazaSetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 wazaGetStatus();
+#endif
+    u16 sVar2;
+
+    if (p1 != 0) {
+        if (p1) {
+            wazaSetStatus(p1, 0, 0x26, 0, PC_PTR32_IMPLICIT((void*)0xffffffff));
+            wazaSetStatus(p1, 0, 0x27, 0, 0);
+            wazaSetStatus(p1, 0, 0x28, 0, 0);
+            wazaSetStatus(p1, 0, 0x29, 0, 0);
+            joutaiInitAry(PC_PTR(wazaGetStatus(p1, 0, 0x2a, 0)), 9);
+            sVar2 = joutaiDataBiosGetStatus(0x3f);
+            if (sVar2 == 0x2a) {
+                joutaiWriteJoutaiDataId(p1, 0x3f, 0);
+            }
+            wazaSetStatus(p1, 0, 0x2b, 0, 1);
+            wazaSetStatus(p1, 0, 0x2c, 0, 1);
+            wazaSetStatus(p1, 0, 0x2d, 0, 0);
+            wazaSetStatus(p1, 0, 0x2e, 0, 0);
+            wazaSetStatus(p1, 0, 0x2f, 0, 0);
+            wazaSetStatus(p1, 0, 0x30, 0, 9);
+            wazaSetStatus(p1, 0, 0x31, 0, 0);
+            wazaSetStatus(p1, 0, 0x32, 0, 0);
+        }
+        wazaSetStatus(p1, 0, 0x26, 0, (s32)p2);
+        wazaSetStatus(p1, 0, 0x29, 0, p4);
+        wazaSetStatus(p1, 0, 0x27, 0, p3 & 0xffff);
+        wazaSetStatus(p1, 0, 0x28, 0, p3 & 0xffff);
+        wazaSetStatus(p1, 0, 0x2f, 0, (u16)wazaGetStatus(0, p3, 7, 0));
+        wazaSetStatus(p1, 0, 0x30, 0, (u16)wazaGetStatus(0, p3, 3, 0));
+        wazaSetStatus(p1, 0, 0x32, 0, p5);
+    }
+}
+
+/* Address: 0x80209C1C | Size: 0x98 | Ghidra import */
+void fightWazaSetUseWazaStatus(u32 r3, u32 r4)
+
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void wazaSetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 wazaGetStatus();
+#endif
+  u16 uVar1;
+
+  wazaSetStatus(PC_PTR(r3),0,0x28,0,r4 & 0xffff);
+  uVar1 = (u16)wazaGetStatus(0,r4,7,0);
+  wazaSetStatus(PC_PTR(r3),0,0x2f,0,uVar1);
+  uVar1 = (u16)wazaGetStatus(0,r4,3,0);
+  wazaSetStatus(PC_PTR(r3),0,0x30,0,uVar1);
+  return;
+}
+
+/* Address: 0x80209CB4 | Size: 0xdc | Ghidra import */
+u32 fightWazaCheckValid(void* ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 wazaGetStatus(void* ctx, u32 p1, u32 p2, u32 p3);
+#endif
+    s32 iVar1;
+    if (ctx == 0) {
+        return 0;
+    }
+    iVar1 = wazaGetStatus(ctx, 0, 0x27, 0);
+    if (iVar1 == 0) {
+        return 0;
+    }
+    iVar1 = wazaGetStatus(ctx, 0, 0x27, 0);
+    if (iVar1 == 0x163) {
+        return 0;
+    }
+    iVar1 = wazaGetStatus(ctx, 0, 0x28, 0);
+    if (iVar1 == 0) {
+        return 0;
+    }
+    iVar1 = wazaGetStatus(ctx, 0, 0x28, 0);
+    if (iVar1 == 0x163) {
+        return 0;
+    }
+    iVar1 = wazaGetStatus(ctx, 0, 0x29, 0);
+    return iVar1 != 0;
+}
+
+/* 0x80209D90 | size: 0x188 */
+void fightWazaInit(void* r3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 joutaiDataBiosGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void joutaiWriteJoutaiDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void joutaiInitAry();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void wazaSetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* wazaGetStatus();
+#endif
+    void* ctx;
+
+    if ((ctx = r3) == NULL) { return; }
+    wazaSetStatus(ctx, 0, 0x26, 0, (u32)-1);
+    wazaSetStatus(ctx, 0, 0x27, 0, 0);
+    wazaSetStatus(ctx, 0, 0x28, 0, 0);
+    wazaSetStatus(ctx, 0, 0x29, 0, 0);
+    joutaiInitAry(PC_PTR(wazaGetStatus(ctx, 0, 0x2A, 0)), 9);
+    if (joutaiDataBiosGetStatus(0x3F) == 0x2A) {
+        joutaiWriteJoutaiDataId(ctx, 0x3F, 0);
+    }
+    wazaSetStatus(ctx, 0, 0x2B, 0, 1);
+    wazaSetStatus(ctx, 0, 0x2C, 0, 1);
+    wazaSetStatus(ctx, 0, 0x2D, 0, 0);
+    wazaSetStatus(ctx, 0, 0x2E, 0, 0);
+    wazaSetStatus(ctx, 0, 0x2F, 0, 0);
+    wazaSetStatus(ctx, 0, 0x30, 0, 9);
+    wazaSetStatus(ctx, 0, 0x31, 0, 0);
+    wazaSetStatus(ctx, 0, 0x32, 0, 0);
+}
+
+/* 0x80209F18 | size: 0xa8 */
+void fightWazaInitLoop(void* ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 joutaiDataBiosGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void joutaiWriteJoutaiDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void joutaiInitAry();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void wazaSetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 wazaGetStatus();
+#endif
+    u32 val;
+    u16 typeId;
+    val = wazaGetStatus(ctx, 0, 0x2a, 0);
+    joutaiInitAry(PC_PTR(val), 9);
+    typeId = joutaiDataBiosGetStatus(0x3f);
+    if (typeId == 0x2a) {
+        joutaiWriteJoutaiDataId(ctx, 0x3f, 0);
+    }
+    wazaSetStatus(ctx, 0, 0x2b, 0, 1);
+    wazaSetStatus(ctx, 0, 0x2c, 0, 1);
+}
+
+/* 0x80209FAC | size: 0x64 */
+void fightWazaInitJoutai(void* ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 joutaiDataBiosGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void joutaiWriteJoutaiDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 joutaiInitAry();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 wazaGetStatus();
+#endif
+    u32 val = wazaGetStatus(ctx, 0, 0x2A, 0);
+    joutaiInitAry(PC_PTR(val), 9);
+    if (joutaiDataBiosGetStatus(0x3F) == 0x2A) {
+        joutaiWriteJoutaiDataId(ctx, 0x3F, 0);
+    }
+}
+
+/* 0x8020A010 | size: 0x18 */
+u32 fightWazaHitKakurituDataBiosGetWaru(u8* ptr) {
+    if (ptr == NULL) { return 1; }
+    return ptr[0x1];
+}
+
+/* 0x8020A028 | size: 0x18 */
+u32 fightWazaHitKakurituDataBiosGetKake(u8* ptr) {
+    if (ptr == NULL) { return 1; }
+    return ptr[0x0];
+}
+
+/* fightWazaHitKakurituDataBiosGetPtr | Size: 0x28 | Look up 2-byte entry in table */
+u16* fightWazaHitKakurituDataBiosGetPtr(u16 index) {
+    extern u8 fight_waza_hit_kakuritu_data[];
+    extern u32 fight_waza_hit_kakuritu_data_number;
+    u16* result = (u16*)&fight_waza_hit_kakuritu_data[index * 2];
+    if (index < fight_waza_hit_kakuritu_data_number) {
+        return result;
+    }
+    return NULL;
+}
+
+/* Address: 0x8020A068 | Size: 0x18 | Pattern: nullcheck_getter */
+u8 fightWazaCriticalDataBiosGetBunbo(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u8*)(&ptr[0x0]);
+}
+
+/* fightWazaCriticalDataBiosGetPtr | Size: 0x24 | Look up byte in table with bounds check */
+u8* fightWazaCriticalDataBiosGetPtr(u16 index) {
+    extern u8 fight_waza_critical_data[];
+    extern u32 fight_waza_critical_data_number;
+    u8* result = &fight_waza_critical_data[index];
+    if (index < fight_waza_critical_data_number) {
+        return result;
+    }
+    return NULL;
+}
+
+/* Address: 0x8020A0A4 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightWazaBiosSetAutoMakeFlag(u8* ptr, u8 val) {
+    if (ptr == NULL) { return; }
+    *(u8*)(&ptr[0xA9]) = val;
+}
+
+/* Address: 0x8020A0B4 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightWazaBiosSetKaisuu(u8* ptr, u8 val) {
+    if (ptr == NULL) { return; }
+    *(u8*)(&ptr[0xA8]) = val;
+}
+
+/* Address: 0x8020A0C4 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightWazaBiosSetZokusei(u8* ptr, u16 val) {
+    if (ptr == NULL) { return; }
+    *(u16*)(&ptr[0xA6]) = val;
+}
+
+/* Address: 0x8020A0D4 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightWazaBiosSetIryoku(u8* ptr, u16 val) {
+    if (ptr == NULL) { return; }
+    *(u16*)(&ptr[0xA4]) = val;
+}
+
+/* Address: 0x8020A0E4 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightWazaBiosSetHitDamage(u8* ptr, u32 val) {
+    if (ptr == NULL) { return; }
+    *(u32*)(&ptr[0xA0]) = val;
+}
+
+/* Address: 0x8020A0F4 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightWazaBiosSetDamage(u8* ptr, u32 val) {
+    if (ptr == NULL) { return; }
+    *(u32*)(&ptr[0x9C]) = val;
+}
+
+/* Address: 0x8020A104 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightWazaBiosSetDamageValue(u8* ptr, u8 val) {
+    if (ptr == NULL) { return; }
+    *(u8*)(&ptr[0x99]) = val;
+}
+
+/* Address: 0x8020A114 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightWazaBiosSetCritical(u8* ptr, u8 val) {
+    if (ptr == NULL) { return; }
+    *(u8*)(&ptr[0x98]) = val;
+}
+
+/* Address: 0x8020A124 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightWazaBiosSetTargetDataId(u8* ptr, u16 val) {
+    if (ptr == NULL) { return; }
+    *(u16*)(&ptr[0x6]) = val;
+}
+
+/* Address: 0x8020A134 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightWazaBiosSetUseWazaDataId(u8* ptr, u16 val) {
+    if (ptr == NULL) { return; }
+    *(u16*)(&ptr[0x4]) = val;
+}
+
+/* Address: 0x8020A144 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightWazaBiosSetMotoWazaDataId(u8* ptr, u16 val) {
+    if (ptr == NULL) { return; }
+    *(u16*)(&ptr[0x2]) = val;
+}
+
+/* Address: 0x8020A154 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightWazaBiosSetWazaBanme(u8* ptr, u8 val) {
+    if (ptr == NULL) { return; }
+    *(u8*)(&ptr[0x0]) = val;
+}
+
+/* Address: 0x8020A164 | Size: 0x18 | Pattern: nullcheck_getter */
+u8 fightWazaBiosGetAutoMakeFlag(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u8*)(&ptr[0xA9]);
+}
+
+/* Address: 0x8020A17C | Size: 0x18 | Pattern: nullcheck_getter */
+u8 fightWazaBiosGetKaisuu(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u8*)(&ptr[0xA8]);
+}
+
+/* Address: 0x8020A194 | Size: 0x18 | Pattern: nullcheck_getter */
+u16 fightWazaBiosGetZokusei(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u16*)(&ptr[0xA6]);
+}
+
+/* Address: 0x8020A1AC | Size: 0x18 | Pattern: nullcheck_getter */
+u16 fightWazaBiosGetIryoku(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u16*)(&ptr[0xA4]);
+}
+
+/* Address: 0x8020A1C4 | Size: 0x18 | Pattern: nullcheck_getter */
+u32 fightWazaBiosGetHitDamage(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u32*)(&ptr[0xA0]);
+}
+
+/* Address: 0x8020A1DC | Size: 0x18 | Pattern: nullcheck_getter */
+u32 fightWazaBiosGetDamage(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u32*)(&ptr[0x9C]);
+}
+
+/* Address: 0x8020A1F4 | Size: 0x18 | Pattern: nullcheck_getter */
+u8 fightWazaBiosGetDamageValue(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u8*)(&ptr[0x99]);
+}
+
+/* Address: 0x8020A20C | Size: 0x18 | Pattern: nullcheck_getter */
+u8 fightWazaBiosGetCritical(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u8*)(&ptr[0x98]);
+}
+
+/* 0x8020A224 | size: 0x34 | small */
+void* fightWazaBiosGetJoutaiPtr(void* base, u16 index) {
+    if (base == 0) return 0;
+    if (index >= 9) return 0;
+    return (u8*)base + 0x8 + index * 16;
+}
+
+/* Address: 0x8020A258 | Size: 0x18 | Pattern: nullcheck_getter */
+u16 fightWazaBiosGetTargetDataId(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u16*)(&ptr[0x6]);
+}
+
+/* Address: 0x8020A270 | Size: 0x18 | Pattern: nullcheck_getter */
+u16 fightWazaBiosGetUseWazaDataId(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u16*)(&ptr[0x4]);
+}
+
+/* Address: 0x8020A288 | Size: 0x18 | Pattern: nullcheck_getter */
+u16 fightWazaBiosGetMotoWazaDataId(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u16*)(&ptr[0x2]);
+}
+
+/* Address: 0x8020A2A0 | Size: 0x18 | Pattern: nullcheck_getter */
+u8 fightWazaBiosGetWazaBanme(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u8*)(&ptr[0x0]);
+}
+
+/* 0x8020A2B8 | size: 0x40 -- copy 0xAC bytes (43 u32s) */
+void fightWazaBiosCopy(u32* dst, u32* src) {
+    struct CopyBlk8020A2B8 { u32 data[43]; };
+    if (dst == 0) return;
+    if (src == 0) return;
+    *(struct CopyBlk8020A2B8*)dst = *(struct CopyBlk8020A2B8*)src;
+}
+
+/* Address: 0x8020A2F8 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightItemBiosSetBuff(u8* ptr, u32 val) {
+    if (ptr == NULL) { return; }
+    *(u32*)(&ptr[0x8]) = val;
+}
+
+/* Address: 0x8020A308 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightItemBiosSetCount(u8* ptr, u32 val) {
+    if (ptr == NULL) { return; }
+    *(u32*)(&ptr[0x4]) = val;
+}
+
+/* Address: 0x8020A318 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightItemBiosSetTargetDataId(u8* ptr, u16 val) {
+    if (ptr == NULL) { return; }
+    *(u16*)(&ptr[0x2]) = val;
+}
+
+/* Address: 0x8020A328 | Size: 0x10 | Pattern: nullcheck_setter */
+void fightItemBiosSetItemDataId(u8* ptr, u16 val) {
+    if (ptr == NULL) { return; }
+    *(u16*)(&ptr[0x0]) = val;
+}
+
+/* Address: 0x8020A338 | Size: 0x18 | Pattern: nullcheck_getter */
+u32 fightItemBiosGetBuff(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u32*)(&ptr[0x8]);
+}
+
+/* Address: 0x8020A350 | Size: 0x18 | Pattern: nullcheck_getter */
+u32 fightItemBiosGetCount(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u32*)(&ptr[0x4]);
+}
+
+/* Address: 0x8020A368 | Size: 0x18 | Pattern: nullcheck_getter */
+u16 fightItemBiosGetTargetDataId(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u16*)(&ptr[0x2]);
+}
+
+/* Address: 0x8020A380 | Size: 0x18 | Pattern: nullcheck_getter */
+u16 fightItemBiosGetItemDataId(u8* ptr) {
+    if (ptr == NULL) { return 0; }
+    return *(u16*)(&ptr[0x0]);
+}
+
+static inline void fightItemInitInline(u8* item)
+{
+    extern void itemSetStatus();
+
+    if (item != NULL) {
+        itemSetStatus(item, 0, 0x1E, 0, 0);
+        itemSetStatus(item, 0, 0x1F, 0, 0);
+        itemSetStatus(item, 0, 0x20, 0, (void*)-1);
+        itemSetStatus(item, 0, 0x21, 0, 0);
+    }
+}
+
+/* Address: 0x8020A398 | Size: 0xe0 */
+void fightItemCreate(u8* item, u16 itemDataId, u16 targetDataId, u32 count)
+{
+    extern void itemSetStatus();
+    u8* ctx;
+
+    if ((ctx = item) != NULL) {
+        fightItemInitInline(ctx);
+        itemSetStatus(ctx, 0, 0x1E, 0, itemDataId);
+        itemSetStatus(ctx, 0, 0x1F, 0, targetDataId);
+        itemSetStatus(ctx, 0, 0x20, 0, count);
+    }
+}
+
+/* Address: 0x8020A478 | Size: 0x88 | Ghidra import */
+void fightItemInit(void* r3)
+{
+    extern void itemSetStatus();
+    void* ctx;
+    if ((ctx = r3) != NULL) {
+        itemSetStatus(ctx, 0, 0x1e, 0, 0);
+        itemSetStatus(ctx, 0, 0x1f, 0, 0);
+        itemSetStatus(ctx, 0, 0x20, 0, (void*)0xffffffff);
+        itemSetStatus(ctx, 0, 0x21, 0, 0);
+    }
+}
+
+/* 0x8020A500 | size: 0x40 */
+/* NAME-T1 fn_8020A500 */ /* XD's map, fightJoukenBios.o: same getters in the same order, same offsets (XD calls GetDataPtr / GetValuePtr where ours inlines them) */
+u32 fightJoukenLinkDataBiosGetNextLinkDataId(u16 idx) {
+    ColosseumEventRow6* entry;
+    idx = idx;
+    if (idx >= lbl_80478D38) {
+        entry = NULL;
+    } else {
+        entry = &lbl_80478D30[idx];
+    }
+    if (entry == NULL) { return 0; }
+    return entry->nextIndex;
+}
+
+/* 0x8020A540 | size: 0x40 */
+/* NAME-T1 fn_8020A540 */
+u32 fightJoukenLinkDataBiosGetJoukenDataId(u16 idx) {
+    ColosseumEventRow6* entry;
+    idx = idx;
+    if (idx >= lbl_80478D38) {
+        entry = NULL;
+    } else {
+        entry = &lbl_80478D30[idx];
+    }
+    if (entry == NULL) { return 0; }
+    return entry->eventIndex;
+}
+
+/* 0x8020A580 | size: 0x40 */
+/* NAME-T1 fn_8020A580 */
+u32 fightJoukenLinkDataBiosGetJoint(u16 idx) {
+    ColosseumEventRow6* entry;
+    idx = idx;
+    if (idx >= lbl_80478D38) {
+        entry = NULL;
+    } else {
+        entry = &lbl_80478D30[idx];
+    }
+    if (entry == NULL) { return 0; }
+    return entry->mode;
+}
+
+/* 0x8020A5C0 | size: 0x70 */
+/* NAME-T1 fn_8020A5C0 */
+s16 fightJoukenDataBiosGetValueWaru(u16 index, u16 slot) {
+    ColosseumEventPairRow* entry;
+    ColosseumEventSubRow* sub;
+    if (index >= lbl_80478D28) {
+        entry = NULL;
+    } else {
+        entry = &lbl_80375A08[index];
+    }
+    if (entry == NULL) {
+        sub = NULL;
+    } else if (slot >= 2) {
+        sub = NULL;
+    } else {
+        sub = &entry->slots[slot];
+    }
+    if (sub == NULL) {
+        return 0;
+    }
+    return sub->scaleDenominator;
+}
+
+/* 0x8020A630 | size: 0x70 */
+/* NAME-T1 fn_8020A630 */
+s16 fightJoukenDataBiosGetValueKake(u16 index, u16 slot) {
+    ColosseumEventPairRow* entry;
+    ColosseumEventSubRow* sub;
+    if (index >= lbl_80478D28) {
+        entry = NULL;
+    } else {
+        entry = &lbl_80375A08[index];
+    }
+    if (entry == NULL) {
+        sub = NULL;
+    } else if (slot >= 2) {
+        sub = NULL;
+    } else {
+        sub = &entry->slots[slot];
+    }
+    if (sub == NULL) {
+        return 0;
+    }
+    return sub->scaleNumerator;
+}
+
+/* 0x8020A6A0 | size: 0x70 */
+/* NAME-T1 fn_8020A6A0 */
+u8 fightJoukenDataBiosGetValueHoseiFlag(u16 index, u16 slot) {
+    ColosseumEventPairRow* entry;
+    ColosseumEventSubRow* sub;
+    if (index >= lbl_80478D28) {
+        entry = NULL;
+    } else {
+        entry = &lbl_80375A08[index];
+    }
+    if (entry == NULL) {
+        sub = NULL;
+    } else if (slot >= 2) {
+        sub = NULL;
+    } else {
+        sub = &entry->slots[slot];
+    }
+    if (sub == NULL) {
+        return 0;
+    }
+    return sub->scaleMode;
+}
+
+/* 0x8020A710 | size: 0x70 */
+/* NAME-T1 fn_8020A710 */
+u16 fightJoukenDataBiosGetValueBuff(u16 index, u16 slot) {
+    ColosseumEventPairRow* entry;
+    ColosseumEventSubRow* sub;
+    if (index >= lbl_80478D28) {
+        entry = NULL;
+    } else {
+        entry = &lbl_80375A08[index];
+    }
+    if (entry == NULL) {
+        sub = NULL;
+    } else if (slot >= 2) {
+        sub = NULL;
+    } else {
+        sub = &entry->slots[slot];
+    }
+    if (sub == NULL) {
+        return 0;
+    }
+    return sub->maxValue;
+}
+
+/* 0x8020A780 | size: 0x70 */
+/* NAME-T1 fn_8020A780 */
+u16 fightJoukenDataBiosGetValueTarget(u16 index, u16 slot) {
+    ColosseumEventPairRow* entry;
+    ColosseumEventSubRow* sub;
+    if (index >= lbl_80478D28) {
+        entry = NULL;
+    } else {
+        entry = &lbl_80375A08[index];
+    }
+    if (entry == NULL) {
+        sub = NULL;
+    } else if (slot >= 2) {
+        sub = NULL;
+    } else {
+        sub = &entry->slots[slot];
+    }
+    if (sub == NULL) {
+        return 0;
+    }
+    return sub->minValue;
+}
+
+/* 0x8020A7F0 | size: 0x70 */
+/* NAME-T1 fn_8020A7F0 */
+u8 fightJoukenDataBiosGetValueKind(u16 index, u16 slot) {
+    ColosseumEventPairRow* entry;
+    ColosseumEventSubRow* sub;
+    if (index >= lbl_80478D28) {
+        entry = NULL;
+    } else {
+        entry = &lbl_80375A08[index];
+    }
+    if (entry == NULL) {
+        sub = NULL;
+    } else if (slot >= 2) {
+        sub = NULL;
+    } else {
+        sub = &entry->slots[slot];
+    }
+    if (sub == NULL) {
+        return 0;
+    }
+    return sub->valueMode;
+}
+
+/* fightJoukenDataBiosGetLink | Size: 0x40 | Look up u16 field at offset 2 in 0x18-byte table */
+/* NAME-T1 fn_8020A860 */
+u16 fightJoukenDataBiosGetLink(u16 index) {
+    ColosseumEventPairRow* entry;
+    if (index >= lbl_80478D28) {
+        entry = NULL;
+    } else {
+        entry = &lbl_80375A08[index];
+    }
+    if (entry == NULL) {
+        return 0;
+    }
+    return entry->firstLinkIndex;
+}
+
+/* fightJoukenDataBiosGetForm | Size: 0x40 | Look up u8 field at offset 0 in 0x18-byte table */
+/* NAME-T1 fn_8020A8A0 */
+u8 fightJoukenDataBiosGetForm(u16 index) {
+    ColosseumEventPairRow* entry;
+    if (index >= lbl_80478D28) {
+        entry = NULL;
+    } else {
+        entry = &lbl_80375A08[index];
+    }
+    if (entry == NULL) {
+        return 0;
+    }
+    return entry->resultFuncId;
+}

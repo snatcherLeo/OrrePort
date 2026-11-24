@@ -1,0 +1,29 @@
+{
+  "_what": "Run 2's save edit E1, after P01 (playthrough-guide.md parts 7 and 9; snatcherLeo's decisions 2026-10-19 / 20): Umbreon and Espeon stay; add Scizor Lv 100, Mewtwo Lv 100, Gengar Lv 100 (replaced Alakazam 2026-10-20) and Sentret Lv 1; x99 Full Restore, Full Heal, Max Revive, Max Elixir; x99 Rare Candy (snatcherLeo, 2026-10-20: one on Sentret at Lv 14, so it evolves from the candy); x99 of the ten buyable ball types and ONE Master Ball; P5,000,000. No Cologne Case and no scents (E2).",
+  "template_slot": 1,
+  "add_pokemon": [
+    {"species": 212, "level": 100, "nature": 3, "ivs": 31, "moves": [206, 318, 163, 14], "_note": "Scizor, Adamant: False Swipe, Silver Wind, Slash, Swords Dance"},
+    {"species": 150, "level": 100, "nature": 15, "ivs": 31, "moves": [94, 58, 85, 105], "_note": "Mewtwo, Modest: Psychic, Ice Beam, Thunderbolt, Recover"},
+    {"species": 94, "level": 100, "nature": 15, "ivs": 31, "moves": [95, 94, 7, 8], "_note": "Gengar, Modest: Hypnosis (level-up), Psychic (TM29), Fire Punch and Ice Punch (GBA tutor moves: flagged by the checks, kept as asked)"},
+    {"species": 161, "level": 1, "nature": 0, "ivs": 31, "moves": [10], "_note": "Sentret Lv 1: Scratch (its only Lv 1 move on this disc)"}
+  ],
+  "set_items": [
+    {"pocket": "normal", "item": 19, "count": 99},
+    {"pocket": "normal", "item": 23, "count": 99},
+    {"pocket": "normal", "item": 25, "count": 99},
+    {"pocket": "normal", "item": 37, "count": 99},
+    {"pocket": "normal", "item": 68, "count": 99},
+    {"pocket": "balls", "item": 1, "count": 1},
+    {"pocket": "balls", "item": 2, "count": 99},
+    {"pocket": "balls", "item": 3, "count": 99},
+    {"pocket": "balls", "item": 4, "count": 99},
+    {"pocket": "balls", "item": 6, "count": 99},
+    {"pocket": "balls", "item": 7, "count": 99},
+    {"pocket": "balls", "item": 8, "count": 99},
+    {"pocket": "balls", "item": 9, "count": 99},
+    {"pocket": "balls", "item": 10, "count": 99},
+    {"pocket": "balls", "item": 11, "count": 99},
+    {"pocket": "balls", "item": 12, "count": 99}
+  ],
+  "set_money": 5000000
+}

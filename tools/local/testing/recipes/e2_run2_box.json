@@ -1,0 +1,19 @@
+{
+  "_what": "Run 2's save edit E2 as actually applied (2026-10-22): e2_run2.json's Pokemon and items, but snatcherLeo ended P17a at Mt. Battle with a full party and 18 of 20 normal-pocket slots used, so (his request) the five Pokemon go into the PC boxes and the bag item that doesn't fit goes into the PC's item storage. Bag: x99 Joy, Excite, Vivid Scent (cologne pocket); Sacred Ash and the Sun Stone (normal pocket, the last two slots); the Oran Berry (berry pocket). PC item storage: the Repel (its P17b test only needs it in the bag: withdraw it first). The Everstone is held by Azurill, as in e2_run2.json.",
+  "add_pokemon": [
+    {"to": "box", "species": 191, "level": 5, "nature": 0, "ivs": 31, "moves": [71], "_note": "Sunkern: Absorb (level-up); evolves with the Sun Stone (kind 7, item 93)"},
+    {"to": "box", "species": 350, "level": 5, "nature": 0, "ivs": 31, "moves": [150, 204], "friendship": 220, "item": 195, "_note": "Azurill: Splash, Charm (level-up); friendship 220 (kind 1 needs 220+); holds the Everstone"},
+    {"to": "box", "species": 236, "level": 19, "nature": 1, "ivs": 31, "moves": [33], "_note": "Tyrogue, Lonely (+Atk -Def): Attack > Defense -> Hitmonlee (kind 8) at Lv 20"},
+    {"to": "box", "species": 236, "level": 19, "nature": 0, "ivs": 31, "moves": [33], "_note": "Tyrogue, Hardy (neutral): Attack = Defense -> Hitmontop (kind 9) at Lv 20"},
+    {"to": "box", "species": 236, "level": 19, "nature": 5, "ivs": 31, "moves": [33], "_note": "Tyrogue, Bold (+Def -Atk): Attack < Defense -> Hitmonchan (kind 10) at Lv 20"}
+  ],
+  "set_items": [
+    {"pocket": "colognes", "item": 543, "count": 99},
+    {"pocket": "colognes", "item": 544, "count": 99},
+    {"pocket": "colognes", "item": 545, "count": 99},
+    {"pocket": "normal", "item": 45, "count": 1},
+    {"pocket": "normal", "item": 93, "count": 1},
+    {"pocket": "berries", "item": 139, "count": 1},
+    {"pocket": "pc", "item": 86, "count": 1}
+  ]
+}

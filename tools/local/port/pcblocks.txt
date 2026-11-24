@@ -1,0 +1,17 @@
+# Zero-filled work areas the PC keeps as one block (pcdata.py; written by merge_datacheck.py --write-blocks).
+# Addresses and names only (from symbols.txt), no game data. NAME SIZE  # where it comes from
+lbl_803FC5E0 0x40  # 0c2a54e33: one 0x40 block; 4e36aa0de: 0x30 + 1 labels
+lbl_80400150 0x60  # 0c2a54e33: one 0x60 block; 4e36aa0de: 0x10 + 4 labels
+lbl_80404B8C 0x64  # 0c2a54e33: one 0x64 block; 4e36aa0de: 0x24 + 4 labels
+lbl_80452DE8 0xE0  # 0c2a54e33: one 0xE0 block; 4e36aa0de: 0x30 + 4 labels
+lbl_80478FC0 0x54  # 0c2a54e33: one 0x54 block; 4e36aa0de: 0xC + 6 labels
+lbl_80479050 0xFC  # 0c2a54e33: one 0xFC block; 4e36aa0de: 0xC + 20 labels
+lbl_8047917C 0x48  # 0c2a54e33: one 0x48 block; 4e36aa0de: 0xC + 5 labels
+lbl_804791D0 0x4E0  # 0c2a54e33: one 0x4E0 block; 4e36aa0de: 0xC + 103 labels
+lbl_80479764 0x534  # 0c2a54e33: one 0x534 block; 4e36aa0de: 0xC + 110 labels
+lbl_80479D4C 0x38  # 0c2a54e33: one 0x38 block; 4e36aa0de: 0x4 + 7 labels
+lbl_80479D8C 0xB0  # 0c2a54e33: one 0xB0 block; 4e36aa0de: 0x4 + 22 labels
+lbl_80479E54 0x8  # 0c2a54e33: one 0x8 block; 4e36aa0de: 0x4 + 1 labels
+lbl_80479E64 0x338  # 0c2a54e33: one 0x338 block; 4e36aa0de: 0x4 + 103 labels
+lbl_8047A204 0x48  # 0c2a54e33: one 0x48 block; 4e36aa0de: 0x4 + 9 labels
+lbl_803A6498 0x178  # hand-added 2026-10-18: the PC menu's work area; its setup writes base + 0x54 / + 0xB4 (lbl_803A64EC / lbl_803A654C), so the four labels must stay contiguous (the PC menu cursor was stuck)

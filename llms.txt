@@ -1,0 +1,40 @@
+# OrrePort
+
+> Pokémon Colosseum (USA, GC6E01) decompiled to C and running natively on PC, with a modding suite. Code only: no game data.
+
+## Read first
+
+- README.md: what OrrePort is, download, building
+- CONTRIBUTING.md: how to contribute, the rules every change meets
+- docs/design-guide.md: what the project decides itself
+- docs/building.md: building from source, step by step
+
+## Players
+
+- docs/saves.md: .gci and .orresave saves, the GameCube copy
+- docs/accurate-mode.md: GameCube-accurate mode
+- docs/controls-and-settings.md: every control and setting
+- docs/debug-menu.md: the debug menu
+
+## Modders, translators and tool makers
+
+- docs/hook-points.md: where changes plug into the game code
+- docs/translation.md: the language files and how to add a language
+- docs/orresave-format.md: the .orresave format
+- docs/function_renames.csv, docs/data_renames.csv: the rename map (old name, new name, address); tools/apply_rename_map.py applies it
+
+## Other port and decompilation projects
+
+- docs/for-other-projects.md: what's reusable and how it was built
+- docs/testing-method.md: how recordings and replays prove the port matches the game
+
+## Code
+
+- src/, include/: the game's decompiled code (src/game is Genius Sonority's game code; src/hsd the HSD library; src/musyx audio; src/dolphin the SDK)
+- port/: the PC layer (Aurora, hook points, the hub)
+- studio/: OrrePort Studio, the editor
+- tools/: build, test and disc-reading tools
+
+## How the engine works
+
+- https://github.com/snatcherLeo/orre-engine-docs

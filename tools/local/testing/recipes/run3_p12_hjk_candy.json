@@ -1,0 +1,10 @@
+{
+  "_note": "the reference playthrough, before P12, on P11's end save (snatcherLeo, 2026-11-06): both RARE CANDY (68) stacks in the bag to x99 ('the rare candy is twice in there (which is fine), just make them both x99'); HITMONLEE (106) gets HI JUMP KICK (136) back in its empty fourth move slot ('I got rid of it earlier with the move deleter at mt. battle just to test if it could happen ... I want that move back')",
+  "template_slot": 1,
+  "replace_move": [
+    {"species": 106, "from": 0, "to": 136}
+  ],
+  "set_items": [
+    {"pocket": "normal", "item": 68, "count": 99, "all": true}
+  ]
+}

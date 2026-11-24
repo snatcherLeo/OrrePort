@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 32" width="56" height="32">
+<!-- The settings switch's track, filled (2026-11-23; snatcherLeo: the switches looked jagged, as RmlUi draws rounded borders
+     without smoothing). A 56 x 32 pill, each half-round two quadratic arcs; white, tinted at draw time (settings.rcss
+     .tog .tf). Rendered at 256 px wide (pc_settings_overlay.cpp's menuicon provider) so it stays smooth at 225%. -->
+<path fill="#FFFFFF" d="M16 0 H40 Q46.627 0 51.314 4.686 Q56 9.373 56 16 Q56 22.627 51.314 27.314 Q46.627 32 40 32 H16 Q9.373 32 4.686 27.314 Q0 22.627 0 16 Q0 9.373 4.686 4.686 Q9.373 0 16 0 Z"/>
+</svg>

@@ -1,0 +1,10 @@
+{
+  "_what": "the reference playthrough's team edit after P04 (snatcherLeo, 2026-11-03): \"I will only keep one shadow Pokemon on the team (Crocanaw), and, we can make AeroDactyl (who's on the team now) at level 30. I will also want added a \\\"Primeape\\\" at level 30, knowing \\\"Brick Break, Thrash, Protect, Earthquake\\\", and Gengar at level 30. Both Gengar and Aerodactyl are already in my party, so just modify their levels, and then, add in Primeape.\" The party before: Sneasel 31, Espeon 26, Aerodactyl 50, Shadow Croconaw 30, Gengar 50 (Makuhita and Noctowl already in the box, so Croconaw is the team's only Shadow Pokemon). Primeape's nature is the project's choice (snatcherLeo gave level and moves): Adamant, physical, as Sneasel; IVs 31 as in the earlier edits.",
+  "modify_pokemon": [
+    {"species": 142, "level": 30, "moves": [89, 246, 332, 36], "_note": "Aerodactyl Lv 50 -> 30 (its own moves: Earthquake, AncientPower, Aerial Ace, Take Down; nature and IVs kept)"},
+    {"species": 94, "level": 30, "moves": [94, 95, 7, 8], "_note": "Gengar Lv 50 -> 30 (its own moves: Psychic, Hypnosis, Fire Punch, Ice Punch; nature and IVs kept)"}
+  ],
+  "add_pokemon": [
+    {"species": 57, "level": 30, "nature": 3, "ivs": 31, "moves": [280, 37, 182, 89], "_note": "Primeape, Adamant: Brick Break, Thrash, Protect, Earthquake"}
+  ]
+}

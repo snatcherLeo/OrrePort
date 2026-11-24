@@ -1,0 +1,357 @@
+/**
+ * @file battle_camera.c
+ * @brief Battle grid trainer/model visibility helpers and battle camera
+ *        tick/cleanup callbacks.
+ *
+ * Address range: 0x801C2AE8 - 0x801C3108 (9 functions).
+ *
+ * Split out of the former monolithic battle_grid.c CodeCandidate bucket
+ * (0x801C0F20 - 0x801C4CB8, split pass 2026-07-07). This is a distinct
+ * XD translation unit (game/pxdvs/app/battleGrid/battleCamera.cpp).
+ */
+
+#include "dolphin/types.h"
+#include "game/battle/battle_grid_types.h"
+
+/* Grid group table entry -- see battleGridAddTrainer (game/battle/battle_grid.c,
+ * shrunk remainder) for the sibling BattleGridGroupTable view of the same
+ * gBattleGrid storage; kept as two independent local casts (as in the
+ * original monolithic file) rather than unified into a shared header,
+ * since neither TU calls the other's accessor. */
+typedef struct BattleGridGroupEntry {
+    PTR32_FIELD(u8) slot; /* 32-bit slots on the PC too: the group array is also read at raw +0x40 */
+    PTR32_FIELD(u8) pokemon[2];
+    u16 memberCount;
+    u8 arg1;
+    u8 arg2;
+} BattleGridGroupEntry;
+
+/* HSD (SysDolphin) model/animation */
+extern void  fn_8036A384(void* jobj, f32 x, f32 y, f32 z); /* HSD_JObjSetTranslate */
+extern void  fn_80363CF4(void* jobj);                       /* HSD_JObjRemoveAll */
+
+/* CRT */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memset(void* dst, int val, u32 size);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memcpy(void* dst, const void* src, u32 size);
+#endif
+
+extern BattleGridGroupEntry gBattleGrid[];
+extern u8 lbl_8047B39A;
+extern u8 lbl_8047B39C[12] __attribute__((section(".sdata")));
+
+/*
+ * The battle_camera unit (0x801C2BE0 - 0x801C2D5C) builds battleGridHideModelsExcept
+ * alone; battle_camera_candidate_801C2D80.c defines BATTLE_CAMERA_FULL_TU for the rest.
+ */
+#if defined(BATTLE_CAMERA_FULL_TU)
+/**
+ * battleGridGetNumPokemonsForTrainer - Get grid group member count by
+ * owner ID (renamed from fn_801C2AE8; confirmed name -- naming pass
+ * 2026-07-07).
+ * Address: 0x801C2AE8 | Size: 0x44
+ */
+
+u16 battleGridGetNumPokemonsForTrainer(u32 id) {
+    BattleGridGroupEntry* group = gBattleGrid;
+    u16 i;
+
+    for (i = 0; i < 4; i++, group++) {
+        if ((u32)group->slot == id) {
+            return group->memberCount;
+        }
+    }
+    return 0;
+}
+
+/**
+ * battleGridResetModelVisibilityFlags - Apply cached visibility to all grid
+ * models (renamed from fn_801C2B2C; confirmed name -- naming pass
+ * 2026-07-07).
+ * Address: 0x801C2B2C | Size: 0xB4
+ */
+void battleGridResetModelVisibilityFlags(void) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void wazaSequenceOwnerSetVisibility(void*, u32);
+#endif
+    BattleGridGroupEntry* group = gBattleGrid;
+    u16 i;
+    u16 j;
+    u16 visibilityIndex = 0;
+
+    if (lbl_8047B39A != 0) {
+        for (i = 0; i < 4; i++, group++) {
+            wazaSequenceOwnerSetVisibility(group->slot, lbl_8047B39C[visibilityIndex++]);
+            for (j = 0; j < 2; j++) {
+                wazaSequenceOwnerSetVisibility(group->pokemon[j],
+                            lbl_8047B39C[visibilityIndex++]);
+            }
+        }
+        lbl_8047B39A = 0;
+    }
+}
+
+#elif !defined(BATTLE_CAMERA_START_RANDOM_ONLY)
+/* RULE-EXCEPTION(user-approved): static inline copy of the real battleGridResetModelVisibilityFlags so its call is inlined as in retail; the real one stays linked in battle_camera_exact_801C2AE8 - see docs/RULE_EXCEPTIONS.md */
+static inline void battleGridResetModelVisibilityFlags(void) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void wazaSequenceOwnerSetVisibility(void*, u32);
+#endif
+    BattleGridGroupEntry* group = gBattleGrid;
+    u16 i;
+    u16 j;
+    u16 visibilityIndex = 0;
+
+    if (lbl_8047B39A != 0) {
+        for (i = 0; i < 4; i++, group++) {
+            wazaSequenceOwnerSetVisibility(P32(group->slot), lbl_8047B39C[visibilityIndex++]);
+            for (j = 0; j < 2; j++) {
+                wazaSequenceOwnerSetVisibility(P32(group->pokemon[j]),
+                            lbl_8047B39C[visibilityIndex++]);
+            }
+        }
+        lbl_8047B39A = 0;
+    }
+}
+#endif
+
+/**
+ * battleGridHideModelsExcept - Pre-grid final setup (renamed from
+ * fn_801C2Be0; confirmed name -- naming pass 2026-07-07). NOTE: prior
+ * source spelled this fn_801C2Be0 (mixed-case typo); the correct address
+ * label is 0x801C2BE0. Any stale callers using either spelling are
+ * updated to the new name.
+ * Address: 0x801C2BE0 | Size: 0x174
+ */
+#if !defined(BATTLE_CAMERA_START_RANDOM_ONLY)
+void battleGridHideModelsExcept(void* ctx) {
+    extern u32 wazaSequenceOwnerIsVisible(void*);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void wazaSequenceOwnerSetVisibility(void*, u32);
+#endif
+    BattleGridGroupEntry* group;
+    u16 visibilityIndex;
+    u16 i;
+    u16 j;
+
+    visibilityIndex = 0;
+    group = gBattleGrid;
+    if (lbl_8047B39A != 0) {
+        battleGridResetModelVisibilityFlags();
+    }
+
+    memset(lbl_8047B39C, 0, 8);
+    for (i = 0; i < 4; i++, group++) {
+        {
+            u8 visible = wazaSequenceOwnerIsVisible(P32(group->slot));
+            void* model = P32(group->slot);
+
+            lbl_8047B39C[visibilityIndex++] = visible;
+            if (model != ctx) {
+                wazaSequenceOwnerSetVisibility(model, 0);
+            }
+        }
+        for (j = 0; j < 2; j++) {
+            u8 visible = wazaSequenceOwnerIsVisible(P32(group->pokemon[j]));
+            void* model = P32(group->pokemon[j]);
+
+            lbl_8047B39C[visibilityIndex++] = visible;
+            if (model != ctx) {
+                wazaSequenceOwnerSetVisibility(model, 0);
+            }
+        }
+    }
+    lbl_8047B39A = 1;
+}
+#endif
+
+#if defined(BATTLE_CAMERA_FULL_TU)
+/* =========================================================================
+ * GRID TICK / STATE MANAGEMENT (0x801C2D54 - 0x801C3108)
+ * ========================================================================= */
+
+/**
+ * battleCameraIsSimple - Battle grid tick callback 1 (no-op forward)
+ * (renamed from fn_801C2D54; confirmed name -- naming pass 2026-07-07).
+ * Referenced by battle_main.c as battle grid tick 1.
+ * Address: 0x801C2D54 | Size: 0x8
+ */
+#endif /* BATTLE_CAMERA_FULL_TU */
+
+extern u8 lbl_8047B398;
+extern u8 gBattleGridSimpleCamera;
+
+#if !defined(BATTLE_CAMERA_START_RANDOM_ONLY)
+u8 battleCameraIsSimple(void) {
+    return gBattleGridSimpleCamera;
+}
+#endif
+
+#if defined(BATTLE_CAMERA_FULL_TU)
+
+/**
+ * battleCameraDoFull - Battle grid tick callback wrapper (renamed from
+ * fn_801C2D5C; confirmed name -- naming pass 2026-07-07).
+ * Address: 0x801C2D5C | Size: 0xC
+ */
+void battleCameraDoFull(void) {
+    gBattleGridSimpleCamera = 0;
+}
+
+/**
+ * battleCameraDoSimple - Battle grid tick callback 2 (renamed from
+ * fn_801C2D68; confirmed name -- naming pass 2026-07-07).
+ * Referenced by battle_main.c as battle grid tick 2.
+ * Address: 0x801C2D68 | Size: 0xC
+ */
+void battleCameraDoSimple(void) {
+    gBattleGridSimpleCamera = 1;
+}
+
+/**
+ * battleCameraDisable - Battle grid tick callback 3 (renamed from
+ * fn_801C2D74; confirmed name -- naming pass 2026-07-07).
+ * Address: 0x801C2D74 | Size: 0xC
+ */
+void battleCameraDisable(void) {
+    lbl_8047B398 = 1;
+}
+
+#endif /* BATTLE_CAMERA_FULL_TU */
+
+/**
+ * battleCameraStartRandom - Periodically select a random battle camera owner
+ * (renamed from fn_801C2D80; confirmed name -- naming pass 2026-07-07).
+ * Defers selection while camera control is disabled or another sequence is
+ * active, then selects a different trainer or party member from the grid.
+ * Address: 0x801C2D80 | Size: 0x180
+ */
+#if defined(BATTLE_CAMERA_FULL_TU) || defined(BATTLE_CAMERA_START_RANDOM_ONLY)
+void battleCameraStartRandom(void) {
+    extern BattleGridGroupEntry gBattleGrid[];
+    extern s32 lbl_80478CA8;
+    extern u32 lbl_80478CAC;
+    extern f32 lbl_8047DF58;
+    extern void* battleCameraWazaGetOwner(void);
+    extern void battleCameraStartOwner(void* owner);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 GSgetFrameStep(void);
+#endif
+    extern f32 GSrandf(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 _fadeEffectGetRandom__FUl(u32 range);
+#endif
+
+    u16 groupCount;
+    s32 i;
+    s32 j;
+    s32 memberCount;
+    BattleGridGroupEntry* group;
+    u32 candidate;
+    u32 ordinal;
+
+    groupCount = *(u16*)((u8*)gBattleGrid + 0x40);
+#ifdef TARGET_PC
+    {
+        /* ORRE_BATTLE_LOG (observe only, 2026-10-26, P13's battle 218: the console's idle camera timer ran out
+         * on the frame of the last command press and took 12 draws there, the PC's didn't): what holds the timer
+         * (1 / 2 camera disabled, 3 a move camera running, 0 counting down), logged when it changes, and the timer
+         * whenever it runs out */
+        static int logCam = -1;
+        static int lastWhy = -1;
+        int why;
+        extern char* getenv(const char*);
+        extern void OSReport(const char*, ...);
+        extern u32 VIGetRetraceCount(void);
+        if (logCam < 0) {
+            logCam = getenv("ORRE_BATTLE_LOG") != 0;
+        }
+        if (logCam) {
+            why = lbl_8047B398 != 0 ? 1 : gBattleGridSimpleCamera != 0 ? 2 : battleCameraWazaGetOwner() != NULL ? 3 : 0;
+            if (why != lastWhy) {
+                OSReport("[battle] camera timer: hold %d (was %d) at retrace %u, timer %d\n", why, lastWhy,
+                         (unsigned)VIGetRetraceCount(), (int)lbl_80478CA8);
+                lastWhy = why;
+            }
+            if (why == 0 && lbl_80478CA8 - GSgetFrameStep() <= 0) {
+                OSReport("[battle] camera timer: runs out at retrace %u (timer %d, step %d)\n",
+                         (unsigned)VIGetRetraceCount(), (int)lbl_80478CA8, (int)GSgetFrameStep());
+            }
+        }
+    }
+#endif
+    if (lbl_8047B398 != 0 || gBattleGridSimpleCamera != 0) {
+        lbl_80478CA8 = 200;
+        return;
+    }
+    if (battleCameraWazaGetOwner() != NULL) {
+        lbl_80478CA8 = 200;
+        return;
+    }
+    lbl_80478CA8 -= GSgetFrameStep();
+    if (lbl_80478CA8 > 0) {
+        return;
+    }
+    if (groupCount + *(u16*)((u8*)gBattleGrid + 0x42) != 0) {
+        if (GSrandf() > lbl_8047DF58) {
+            lbl_80478CA8 = 200;
+            return;
+        }
+        candidate = _fadeEffectGetRandom__FUl(
+            groupCount + *(u16*)((u8*)gBattleGrid + 0x42));
+        while (candidate == lbl_80478CAC) {
+            candidate = _fadeEffectGetRandom__FUl(
+                groupCount + *(u16*)((u8*)gBattleGrid + 0x42));
+        }
+        lbl_80478CAC = candidate;
+
+        ordinal = 0;
+        group = gBattleGrid;
+        for (i = 0; i < groupCount; i++, group++) {
+            if (P32(group->slot) == NULL) {
+                continue;
+            }
+            if (ordinal == candidate) {
+                battleCameraStartOwner(P32(group->slot));
+                lbl_80478CA8 = 200;
+            }
+            ordinal++;
+            memberCount = group->memberCount;
+            for (j = 0; j < memberCount; j++) {
+                if (P32(group->pokemon[j]) != NULL) {
+                    if (ordinal == candidate) {
+                        battleCameraStartOwner(P32(group->pokemon[j]));
+                        lbl_80478CA8 = 200;
+                    }
+                    ordinal++;
+                }
+            }
+        }
+    } else {
+        lbl_80478CA8 = 200;
+    }
+}
+#endif
+
+#if defined(BATTLE_CAMERA_FULL_TU)
+/**
+ * battleCameraStartOffsetAnime - Battle grid load data from buffer.
+ * Address: 0x801C2F00 | Size: 0x208
+ * Referenced by battle_main.c as "battle grid load data".
+ * Loads grid configuration from a data buffer.
+ */
+void battleCameraStartOffsetAnime(void* data, u32 size) {
+    if (data == NULL || size == 0) {
+        return;
+    }
+    /* Load grid configuration from a data buffer:
+     * 1. Parse header (slot count, field type)
+     * 2. For each slot: load position, model ID, animation set
+     * 3. Load camera configuration
+     * 4. Load stage model reference
+     */
+    memcpy(lbl_80466E50, data, (size < 0x1E0) ? size : 0x1E0);
+}
+#endif /* BATTLE_CAMERA_FULL_TU */

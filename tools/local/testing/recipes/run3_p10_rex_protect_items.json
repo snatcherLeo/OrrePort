@@ -1,0 +1,10 @@
+{
+  "_note": "the reference playthrough, before P10, on top of run3_p10_rex_icebeam.json (snatcherLeo, 2026-11-05): Rex (FERALIGATR, 160) learns PROTECT (182) in place of RAIN DANCE (240); MASTER BALL (1) x1 -> x3 ('give me 2 more master balls'); RARE CANDY (68) back to x99",
+  "replace_move": [
+    {"species": 160, "from": 240, "to": 182}
+  ],
+  "set_items": [
+    {"pocket": "balls", "item": 1, "count": 3},
+    {"pocket": "normal", "item": 68, "count": 99}
+  ]
+}

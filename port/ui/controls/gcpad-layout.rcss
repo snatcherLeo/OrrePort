@@ -1,0 +1,83 @@
+/* written by tools/local/brand/gcpad_stage.py (do not edit): where the controller setup screen's labels
+ * and highlight rings sit in its 960 x 640 dp frame, matching gcpad-*.svg */
+#lab-L { left: 0dp; top: 60dp; width: 196dp; }
+#lab-STICK { left: 0dp; top: 230dp; width: 196dp; }
+#lab-DPAD { left: 0dp; top: 298dp; width: 196dp; }
+#lab-START { left: 382dp; top: 572dp; width: 196dp; }
+#lab-R { left: 764dp; top: 30dp; width: 196dp; }
+#lab-Z { left: 764dp; top: 82dp; width: 196dp; }
+#lab-Y { left: 764dp; top: 170dp; width: 196dp; }
+#lab-X { left: 764dp; top: 220dp; width: 196dp; }
+#lab-A { left: 764dp; top: 294dp; width: 196dp; }
+#lab-B { left: 764dp; top: 344dp; width: 196dp; }
+#lab-C { left: 764dp; top: 410dp; width: 196dp; }
+#ring-L { left: 280.1dp; top: 131.0dp; width: 54.0dp; height: 54.0dp; border-radius: 27.0dp; }
+#ring-R { left: 625.9dp; top: 131.0dp; width: 54.0dp; height: 54.0dp; border-radius: 27.0dp; }
+#ring-Z { left: 636.9dp; top: 141.0dp; width: 41.4dp; height: 41.4dp; border-radius: 20.7dp; }
+#ring-STICK { left: 277.5dp; top: 192.4dp; width: 106.2dp; height: 106.2dp; border-radius: 53.1dp; }
+#ring-DPAD { left: 362.1dp; top: 317.1dp; width: 75.6dp; height: 75.6dp; border-radius: 37.8dp; }
+#ring-START { left: 462.9dp; top: 230.2dp; width: 29.7dp; height: 29.7dp; border-radius: 14.8dp; }
+#ring-A { left: 593.0dp; top: 215.4dp; width: 67.5dp; height: 67.5dp; border-radius: 33.8dp; }
+#ring-B { left: 550.4dp; top: 252.4dp; width: 46.4dp; height: 46.4dp; border-radius: 23.2dp; }
+#ring-X { left: 651.9dp; top: 210.0dp; width: 52.2dp; height: 52.2dp; border-radius: 26.1dp; }
+#ring-Y { left: 585.8dp; top: 171.3dp; width: 54.0dp; height: 54.0dp; border-radius: 27.0dp; }
+#ring-C { left: 520.4dp; top: 313.5dp; width: 79.2dp; height: 79.2dp; border-radius: 39.6dp; }
+#lit-L { left: 196.0dp; top: 74.8dp; width: 129.8dp; height: 2.4dp; transform-origin: 0dp 1.2dp; transform: rotate(40.12deg); }
+#litdot-L { left: 291.1dp; top: 155.4dp; width: 8.4dp; height: 8.4dp; border-radius: 4.2dp; }
+#lit-STICK { left: 196.0dp; top: 244.8dp; width: 134.6dp; height: 2.4dp; transform-origin: 0dp 1.2dp; transform: rotate(-0.19deg); }
+#litdot-STICK { left: 326.4dp; top: 241.3dp; width: 8.4dp; height: 8.4dp; border-radius: 4.2dp; }
+#lit-DPAD { left: 196.0dp; top: 368.8dp; width: 204.5dp; height: 2.4dp; transform-origin: 0dp 1.2dp; transform: rotate(-4.24deg); }
+#litdot-DPAD { left: 395.7dp; top: 350.7dp; width: 8.4dp; height: 8.4dp; border-radius: 4.2dp; }
+#lit-START { left: 480.0dp; top: 570.8dp; width: 326.9dp; height: 2.4dp; transform-origin: 0dp 1.2dp; transform: rotate(-90.39deg); }
+#litdot-START { left: 473.6dp; top: 240.9dp; width: 8.4dp; height: 8.4dp; border-radius: 4.2dp; }
+#lit-R { left: 764.0dp; top: 44.8dp; width: 161.7dp; height: 2.4dp; transform-origin: 0dp 1.2dp; transform: rotate(144.26deg); }
+#litdot-R { left: 628.5dp; top: 136.3dp; width: 8.4dp; height: 8.4dp; border-radius: 4.2dp; }
+#lit-Z { left: 764.0dp; top: 96.8dp; width: 115.4dp; height: 2.4dp; transform-origin: 0dp 1.2dp; transform: rotate(138.11deg); }
+#litdot-Z { left: 673.9dp; top: 170.9dp; width: 8.4dp; height: 8.4dp; border-radius: 4.2dp; }
+#lit-Y { left: 764.0dp; top: 184.8dp; width: 151.7dp; height: 2.4dp; transform-origin: 0dp 1.2dp; transform: rotate(175.35deg); }
+#litdot-Y { left: 608.5dp; top: 194.1dp; width: 8.4dp; height: 8.4dp; border-radius: 4.2dp; }
+#lit-X { left: 764.0dp; top: 234.8dp; width: 86.0dp; height: 2.4dp; transform-origin: 0dp 1.2dp; transform: rotate(179.93deg); }
+#litdot-X { left: 673.8dp; top: 231.9dp; width: 8.4dp; height: 8.4dp; border-radius: 4.2dp; }
+#lit-A { left: 764.0dp; top: 308.8dp; width: 150.2dp; height: 2.4dp; transform-origin: 0dp 1.2dp; transform: rotate(-156.10deg); }
+#litdot-A { left: 622.5dp; top: 245.0dp; width: 8.4dp; height: 8.4dp; border-radius: 4.2dp; }
+#lit-B { left: 764.0dp; top: 358.8dp; width: 208.2dp; height: 2.4dp; transform-origin: 0dp 1.2dp; transform: rotate(-156.11deg); }
+#litdot-B { left: 569.4dp; top: 271.5dp; width: 8.4dp; height: 8.4dp; border-radius: 4.2dp; }
+#lit-C { left: 764.0dp; top: 424.8dp; width: 216.6dp; height: 2.4dp; transform-origin: 0dp 1.2dp; transform: rotate(-160.33deg); }
+#litdot-C { left: 555.8dp; top: 348.9dp; width: 8.4dp; height: 8.4dp; border-radius: 4.2dp; }
+#pulse-L { left: 274.7dp; top: 125.6dp; width: 64.8dp; height: 64.8dp; border-radius: 32.4dp; }
+#push-L { left: 290.4dp; top: 141.2dp; width: 33.5dp; height: 33.5dp; border-radius: 16.7dp; }
+#pulse-R { left: 620.5dp; top: 125.6dp; width: 64.8dp; height: 64.8dp; border-radius: 32.4dp; }
+#push-R { left: 636.2dp; top: 141.3dp; width: 33.5dp; height: 33.5dp; border-radius: 16.7dp; }
+#pulse-Z { left: 632.7dp; top: 136.9dp; width: 49.7dp; height: 49.7dp; border-radius: 24.8dp; }
+#push-Z { left: 644.8dp; top: 148.9dp; width: 25.7dp; height: 25.7dp; border-radius: 12.8dp; }
+#pulse-STICK { left: 266.9dp; top: 181.8dp; width: 127.4dp; height: 127.4dp; border-radius: 63.7dp; }
+#push-STICK { left: 297.7dp; top: 212.6dp; width: 65.8dp; height: 65.8dp; border-radius: 32.9dp; }
+#pulse-DPAD { left: 354.5dp; top: 309.5dp; width: 90.7dp; height: 90.7dp; border-radius: 45.4dp; }
+#push-DPAD { left: 376.5dp; top: 331.5dp; width: 46.9dp; height: 46.9dp; border-radius: 23.4dp; }
+#pulse-START { left: 459.9dp; top: 227.3dp; width: 35.6dp; height: 35.6dp; border-radius: 17.8dp; }
+#push-START { left: 468.5dp; top: 235.9dp; width: 18.4dp; height: 18.4dp; border-radius: 9.2dp; }
+#pulse-A { left: 586.2dp; top: 208.7dp; width: 81.0dp; height: 81.0dp; border-radius: 40.5dp; }
+#push-A { left: 605.8dp; top: 228.2dp; width: 41.9dp; height: 41.9dp; border-radius: 20.9dp; }
+#pulse-B { left: 545.7dp; top: 247.8dp; width: 55.7dp; height: 55.7dp; border-radius: 27.9dp; }
+#push-B { left: 559.2dp; top: 261.3dp; width: 28.8dp; height: 28.8dp; border-radius: 14.4dp; }
+#pulse-X { left: 646.7dp; top: 204.8dp; width: 62.6dp; height: 62.6dp; border-radius: 31.3dp; }
+#push-X { left: 661.8dp; top: 219.9dp; width: 32.4dp; height: 32.4dp; border-radius: 16.2dp; }
+#pulse-Y { left: 580.4dp; top: 165.9dp; width: 64.8dp; height: 64.8dp; border-radius: 32.4dp; }
+#push-Y { left: 596.0dp; top: 181.6dp; width: 33.5dp; height: 33.5dp; border-radius: 16.7dp; }
+#pulse-C { left: 512.5dp; top: 305.6dp; width: 95.0dp; height: 95.0dp; border-radius: 47.5dp; }
+#push-C { left: 535.5dp; top: 328.5dp; width: 49.1dp; height: 49.1dp; border-radius: 24.6dp; }
+#arm-UP { left: 389.6dp; top: 325.2dp; width: 20.7dp; height: 19.3dp; }
+#arm-DOWN { left: 389.6dp; top: 365.2dp; width: 20.7dp; height: 19.3dp; }
+#arm-LEFT { left: 370.2dp; top: 344.5dp; width: 19.3dp; height: 20.7dp; }
+#arm-RIGHT { left: 410.3dp; top: 344.5dp; width: 19.3dp; height: 20.7dp; }
+#follow-STICK { left: 325.6dp; top: 240.5dp; }
+#follow-C { left: 555.0dp; top: 348.1dp; }
+#piece-trig-L { left: 253.24dp; top: 135.75dp; width: 109.14dp; height: 72.66dp; }
+#piece-trig-R { left: 597.62dp; top: 135.64dp; width: 109.09dp; height: 72.86dp; }
+#piece-btn-Z { left: 602.35dp; top: 137.44dp; width: 84.57dp; height: 48.80dp; }
+#piece-btn-START { left: 466.30dp; top: 233.65dp; width: 22.90dp; height: 22.90dp; }
+#piece-btn-A { left: 596.35dp; top: 218.80dp; width: 60.70dp; height: 60.70dp; }
+#piece-btn-B { left: 553.78dp; top: 255.83dp; width: 39.64dp; height: 39.64dp; }
+#piece-btn-X { left: 659.96dp; top: 209.12dp; width: 35.35dp; height: 54.35dp; }
+#piece-btn-Y { left: 584.92dp; top: 180.07dp; width: 55.08dp; height: 35.98dp; }
+#piece-btn-DPAD { left: 368.20dp; top: 323.20dp; width: 63.40dp; height: 63.40dp; }

@@ -1,0 +1,6 @@
+{
+  "_what": "the reference playthrough, after the P04 team edit (snatcherLeo, 2026-11-03): \"Can we give Gengar the movie \\\"Thunderpunch\\\" instead of Ice punch? Legally we can, it is a move tutor move, I'd rather it know Thunderpunch, so replace that one move\". Gengar keeps level 30, nature and IVs; Ice Punch (8) becomes Thunder Punch (9).",
+  "modify_pokemon": [
+    {"species": 94, "level": 30, "moves": [94, 95, 7, 9], "_note": "Gengar: Psychic, Hypnosis, Fire Punch, Thunder Punch"}
+  ]
+}

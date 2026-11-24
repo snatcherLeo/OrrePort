@@ -1,0 +1,17 @@
+# P13 (sitting 023_20261022_1510): logged resyncs for the second pass (2026-10-29; match ledger, P13 rows).
+# No hand edits and no Wes placements; the run reached the end with settings only (p2_P13e):
+#   replay_check.py --replay 2 --window-frameat --cursor-sync all --fadein --fade-lag 1 --fadein-hero-room
+#     --entry-lag-rooms 0x390,0x38F --windows-rooms 0x38F --windows-rooms-unroomed --window-seed-burst 20
+#     --window-seed-keep 1 --window-seed-blink --window-seed-rooms 0x38F:1@400~0
+#   + the usual --extra-env (DVD dolphin, short model, unrecorded 0) and ORRE_ROLL_SEEDS for both battles
+#   (roll_resync_spec.py replay_5 --all-battles; replay_5 = PLAYREC_RNGCALL=7800-18650,31700-55700, playrec.py check:
+#   all 451 events identical, 683 flag changes in order).
+#
+# Why each one:
+# - --replay 2: replay_1 of this sitting holds no probe files (only the event log); replay_2 is the full probe
+#   replay (windows, frames, DVD, fades, positions, RNG). With --replay 1 the pads had no window or frame anchors.
+# - --window-seed-rooms 0x38F:1@400~0: from the first pass (a person's random walk after a blink draw a frame early
+#   on the PC, in the walk to the PC terminal).
+# - --windows-rooms-unroomed: the post-battle message after battle 203 is logged with room -1.
+# - --fadein-hero-room: after battles 218 and 203 the field reloads (rooms 0x4A and 0x24) with no recorded entry,
+#   so the fade-in anchor waited for room 0x38F's and every later press of the visit ran 60 frames late.

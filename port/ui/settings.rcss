@@ -1,0 +1,851 @@
+/* The RmlUi trial's in-game Settings overlay, after the project's mockups 13 (dark) and 13a (light) in docs/design/mockups/:
+ * the measurements come from their HTML source (panel 960 wide, 26 padding, rows 16 / 22, select 268 x 44, toggle
+ * 56 x 32, slider 188, Resume 52 high). RmlUi has no CSS variables, so each theme's colours are written out under
+ * body.dark / body.light. Fonts: Inter (text) and Saira (headings), as the mockups, from Fonts/ next to the exe
+ * (ui/fonts/ until 2026-11-16; SIL Open Font License; the files are not in the repository, the build folder gets them
+ * from decomp\_external\fonts\). Symbols: "Noto Sans Symbols 2" (shipped on every OS; *changed 2026-11-16* from the
+ * player's own Windows "Noto Sans Symbols 2"). */
+
+body { width: 100%; height: 100%; font-family: "Inter"; font-size: 16dp; }
+#settings, #resume { font-family: "Saira"; }
+
+#dim { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 107); }
+
+/* mockup 13's badge: only while the game is paused (body.pausing, set by the overlay code) */
+#paused { display: none; position: absolute; left: 24dp; top: 24dp; height: 36dp; line-height: 36dp; padding: 0dp 18dp;
+          border-radius: 18dp; border-width: 1dp; border-color: #2C322F; background-color: rgba(17, 20, 19, 230);
+          color: #E9EDEA; font-size: 14dp; font-weight: bold; letter-spacing: 3dp; }
+body.pausing #paused { display: block; }
+body.nohints #hint { display: none; } /* Appearance: "Button hints above the menu" off (snatcherLeo, 2026-11-09) */
+/* opened from the hub's gear (snatcherLeo, 2026-11-11, in-window): no game to quit, pause or report from; the hub has its own
+ * Report a problem, and the Z + START hint is about the game */
+body.inhub #quit, body.inhub #report-btn, body.inhub #hint, body.inhub #paused { display: none; }
+/* ---- the full page in the hub (snatcherLeo, 2026-11-11: "A, full page"; Full page is the default Settings style, a Side
+ * sheet and the Pop-up to come as choices): the panel fills the hub's middle between its top and bottom bars;
+ * the categories become a column on the left with the open one's orange edge, its name heads the rows on the right,
+ * and BACK sits under the column. The hub's own bars stay (pc_hub.cpp swaps their hints while this is open). ---- */
+body.inhub #dim { display: none; }
+/* the gear, over the hub's own (hub.rcss #gear: right 40, top 18, 52 x 52), lit while Settings is open; a click goes
+ * back to the hub */
+/* *Changed 2026-11-16 (mockup item 4):* the symbol 37 dp in a 61.5 dp line, as hub.rcss #gear (why there) */
+#hubgear { display: none; position: absolute; right: 40dp; top: 18dp; width: 52dp; height: 52dp; line-height: 61.5dp;
+           text-align: center; border-radius: 12dp; border-width: 1dp; font-family: "Noto Sans Symbols 2"; font-size: 37dp;
+           cursor: pointer; }
+body.inhub #hubgear { display: block; }
+body.inhub.ingame #hubgear { display: none; } /* the full window in game (General > In-game menu): no hub gear */
+body.inhub.dark #hubgear { background-color: #2B2119; border-color: #E8955A; color: #E8955A; }
+body.inhub.light #hubgear { background-color: #F6E7DA; border-color: #C2662F; color: #C2662F; }
+body.inhub #panel { left: 0dp; right: 0dp; top: 88dp; bottom: 80dp; width: auto; margin-left: 0dp; padding: 0dp;
+                    border-radius: 0dp; border-width: 0dp; }
+body.inhub #ph1 { position: absolute; left: 56dp; top: 40dp; height: 24dp; }
+body.inhub #settings { font-size: 16dp; letter-spacing: 4dp; }
+body.inhub #gs, body.inhub .lr, body.inhub #fh { display: none; }
+body.inhub #tabs { position: absolute; left: 0dp; top: 0dp; bottom: 0dp; width: 330dp; margin: 0dp; padding-top: 84dp;
+                   text-align: left; border-right-width: 1dp; }
+body.inhub #rail { display: block; padding: 0dp 24dp 0dp 40dp; }
+body.inhub .tab { display: block; padding: 14dp 16dp; margin-bottom: 4dp; border-radius: 10dp; font-size: 20dp;
+                  border-bottom-width: 0dp; }
+body.inhub .tab.on { border-left-width: 4dp; padding-left: 12dp; }
+body.inhub #mh { display: block; position: absolute; left: 400dp; top: 40dp; font-family: "Saira"; font-size: 40dp;
+                 font-weight: bold; }
+body.inhub #list { position: absolute; left: 400dp; right: 120dp; top: 116dp; }
+body.inhub .row { padding: 20dp 8dp; }
+body.inhub .row.f { padding: 21dp 8dp 21dp 5dp; }
+body.inhub .n { font-size: 20dp; }
+body.inhub .s { font-size: 15dp; margin-top: 4dp; }
+body.inhub #live { position: absolute; left: 400dp; bottom: 26dp; margin: 0dp; }
+body.inhub #foot { position: absolute; left: 56dp; bottom: 30dp; height: 48dp; }
+body.inhub #resume { height: 48dp; line-height: 48dp; padding: 0dp 22dp; font-size: 16dp; letter-spacing: 1dp; }
+/* in game the full window has no hub bar above or below it: it fills the whole window (snatcherLeo, 2026-11-13: "top and
+ * bottom are croped") */
+body.inhub.ingame #panel { top: 0dp; bottom: 0dp; }
+body.inhub.dark #panel { background-color: #111413; }
+body.inhub.dark #tabs { border-color: #1F2421; }
+/* the page's two levels (snatcherLeo, 2026-11-13): the open category keeps a quiet marker while the rows have the controller,
+ * and is lit (accent edge and tint) while the controller is on the category column */
+body.inhub.dark .tab.on { background-color: #1B201D; color: #E9EDEA; border-color: #4A524E; }
+body.inhub.dark .tab.on.f { background-color: rgba(232, 149, 90, 36); border-color: #E8955A; }
+body.inhub.dark #resume { background-color: #1B1F1D; color: #E9EDEA; border-color: #2C322F; }
+body.inhub.dark #settings { color: #8A938E; }
+body.inhub.light #panel { background-color: #F2F4F1; }
+body.inhub.light #tabs { border-color: #D5DCD4; }
+body.inhub.light .tab.on { background-color: #FFFFFF; color: #18201B; border-color: #B8C2B6; }
+body.inhub.light .tab.on.f { background-color: rgba(194, 82, 47, 22); border-color: #C2522F; }
+body.inhub.light #resume { background-color: #FFFFFF; color: #18201B; border-color: #D5DCD4; }
+body.inhub.light #settings { color: #66726B; }
+/* ---- the in-game side panel (snatcherLeo, 2026-11-11: "B, mock it up", "Yes, build it"; mockups 5-7): a slim panel on the
+ * right over the paused game; the first screen holds a few shortcuts, the categories, Report a problem and Quit to
+ * hub; a category slides its rows into the same panel. See-through (blurred) by default, solid as Appearance's
+ * "Menu background" (body.solid). The list scrolls when the window is short (the Steam Deck). ---- */
+/* *Updated 2026-11-12, v2 (snatcherLeo: "Yes, build v2"; mockups 8-11):* every row one fixed height with its label and
+ * control on one centre line; the shortcuts (and a category's rows) in a card; the categories with an icon and a
+ * summary of what is set; the focused row's description in one help box at the bottom (rows never change height);
+ * Report a problem and Quit to hub as two buttons; the footer's hints for the controller in hand; the big banner over
+ * the game gone (a first-run hint instead, #toast). */
+#ptop, #phint, #phead, #pbtns, #phelp, #toast { display: none; }
+body.panel #dim, body.panel #hint, body.panel #paused { display: none; }
+body.panel #panel { left: auto; right: 0dp; top: 0dp; bottom: 0dp; width: 420dp; margin-left: 0dp;
+                    padding: 0dp; border-radius: 0dp; border-width: 0dp; border-left-width: 1dp; }
+body.panel.pausing #ptop { display: block; } /* only while the game really is paused (off by default) */
+body.panel #ptop { position: absolute; left: 24dp; top: 8dp; font-size: 11dp; font-weight: bold; letter-spacing: 3dp; }
+body.panel #ph1, body.panel #tabs, body.panel #foot, body.panel #mh, body.panel #fh { display: none; }
+body.panel #phead { display: block; position: absolute; left: 24dp; right: 24dp; top: 24dp; height: 34dp; }
+#plogo { display: inline-block; width: 30dp; height: 30dp; margin-right: 10dp; vertical-align: middle; }
+#ptitle { display: inline-block; font-family: "Saira"; font-size: 21dp; font-weight: bold; vertical-align: middle; }
+#pgame { float: right; font-size: 13dp; line-height: 34dp; }
+#pback { display: inline-block; width: 30dp; height: 30dp; line-height: 28dp; text-align: center; border-radius: 9dp;
+         border-width: 1dp; font-size: 18dp; margin-right: 10dp; vertical-align: middle; cursor: pointer; }
+/* a fixed width: with only left and right, the rows of the scrolling list collapsed to their narrowest */
+body.panel #list { position: absolute; left: 16dp; width: 388dp; top: 74dp; bottom: 120dp; overflow-y: auto; }
+body.panel.lvl1 #list { bottom: 150dp; }
+.card { display: block; padding: 4dp; border-radius: 14dp; border-width: 1dp; margin-bottom: 12dp; }
+.sec { display: block; margin: 4dp 10dp 8dp 10dp; font-size: 11dp; font-weight: bold; letter-spacing: 3dp; }
+body.panel .row { height: 46dp; min-height: 0dp; padding: 0dp 12dp; border-width: 0dp; border-radius: 10dp; }
+body.panel .row.f { padding: 0dp 12dp 0dp 9dp; border-left-width: 3dp; }
+body.panel .n { font-size: 15dp; }
+body.panel .s { display: none; }
+body.panel .c { margin-left: 10dp; }
+body.panel .c-sel { width: 172dp; }
+body.panel .sel { width: 146dp; height: 32dp; line-height: 32dp; padding: 0dp 12dp; font-size: 13dp; border-radius: 8dp;
+                  white-space: nowrap; overflow: hidden; }
+body.panel .c-tog { width: 42dp; }
+body.panel .tog { width: 42dp; height: 24dp; margin-top: 0dp; }
+body.panel .tog .tf, body.panel .tog .te { width: 42dp; height: 24dp; } /* the same pill, 42 x 24 (the same 1.75 shape) */
+/* the side menu's smaller switch, the same shape (mockup item 2) inside 42 x 24: the knob 1.5 dp inside the edge */
+body.panel .knob { width: 18dp; height: 18dp; margin-top: 3dp; margin-left: 3dp; }
+body.panel .knob .kf { width: 18dp; height: 18dp; }
+body.panel .tog.on .knob { margin-left: 21dp; }
+body.panel .ck { width: 18dp; height: 18dp; line-height: 18dp; font-size: 11dp; }
+/* About's icon buttons in the side menu: the switch's size, so their left edges line up (2026-11-23) */
+body.panel .c-ib { width: 42dp; }
+body.panel .ibtn { width: 42dp; height: 24dp; border-radius: 6dp; }
+body.panel .ibtn img { width: 15dp; height: 15dp; margin-top: 3.5dp; }
+body.panel .c-sl { width: 180dp; }
+body.panel .sl { height: 32dp; line-height: 32dp; }
+body.panel .track { width: 132dp; }
+body.panel .thumb { top: -8dp; width: 20dp; height: 20dp; margin-left: -10dp; }
+body.panel .thumb .tk { width: 20dp; height: 20dp; }
+body.panel .val { width: 34dp; margin-left: 10dp; font-size: 14dp; }
+body.panel .c-info { width: 176dp; }
+/* a locked row's tag in the side menu (snatcherLeo's polish list 2026-11-16, mockup item 3 "After B"): its column as wide as
+ * the short "Accurate mode" tag, so the name keeps the rest of the row; Battles' wider choice box ("Match current Game
+ * speed" was cut off in the 146 dp box; its name is short) */
+body.panel .c-lock { width: auto; }
+body.panel .c-wide { width: 232dp; }
+body.panel .c-wide .sel { width: 206dp; }
+/* the categories: an icon, the name and a summary of what is set, an arrow */
+.cat { display: flex; align-items: center; height: 58dp; padding: 0dp 12dp; border-radius: 10dp; cursor: pointer; }
+.cat.f { padding-left: 9dp; border-left-width: 3dp; }
+.ic { display: block; flex: 0 0 auto; width: 22dp; height: 22dp; margin-right: 14dp; }
+.txt { display: block; flex: 1 1 0dp; }
+.cn { display: block; font-size: 15dp; font-weight: bold; }
+.cs { display: block; font-size: 12dp; margin-top: 2dp; white-space: nowrap; overflow: hidden; }
+.go { display: block; flex: 0 0 auto; font-size: 20dp; margin-left: 10dp; }
+/* the first screen's two buttons, and a category's help box */
+body.panel.lvl0 #pbtns { display: block; position: absolute; left: 16dp; right: 16dp; bottom: 64dp; height: 146dp; }
+body.panel.lvl0 #list { bottom: 220dp; }
+/* the menu bar over the game (snatcherLeo, 2026-11-13, mockup 46): only File and Help, no logo; a rounded menu under each;
+ * body.baronly: the bar alone (the menu closed); About OrrePort in the middle (body.aboutopen) */
+#mbar, #mdrop, #msub, #about { display: none; }
+body.baronly #panel, body.baronly #report, body.baronly #dim, body.baronly #hint, body.baronly #paused,
+body.baronly #hubgear { display: none; }
+body.baronly #mbar, body.barup #mbar, body.barhover #mbar { display: block; position: absolute; left: 0dp; right: 0dp;
+                                                            top: 0dp; height: 40dp; padding: 0dp 10dp;
+                                                            border-bottom-width: 1dp; }
+/* Always show the menu bar turned on with the menu open: the bar at once, the menu below it (pc_settings_overlay.cpp).
+ * *Updated 2026-11-13:* the bar answers the mouse there too (it passed it through before; snatcherLeo: "I am unable to click
+ * on "File" or "Help" once the side settings menu is opened up"); body.barhover: Always show off, the mouse at the top
+ * brings the bar over the menu's header, the menu staying where it is */
+body.barup.panel #panel, body.barup.inhub.ingame #panel { top: 41dp; }
+/* the hovered bar covers the menu's header ("Menu" and the game), which would show cut in half under it: hidden while
+ * the bar is up. Not moved down instead: the menu would then jump under the mouse on its way from the bar to it */
+body.barhover #phead { visibility: hidden; }
+.mb { display: inline-block; height: 30dp; line-height: 30dp; margin-top: 5dp; padding: 0dp 12dp; border-radius: 7dp;
+      font-size: 14dp; cursor: pointer; }
+body.baronly #mdrop.show, body.barup #mdrop.show, body.barhover #mdrop.show {
+    display: block; position: absolute; left: 10dp; top: 44dp; width: 300dp; padding: 7dp; border-radius: 12dp;
+    border-width: 1dp; }
+/* *Updated 2026-11-13:* each menu opens under its own name, placed from the bar's layout (pc_settings_overlay.cpp
+ * bar_rml), so it fits every language; the Cheats menu (mockup 63 v2) is wider, and its side list (#msub: EXP's
+ * choices, the items to put in the PC) opens beside the row */
+body.baronly #mdrop.show.cheats, body.barup #mdrop.show.cheats, body.barhover #mdrop.show.cheats { width: 360dp; }
+body.baronly #msub.show, body.barup #msub.show, body.barhover #msub.show {
+    display: block; position: absolute; width: 170dp; padding: 7dp; border-radius: 12dp; border-width: 1dp; }
+#msub.wide { width: 330dp; }
+.mhd { display: block; padding: 6dp 10dp 6dp 26dp; font-size: 11dp; line-height: 16dp; }
+.mhd2 { display: block; padding: 6dp 10dp 6dp 6dp; font-size: 11dp; line-height: 16dp; }
+.msub { font-size: 11.5dp; }
+.marr { font-size: 17dp; margin-left: 4dp; }
+.msave { display: inline-block; height: 20dp; line-height: 20dp; padding: 0dp 7dp; border-radius: 5dp; border-width: 1dp;
+         font-size: 10dp; font-weight: bold; vertical-align: middle; }
+.mi { position: relative; display: block; height: 36dp; line-height: 36dp; padding: 0dp 12dp 0dp 6dp; border-radius: 7dp;
+      font-size: 14dp; cursor: pointer; white-space: nowrap; }
+.mck { display: inline-block; width: 20dp; font-weight: bold; }
+.mr { position: absolute; right: 10dp; top: 0dp; }
+.kk { display: inline-block; height: 20dp; line-height: 20dp; padding: 0dp 7dp; margin-left: 5dp; border-radius: 5dp;
+      font-size: 10.5dp; font-weight: bold; vertical-align: middle; }
+.msep { display: block; height: 1dp; margin: 5dp 6dp; }
+body.baronly.aboutopen #about { display: block; position: absolute; left: 50%; top: 22%; width: 460dp; margin-left: -230dp;
+                                padding: 22dp 24dp; border-radius: 14dp; border-width: 1dp; }
+#about .at { display: block; font-family: "Saira"; font-size: 24dp; font-weight: bold; }
+#about .av { display: block; font-size: 11.5dp; margin: 2dp 0dp 14dp 0dp; }
+#about .ah { display: block; font-size: 10.5dp; font-weight: bold; letter-spacing: 2dp; margin-bottom: 6dp; }
+#about .al { display: block; font-size: 13dp; line-height: 19dp; margin-bottom: 4dp; }
+#about .an { display: block; font-size: 11.5dp; line-height: 17dp; margin: 12dp 0dp 14dp 0dp; }
+#about .btn { display: inline-block; padding: 0dp 22dp; }
+body.dark #mbar { background-color: rgba(22, 26, 24, 240); border-color: #2C322F; color: #D7DDD9; }
+body.dark .mb:hover, body.dark .mb.open { background-color: #2C322F; color: #E9EDEA; }
+body.dark #mdrop, body.dark #msub, body.dark #about { background-color: #1B1F1D; border-color: #3A423E; color: #E9EDEA; }
+body.dark .mhd, body.dark .mhd2, body.dark .msub { color: #8A938E; }
+body.dark .marr { color: #B4BCB7; }
+body.dark .msave { color: #F2B183; background-color: rgba(232, 149, 90, 30); border-color: rgba(232, 149, 90, 115); }
+body.dark .mi:hover { background-color: #2C322F; }
+body.dark .mck { color: #E8955A; }
+body.dark .kk { background-color: #3A423E; color: #E9EDEA; }
+body.dark .msep { background-color: #2C322F; }
+body.dark #about .av, body.dark #about .ah, body.dark #about .an { color: #8A938E; }
+body.light #mbar { background-color: rgba(242, 244, 241, 245); border-color: #D5DCD4; color: #2B332E; }
+body.light .mb:hover, body.light .mb.open { background-color: #E3E8E1; color: #18201B; }
+body.light #mdrop, body.light #msub, body.light #about { background-color: #FFFFFF; border-color: #B8C2B6; color: #18201B; }
+body.light .mhd, body.light .mhd2, body.light .msub { color: #66726B; }
+body.light .marr { color: #4A554E; }
+body.light .msave { color: #A8431F; background-color: rgba(194, 82, 47, 22); border-color: rgba(194, 82, 47, 110); }
+body.light .mi:hover { background-color: #EEF2EC; }
+body.light .mck { color: #C2522F; }
+body.light .kk { background-color: #D9DED7; color: #18201B; }
+body.light .msep { background-color: #E3E8E1; }
+body.light #about .av, body.light #about .ah, body.light #about .an { color: #66726B; }
+/* a fullscreen switch's dip to black (snatcherLeo, 2026-11-13: the "weird clicker" when switching): over everything, alone
+ * when the menu is closed */
+#cover { display: none; position: absolute; left: 0dp; top: 0dp; right: 0dp; bottom: 0dp; background-color: #000000; }
+body.covering #cover { display: block; }
+body.coveronly #panel, body.coveronly #report, body.coveronly #dim, body.coveronly #hint, body.coveronly #paused,
+body.coveronly #hubgear, body.coveronly #toast { display: none; }
+/* Quit to hub's fade: black over everything, the words fading in, then OrrePort starts again on the hub */
+#fade { display: none; position: absolute; left: 0dp; top: 0dp; right: 0dp; bottom: 0dp; background-color: #000000;
+        text-align: center; }
+body.quitting #fade { display: block; }
+/* the shortcut's quit: the fade alone, none of the menu (snatcherLeo, 2026-11-13: "it can't show the small settings menu right
+ * before") */
+body.fadeonly #panel, body.fadeonly #report, body.fadeonly #dim, body.fadeonly #hint, body.fadeonly #paused,
+body.fadeonly #hubgear, body.fadeonly #toast { display: none; }
+#fadetext { display: block; position: absolute; left: 0dp; right: 0dp; top: 48%; font-size: 18dp; color: #B4BCB7; }
+/* the GameCube adapter's setup running (snatcherLeo, 2026-11-13: "have a loading screen as it is installing"): the window
+ * dimmed, a box with the words and a bar that slides back and forth (pc_settings_overlay.cpp moves #busybar) */
+#busy { display: none; position: absolute; left: 0dp; top: 0dp; right: 0dp; bottom: 0dp;
+        background-color: rgba(0, 0, 0, 170); }
+body.busy #busy { display: block; }
+#busybox { position: absolute; left: 50%; top: 50%; width: 520dp; margin-left: -260dp; margin-top: -80dp;
+           padding: 26dp 30dp; box-sizing: border-box; border-radius: 16dp; border-width: 1dp; border-color: #3A423E;
+           background-color: #1B1F1D; }
+#busyt { display: block; font-family: "Saira"; font-size: 24dp; font-weight: bold; color: #E9EDEA; }
+#busystep { display: block; margin-top: 14dp; font-size: 17dp; color: #E9EDEA; }
+#busys { display: block; margin-top: 12dp; font-size: 15dp; color: #8A938E; }
+#busytrack { display: block; position: relative; height: 10dp; margin-top: 10dp; border-radius: 5dp;
+             background-color: #2A302D; overflow: hidden; }
+#busybar { position: absolute; left: 0dp; top: 0dp; width: 0%; height: 10dp; border-radius: 5dp;
+           background-color: #A9C3A3; }
+body.light #busystep { color: #18201B; }
+body.light #busybox { background-color: #F2F4F1; border-color: #D5DCD4; }
+body.light #busyt { color: #18201B; }
+body.light #busys { color: #45514A; }
+body.light #busytrack { background-color: #D5DCD4; }
+body.light #busybar { background-color: #5D7A57; }
+/* the adapter's result note, larger (snatcherLeo, 2026-11-13: "We can make this text a little bigger") */
+#live.big { font-size: 17dp; }
+body.panel #live.big { font-size: 15.5dp; }
+/* Open full Settings: full width, above Back to the game (snatcherLeo, 2026-11-13) */
+.pbtn.wide { display: block; width: auto; margin: 0dp 0dp 8dp 0dp; }
+/* Quit to hub's question: a line and its "Don't ask again" box above Cancel / Quit to hub (snatcherLeo, 2026-11-13) */
+.qask { display: block; height: 90dp; margin: 0dp 0dp 8dp 0dp; padding-top: 8dp; box-sizing: border-box; }
+.qt { display: block; font-size: 13dp; font-weight: bold; margin-bottom: 6dp; }
+.qbox { display: inline-block; height: 28dp; line-height: 28dp; padding: 0dp 10dp 0dp 4dp; border-radius: 7dp;
+        border-width: 1dp; border-color: transparent; font-size: 13dp; cursor: pointer; }
+.qbox .cb { display: inline-block; width: 16dp; height: 16dp; line-height: 14dp; margin: 0dp 8dp 0dp 4dp; border-radius: 4dp;
+            border-width: 1.5dp; text-align: center; font-size: 12dp; vertical-align: middle; }
+body.dark .qbox.f { border-color: #E8955A; } body.light .qbox.f { border-color: #C2522F; }
+body.dark .qbox .cb { border-color: #8A938E; } body.light .qbox .cb { border-color: #66726B; }
+body.dark .qbox .cb.on { background-color: #E8955A; border-color: #E8955A; color: #1A120C; }
+body.light .qbox .cb.on { background-color: #C2522F; border-color: #C2522F; color: #FFFFFF; }
+body.dark .pbtn.danger { background-color: #B5452E; border-color: #B5452E; color: #FFFFFF; }
+body.light .pbtn.danger { background-color: #B5452E; border-color: #B5452E; color: #FFFFFF; }
+/* Back to the game: the first screen's big button, full width, in the accent colour (snatcherLeo, 2026-11-12) */
+.pbtn.resume { display: block; width: auto; height: 48dp; line-height: 46dp; margin: 0dp 0dp 8dp 0dp; font-size: 15dp; }
+.pbtn.resume .rk { font-size: 11dp; padding: 2dp 7dp; margin-left: 8dp; border-radius: 6dp; }
+.pbtn { display: inline-block; width: 184dp; height: 40dp; line-height: 40dp; text-align: center; border-radius: 10dp;
+        border-width: 1dp; font-size: 13dp; font-weight: bold; margin-right: 8dp; cursor: pointer; }
+body.panel.lvl1 #phelp { display: block; position: absolute; left: 16dp; right: 16dp; bottom: 64dp; height: 64dp;
+                         padding: 10dp 14dp; border-radius: 10dp; font-size: 13dp; }
+#phelp .hn { font-weight: bold; }
+body.panel #live { position: absolute; left: 22dp; right: 22dp; bottom: 112dp; margin: 0dp; font-size: 13dp; }
+body.panel.lvl1 #live { bottom: 136dp; }
+/* the first screen: the note above the buttons block (#pbtns, 64-210dp from the bottom), never over Quit to hub
+   (*Fixed 2026-11-16*, snatcherLeo: the "still saving" note sat inside the button); the list ends higher while a note shows */
+body.panel.lvl0 #live { bottom: 218dp; }
+body.panel.lvl0.hasnote #list { bottom: 276dp; } /* room for three lines of 13dp (German runs longest) */
+/* the footer: the controller's own buttons (pc_settings_overlay.cpp hint_bar) */
+body.panel #phint { display: block; position: absolute; left: 20dp; right: 20dp; bottom: 0dp; height: 52dp;
+                    line-height: 52dp; border-top-width: 1dp; font-size: 12dp; }
+#phint .rt { float: right; }
+.hi { display: inline-block; margin-right: 12dp; }
+.k { display: inline-block; min-width: 20dp; height: 20dp; line-height: 20dp; padding: 0dp 5dp; border-radius: 10dp;
+     font-size: 10dp; font-weight: bold; text-align: center; color: #FFFFFF; margin-right: 5dp; vertical-align: middle; }
+.k.sq { border-radius: 5dp; }
+.kimg { display: inline-block; width: 11dp; height: 11dp; margin-top: 4dp; }
+/* the first-run hint, over the game (body.toastonly: only it shows, the panel closed) */
+body.toastonly #panel, body.toastonly #report, body.toastonly #dim, body.toastonly #hint, body.toastonly #paused,
+body.toastonly #hubgear { display: none; }
+body.toastonly #toast { display: block; position: absolute; left: 32dp; bottom: 32dp; padding: 16dp 22dp;
+                        border-radius: 14dp; border-width: 1dp; font-size: 20dp; }
+#tlogo { display: inline-block; width: 36dp; height: 36dp; margin-right: 16dp; vertical-align: middle; }
+#ttext { display: inline-block; vertical-align: middle; }
+#ttext b { font-weight: bold; }
+#tsub { display: block; font-size: 15dp; margin-top: 3dp; }
+body.dark .card { background-color: rgba(255, 255, 255, 12); border-color: rgba(255, 255, 255, 16); }
+body.light .card { background-color: rgba(255, 255, 255, 150); border-color: #D5DCD4; }
+body.dark.panel .row.f, body.dark .cat.f { background-color: rgba(232, 149, 90, 34); border-color: #E8955A; }
+body.light.panel .row.f, body.light .cat.f { background-color: rgba(194, 82, 47, 30); border-color: #C2522F; }
+body.dark .cs { color: #8A938E; }
+body.light .cs { color: #66726B; }
+body.dark .ic { image-color: #C9D2CB; }
+body.light .ic { image-color: #45514A; }
+body.dark #pgame { color: #B4BCB7; }
+body.light #pgame { color: #45514A; }
+body.dark .pbtn { background-color: rgba(255, 255, 255, 13); border-color: rgba(255, 255, 255, 22); color: #E9EDEA; }
+body.light .pbtn { background-color: #FFFFFF; border-color: #D5DCD4; color: #18201B; }
+body.dark .pbtn.f { border-color: #E8955A; }
+body.light .pbtn.f { border-color: #C2522F; }
+body.dark .pbtn.resume { background-color: #E8955A; border-color: #E8955A; color: #1A120C; }
+body.light .pbtn.resume { background-color: #C2522F; border-color: #C2522F; color: #FFFFFF; }
+body.dark .pbtn.resume.f { border-color: #FFFFFF; }
+body.light .pbtn.resume.f { border-color: #18201B; }
+/* the controller's cursor on a button: a 2.5 dp ring 3.8 dp outside it, the hub's PLAY ring (snatcherLeo, 2026-11-15, mockup
+ * B: "the cursor ... more easy to see from afar"). Placed from the padding box, so 1 dp more than the gap for the
+ * button's own border; radius = the button's + 6.3 dp. Never takes clicks. White (dark theme) or ink (light) round the
+ * coloured buttons (Back to the game, the red Quit to hub), where an orange ring would sink in */
+.pbtn, .qbox { position: relative; }
+.fring { position: absolute; top: -7.3dp; left: -7.3dp; right: -7.3dp; bottom: -7.3dp; border-width: 2.5dp;
+         border-radius: 16.3dp; pointer-events: none; }
+.qbox .fring { border-radius: 13.3dp; }
+body.dark .fring { border-color: #E8955A; } body.light .fring { border-color: #C2522F; }
+body.dark .pbtn.resume .fring, body.dark .pbtn.danger .fring { border-color: #FFFFFF; }
+body.light .pbtn.resume .fring, body.light .pbtn.danger .fring { border-color: #18201B; }
+/* ---- Quit to hub in the full Settings window in game (snatcherLeo, 2026-11-15: mockup A, above BACK; R2, its question as a
+ * dialog over the dimmed window). #fquit sits one button above BACK (#foot: left 56 dp, bottom 30 dp, 48 dp high);
+ * the dialog's buttons and box take the side panel's ring (.fring) for the controller's cursor ---- */
+#fquit, #fqdim, #fqdlg { display: none; }
+body.inhub.fullgame #fquit { display: block; position: absolute; left: 56dp; bottom: 90dp; height: 48dp; line-height: 46dp;
+                             padding: 0dp 22dp; font-size: 16dp; font-weight: bold; letter-spacing: 1dp;
+                             text-transform: uppercase; cursor: pointer; }
+/* *Changed 2026-11-15 (snatcherLeo: "let's make QUIT TO HUB more red, so users know to avoid it"):* a red tint and red edge,
+ * red text; the controller on it: the full red with a white (dark) or ink (light) edge. The side panel's Quit to hub
+ * (.pbtn.quitb) has the same tint */
+body.dark #fquit, body.dark .pbtn.quitb { background-color: rgba(181, 69, 46, 46); color: #FF9F8A; border-color: #8C3A2A; }
+body.light #fquit, body.light .pbtn.quitb { background-color: #FBE7E2; color: #A8391F; border-color: #E0A090; }
+body.dark #fquit.f { background-color: #B5452E; color: #FFFFFF; border-color: #FFFFFF; }
+body.light #fquit.f { background-color: #B5452E; color: #FFFFFF; border-color: #18201B; }
+/* *Changed 2026-11-15 (snatcherLeo: "if a user moves their cursor over "Quit to hub" it will flash exactly like [the full
+ * Settings' lit QUIT TO HUB], to alarm the user"):* under the mouse or the controller, Quit to hub is the full red with a
+ * white (dark) or ink (light) edge, on the side panel and in full Settings alike */
+body.dark #fquit:hover, body.dark.panel .pbtn.quitb:hover, body.dark.panel .pbtn.quitb.f, body.dark.panel .pbtn.quitb.f:hover {
+    background-color: #B5452E; color: #FFFFFF; border-color: #FFFFFF; }
+body.light #fquit:hover, body.light.panel .pbtn.quitb:hover, body.light.panel .pbtn.quitb.f,
+body.light.panel .pbtn.quitb.f:hover { background-color: #B5452E; color: #FFFFFF; border-color: #18201B; }
+body.dark .pbtn.quitb .fring { border-color: #FFFFFF; } body.light .pbtn.quitb .fring { border-color: #18201B; }
+/* the column's BACK with the controller on it (after QUIT TO HUB): the categories' lit look */
+body.inhub.dark #resume.f { background-color: rgba(232, 149, 90, 36); border-color: #E8955A; }
+body.inhub.light #resume.f { background-color: rgba(194, 82, 47, 22); border-color: #C2522F; }
+body.fq #fqdim { display: block; position: absolute; left: 0dp; top: 0dp; right: 0dp; bottom: 0dp;
+                 background-color: rgba(0, 0, 0, 140); }
+body.fq #fqdlg { display: block; position: absolute; left: 50%; top: 50%; width: 420dp; margin-left: -210dp;
+                 margin-top: -118dp; padding: 26dp 26dp 24dp 26dp; border-radius: 16dp; border-width: 1dp; }
+body.dark #fqdlg { background-color: #1B1F1D; border-color: #343A36; color: #E9EDEA; }
+body.light #fqdlg { background-color: #FFFFFF; border-color: #D5DCD4; color: #18201B; }
+/* General's GameCube-accurate card (snatcherLeo's polish list 2026-11-16, mockups item 1 / 1b; pc_settings_overlay.cpp
+ * refresh): the Saves page's accurate box (hub.rcss .svacc) at Settings' row sizes, on the page layout only. The name
+ * and its line, a grey teaser counting what accurate mode turns off, the green "What it turns off ›" link (the Saves
+ * page's .svlink: underlined under the mouse, an orange edge with the controller on it), the switch on the right. In
+ * game the switch and its words are greyed (.locked: "Close the game to change this"); the teaser and link stay live */
+.acccard { display: flex; align-items: center; margin: 6dp 0dp 12dp 0dp; padding: 18dp 22dp 16dp 22dp; border-radius: 12dp;
+           border-width: 1dp; }
+.acccard .l { min-width: 0dp; }
+body.inhub .acccard .s { line-height: 21dp; margin-top: 5dp; } /* beats body.inhub .s */
+.teaser { display: block; margin-top: 10dp; font-size: 15dp; line-height: 21dp; }
+.what { display: inline-block; margin-top: 4dp; margin-left: -6dp; padding: 1dp 6dp; border-radius: 6dp; border-width: 2dp;
+        border-color: transparent; font-size: 15.5dp; font-weight: bold; line-height: 22dp; cursor: pointer; }
+.what:hover { text-decoration: underline; }
+.chev { margin-left: 6dp; font-size: 19dp; }
+.acccard .c { margin-left: 32dp; }
+.acccard .tog { margin-top: 0dp; }
+.acccard.locked .n, .acccard.locked .s, .acccard.locked .tog { opacity: 0.55; }
+body.dark .acccard { background-color: #161A18; border-color: #262B28; }
+body.light .acccard { background-color: #FFFFFF; border-color: #D5DCD4; }
+body.dark .teaser { color: #8A938E; } body.light .teaser { color: #66726B; }
+body.dark .what { color: #A9C3A3; } body.light .what { color: #4E6B49; }
+body.dark .what.f { border-color: #E8955A; } body.light .what.f { border-color: #C2522F; }
+/* General › "What it turns off" (2.12): the Quit to hub dialog's look, wider, its list scrolling (.awh / .awr, as on the
+ * hub's Saves page) */
+#whatdim, #whatdlg { display: none; }
+body.whatoff #whatdim { display: block; position: absolute; left: 0dp; top: 0dp; right: 0dp; bottom: 0dp;
+                        background-color: rgba(0, 0, 0, 140); }
+body.whatoff #whatdlg { display: block; position: absolute; left: 50%; top: 50%; width: 620dp; margin-left: -310dp;
+                        margin-top: -300dp; padding: 26dp 26dp 24dp 26dp; border-radius: 16dp; border-width: 1dp; }
+body.dark #whatdlg { background-color: #1B1F1D; border-color: #343A36; color: #E9EDEA; }
+body.light #whatdlg { background-color: #FFFFFF; border-color: #D5DCD4; color: #18201B; }
+#whatlist { display: block; height: 430dp; margin: 6dp 0dp 18dp 0dp; overflow-y: auto; padding-right: 10dp; }
+#whatlist scrollbarvertical { width: 8dp; }
+#whatlist scrollbarvertical sliderbar { background-color: #3A423E; border-radius: 4dp; }
+.awi { display: block; font-size: 14.5dp; line-height: 21dp; margin-bottom: 4dp; }
+.awh { display: block; margin: 12dp 0dp 3dp 0dp; font-size: 13dp; font-weight: bold; letter-spacing: 1dp; }
+.awr { display: block; padding: 4dp 0dp 4dp 14dp; font-size: 15dp; line-height: 21dp; }
+body.dark .awi { color: #9AA39E; } body.light .awi { color: #55615A; }
+body.dark .awh.k0, body.dark .awh.k1 { color: #E0B45C; } body.dark .awh.k2 { color: #A9C3A3; }
+body.light .awh.k0, body.light .awh.k1 { color: #8A6420; } body.light .awh.k2 { color: #4E6B49; }
+/* the one locked style (orreport-design-overview.md 4.1; 2.12): a small lock and the amber "off in accurate mode" tag in
+ * place of the control; the lock's shackle and body are two boxes (no font needs a lock symbol). The row is greyed by
+ * .row.disabled; the tag keeps full colour so it reads */
+.acclock { display: inline-block; height: 26dp; line-height: 26dp; margin-top: 9dp; padding: 0dp 10dp 0dp 8dp; border-radius: 7dp;
+           border-width: 1dp; font-size: 13dp; font-weight: bold; white-space: nowrap; }
+body.dark .acclock { background-color: rgba(224, 180, 92, 30); border-color: rgba(224, 180, 92, 140); color: #E0B45C; }
+body.light .acclock { background-color: #FBF1DC; border-color: #D9B465; color: #8A6420; }
+.lki { display: inline-block; position: relative; width: 11dp; height: 14dp; margin-right: 7dp; vertical-align: middle; top: -1dp; }
+.lks { display: block; position: absolute; left: 1.5dp; top: 0dp; width: 8dp; height: 8dp; border-width: 2dp 2dp 0dp 2dp;
+       border-radius: 4dp 4dp 0dp 0dp; box-sizing: border-box; }
+.lkb { display: block; position: absolute; left: 0dp; top: 6dp; width: 11dp; height: 8dp; border-radius: 2dp; }
+body.dark .lks { border-color: #E0B45C; } body.dark .lkb { background-color: #E0B45C; }
+body.light .lks { border-color: #8A6420; } body.light .lkb { background-color: #8A6420; }
+body .row.locked .c { opacity: 1; } /* beats .row.disabled .c (below, same weight otherwise) */
+body .row.locked .c .tog { opacity: 0.55; }
+body.panel .acclock { margin-top: 0dp; font-size: 12dp; }
+.fqt { display: block; font-size: 22dp; font-weight: bold; margin-bottom: 6dp; }
+.fqs { display: block; font-size: 15dp; margin-bottom: 14dp; }
+body.dark .fqs { color: #9AA39E; } body.light .fqs { color: #55615A; }
+/* Go back's warning line (2026-11-23, snatcherLeo's pop-up): under the question, in the warning colour of About's error
+ * status, a little smaller */
+.fqs.gbwarn { font-size: 14dp; }
+body.gb #fqdlg { margin-top: -160dp; } /* the title, two paragraphs and the buttons: about 320 dp high */
+body.dark .fqs.gbwarn { color: #E8955A; } body.light .fqs.gbwarn { color: #B5452E; }
+.fqchk { display: block; position: relative; height: 32dp; line-height: 32dp; margin: 0dp 0dp 18dp -6dp; padding: 0dp 10dp 0dp 6dp;
+         border-radius: 7dp; border-width: 1dp; border-color: transparent; font-size: 15dp; cursor: pointer; }
+.fqchk .fring { border-radius: 13.3dp; }
+.fqchk .cb { display: inline-block; width: 16dp; height: 16dp; line-height: 14dp; margin: 0dp 8dp 0dp 0dp; border-radius: 4dp;
+             border-width: 1.5dp; text-align: center; font-size: 12dp; vertical-align: middle; }
+body.dark .fqchk .cb { border-color: #8A938E; } body.light .fqchk .cb { border-color: #66726B; }
+body.dark .fqchk .cb.on { background-color: #E8955A; border-color: #E8955A; color: #1A120C; }
+body.light .fqchk .cb.on { background-color: #C2522F; border-color: #C2522F; color: #FFFFFF; }
+.fqbtns { display: block; height: 48dp; }
+.fqb { display: inline-block; position: relative; width: 176dp; height: 48dp; line-height: 46dp; margin-right: 16dp;
+       text-align: center; border-radius: 10dp; border-width: 1dp; font-size: 16dp; font-weight: bold; cursor: pointer; }
+.fqb.danger { margin-right: 0dp; }
+body.dark .fqb { background-color: rgba(255, 255, 255, 13); border-color: rgba(255, 255, 255, 30); color: #E9EDEA; }
+body.light .fqb { background-color: #F0F3EF; border-color: #B8C2B6; color: #18201B; }
+body.dark .fqb.danger, body.light .fqb.danger { background-color: #B5452E; border-color: #B5452E; color: #FFFFFF; }
+body.dark .fqb:hover { background-color: rgba(255, 255, 255, 28); } body.dark .fqb.danger:hover { background-color: #C9533A; }
+body.light .fqb:hover { background-color: #E4E9E2; } body.light .fqb.danger:hover { background-color: #C9533A; }
+body.dark .fqb.danger .fring { border-color: #FFFFFF; } body.light .fqb.danger .fring { border-color: #18201B; }
+body.dark .pbtn.resume .rk { background-color: rgba(26, 18, 12, 46); }
+body.light .pbtn.resume .rk { background-color: rgba(255, 255, 255, 56); }
+/* the mouse over the side menu's categories and buttons (snatcherLeo, 2026-11-13: "I would like to have hoverabilty regions,
+ * if you are on mouse ... more polished"): a soft tint, lighter than the controller's focus (the accent edge), so the
+ * two never look alike; the accent buttons a shade brighter (dark) or deeper (light). The full Settings window keeps
+ * its own (.tab:hover) */
+body.dark.panel .cat:hover { background-color: rgba(255, 255, 255, 14); }
+body.light.panel .cat:hover { background-color: rgba(24, 32, 27, 12); }
+body.dark.panel .pbtn:hover { background-color: rgba(255, 255, 255, 28); border-color: rgba(255, 255, 255, 40); }
+body.light.panel .pbtn:hover { background-color: #EEF2EC; border-color: #B8C2B6; }
+body.dark.panel .pbtn.resume:hover { background-color: #F2A774; border-color: #F2A774; }
+body.light.panel .pbtn.resume:hover { background-color: #A8421F; border-color: #A8421F; }
+body.dark.panel .pbtn.danger:hover, body.light.panel .pbtn.danger:hover { background-color: #C9533A; border-color: #C9533A; }
+/* the controller's focus (tint and edge) stays visible under the mouse */
+body.dark.panel .cat.f:hover { background-color: rgba(232, 149, 90, 34); }
+body.light.panel .cat.f:hover { background-color: rgba(194, 82, 47, 30); }
+body.dark.panel .pbtn.f:hover { border-color: #E8955A; }
+body.light.panel .pbtn.f:hover { border-color: #C2522F; }
+body.dark.panel .pbtn.resume.f:hover { border-color: #FFFFFF; }
+body.light.panel .pbtn.resume.f:hover { border-color: #18201B; }
+body.dark #phelp { background-color: rgba(0, 0, 0, 56); color: #C9D2CB; }
+body.light #phelp { background-color: rgba(0, 0, 0, 13); color: #45514A; }
+/* dark: the panel's card grey, lifted so it reads over the black logo screens (snatcherLeo, 2026-11-12: "dark but not too
+ * dark") */
+body.dark #toast { background-color: rgba(35, 40, 38, 235); border-color: #4A524E; color: #E9EDEA; }
+body.light #toast { background-color: rgba(242, 244, 241, 230); border-color: #D5DCD4; color: #18201B; }
+body.dark #tsub { color: #A3ACA6; }
+body.light #tsub { color: #66726B; }
+/* a drop-down's list, open under its row (both looks) */
+.dd { display: block; margin: 2dp 0dp 8dp 0dp; padding: 6dp; border-radius: 10dp; border-width: 1dp; }
+.opt { display: block; padding: 9dp 12dp; border-radius: 7dp; font-size: 14dp; cursor: pointer; }
+.opt.f { border-left-width: 3dp; padding-left: 9dp; }
+.opt.cur { font-weight: bold; }
+body.dark.panel #panel { background-color: rgba(22, 26, 24, 168); backdrop-filter: blur(18dp); color: #E9EDEA;
+                         border-color: #2C322F; }
+body.dark.panel.solid #panel { background-color: #161A18; backdrop-filter: none; }
+body.light.panel #panel { background-color: rgba(242, 244, 241, 190); backdrop-filter: blur(18dp); color: #18201B;
+                          border-color: #D5DCD4; }
+body.light.panel.solid #panel { background-color: #F2F4F1; backdrop-filter: none; }
+body.dark #ptop, body.dark .sec { color: #8A938E; }
+body.light #ptop, body.light .sec { color: #66726B; }
+body.dark #phint { border-color: #2C322F; color: #B4BCB7; }
+body.light #phint { border-color: #D5DCD4; color: #45514A; }
+body.dark .psep { background-color: #2C322F; }
+body.light .psep { background-color: #D5DCD4; }
+body.dark .go { color: #B4BCB7; }
+body.light .go { color: #45514A; }
+body.dark #pback { border-color: #3A423E; color: #B4BCB7; }
+body.light #pback { border-color: #B8C2B6; color: #45514A; }
+body.dark .dd { background-color: #1B1F1D; border-color: #3A423E; }
+body.light .dd { background-color: #FFFFFF; border-color: #B8C2B6; }
+body.dark .opt.f { background-color: #2C322F; border-color: #E8955A; }
+body.light .opt.f { background-color: #E6ECE4; border-color: #C2522F; }
+body.dark .opt.cur { color: #8FA98A; }
+body.light .opt.cur { color: #5D7A57; }
+body.dark .sel.open { border-color: #E8955A; }
+body.light .sel.open { border-color: #C2522F; }
+
+.bars { letter-spacing: 0dp; margin-right: 8dp; }
+
+#hint { position: absolute; left: 0; top: 18dp; width: 100%; text-align: center; }
+#h1 { display: block; font-size: 14dp; font-weight: bold; color: #E9EDEA; }
+.z { display: inline-block; width: 24dp; height: 24dp; line-height: 24dp; border-radius: 12dp;
+     background-color: #6B5BD6; color: #FFFFFF; font-size: 11dp; font-weight: bold; text-align: center; }
+.start { display: inline-block; height: 20dp; line-height: 20dp; padding: 0dp 10dp; border-radius: 10dp;
+         background-color: #3A423E; color: #E9EDEA; font-size: 10dp; font-weight: bold; }
+#h2 { display: inline-block; margin-top: 8dp; padding: 6dp 14dp; border-radius: 12dp; border-width: 1dp;
+      border-color: #2C322F; background-color: rgba(17, 20, 19, 217); font-size: 14dp; color: #B4BCB7; }
+.sep { display: inline-block; width: 1dp; height: 16dp; margin: 0dp 10dp; vertical-align: middle;
+       background-color: #3A423E; }
+#h3 { display: block; margin-top: 8dp; font-size: 13dp; color: #D3D8D4; }
+
+.key { display: inline-block; min-width: 22dp; height: 20dp; line-height: 20dp; padding: 0dp 6dp;
+       border-radius: 5dp; font-size: 11dp; font-weight: bold; text-align: center; }
+.key.wide { min-width: 30dp; }
+
+#panel { position: absolute; left: 50%; top: 150dp; width: 960dp; margin-left: -480dp; padding: 26dp 26dp 22dp 26dp;
+         border-radius: 16dp; border-width: 1dp; }
+#ph1 { display: block; height: 28dp; }
+#settings { font-size: 20dp; font-weight: bold; letter-spacing: 3dp; }
+#gs { float: right; font-size: 14dp; padding-top: 4dp; }
+/* the game's dot ("● Pokémon Colosseum"): "middle" sets it at the lowercase letters' middle, which reads low beside the
+ * capitals, so it is lifted a little (snatcherLeo, 2026-11-13: "can we make this circle more... centered?") */
+.d { display: inline-block; width: 8dp; height: 8dp; border-radius: 4dp; margin-right: 6dp;
+     background-color: #E8955A; vertical-align: middle; position: relative; top: -1.5dp; }
+
+#tabs { display: block; text-align: center; margin: 22dp 0dp 18dp 0dp; }
+.lr { vertical-align: middle; margin: 0dp 12dp; }
+#rail { display: inline-block; padding: 0dp 5dp; vertical-align: middle; }
+.tab { display: inline-block; padding: 9dp 16dp; font-size: 16dp; }
+.tab.on { font-weight: bold; border-bottom-width: 3dp; } /* plain tabs, the open one underlined (was a boxed rail) */
+
+/* *Updated 2026-11-11 (snatcherLeo: "it's close, but not quite"; "A, full page"):* simple rows for both looks: no box round
+ * the list, a thin line between rows, the focused row a soft tint with an orange edge (was a boxed outline) */
+#list { display: block; }
+.row { display: flex; align-items: center; padding: 16dp 22dp; border-top-width: 1dp; min-height: 46dp; }
+.row.first { border-top-width: 0dp; }
+.row.f { border-width: 0dp; border-left-width: 3dp; border-radius: 8dp; padding: 17dp 22dp 17dp 19dp; }
+.row.f + .row { border-top-width: 0dp; }
+/* *Fixed 2026-11-15 (snatcherLeo: "When I move to the right, the height SLIGHTLY moves below of all rows"):* a focused row
+ * swaps its 1 dp top line for 1 dp more padding, so its height stays; the first row has no line, so it grew a pixel and
+ * pushed every row below it down. The first row keeps its own top padding when focused */
+.row.first.f { padding-top: 16dp; }
+body.inhub .row.first.f { padding-top: 20dp; }
+#mh { display: none; }
+#live.empty { display: none; }
+.l { display: block; flex: 1 1 0dp; }
+.n { display: block; font-size: 16dp; font-weight: bold; }
+.s { display: block; font-size: 14dp; margin-top: 3dp; }
+/* each control kind gets a fixed column (RmlUi measured a block child as the whole row's width) */
+.c { display: block; flex: 0 0 auto; margin-left: 20dp; }
+.c-sel { width: 268dp; }
+.c-tog { width: 56dp; }
+.c-sl { width: 256dp; }
+.c-info { width: 268dp; text-align: right; }
+.row.disabled .n, .row.disabled .s, .row.disabled .c { opacity: 0.55; }
+
+.sel { display: block; width: 236dp; height: 44dp; line-height: 44dp; padding: 0dp 16dp; border-radius: 9dp;
+       border-width: 1dp; font-size: 15dp; font-weight: bold; }
+.caret { float: right; font-size: 11dp; }
+/* *Changed 2026-11-16 (snatcherLeo's polish list, mockup item 2, "the switch"):* every switch one shape: 56 x 32 dp with a
+ * 1.5 dp edge, a dark track when off, the knob 24 dp and 4 dp from the outer edge, a check mark in the knob when on
+ * (a ✓ letter: RmlUi draws no SVG paths, and the fonts carry the mark). Ordinary switches keep the sage "on" (snatcherLeo's
+ * decision); only GameCube-accurate mode's switch (.tog.acc: General's card, as the Saves page's .svtog) is amber.
+ * .tring: the controller's ring round the switch when the switch itself has the controller (the accurate card), the
+ * hub's PLAY ring (2.5 dp, 3.8 dp outside the switch's edge); rows in the list keep their row tint instead. border-box
+ * keeps the edge inside the 56 x 32 */
+/* *Changed 2026-11-23 (snatcherLeo: the switches looked jagged):* the track, its 1.5 dp edge and the knob are smooth SVG
+ * pictures (icons/tog-fill, tog-edge, tog-knob; RmlUi's rounded borders have no smoothing), tinted below; the box itself
+ * draws nothing. Same shape and sizes as before */
+.tog { display: block; position: relative; box-sizing: border-box; width: 56dp; height: 32dp; margin-top: 6dp; }
+.tog .tf, .tog .te { position: absolute; left: 0dp; top: 0dp; width: 56dp; height: 32dp; }
+.knob { display: block; position: relative; width: 24dp; height: 24dp; margin-top: 4dp; margin-left: 4dp; }
+.knob .kf { position: absolute; left: 0dp; top: 0dp; width: 24dp; height: 24dp; }
+.tog.on .knob { margin-left: 28dp; }
+.ck { display: none; position: absolute; left: 0dp; top: 0dp; width: 24dp; height: 24dp; line-height: 24dp;
+      text-align: center; font-size: 15dp; font-weight: bold; }
+.tog.on .ck { display: block; }
+.tring { position: absolute; left: -7.8dp; top: -7.8dp; right: -7.8dp; bottom: -7.8dp; border-width: 2.5dp;
+         border-radius: 22.3dp; pointer-events: none; }
+body.dark .tring { border-color: #E8955A; } body.light .tring { border-color: #C2522F; }
+.sl { display: block; height: 44dp; }
+.track { display: inline-block; position: relative; width: 188dp; height: 4dp; border-radius: 2dp;
+         vertical-align: middle; }
+.fillbar { display: block; height: 4dp; border-radius: 2dp; }
+/* the thumb: a smooth circle picture (icons/tog-knob.svg, as the switches' knob; 2026-11-23), tinted below */
+.thumb { position: absolute; top: -10dp; width: 24dp; height: 24dp; margin-left: -12dp; }
+.thumb .tk { position: absolute; left: 0dp; top: 0dp; width: 24dp; height: 24dp; }
+.val { display: inline-block; width: 56dp; text-align: right; font-size: 15dp; font-weight: bold; vertical-align: middle; }
+.infotext { display: block; font-size: 15dp; line-height: 44dp; }
+
+#live { display: block; margin: 16dp 4dp; font-size: 14dp; }
+#foot { display: block; height: 52dp; margin-top: 18dp; }
+.btn { display: inline-block; height: 52dp; line-height: 52dp; padding: 0dp 22dp; border-radius: 10dp;
+       margin-right: 12dp; border-width: 2dp; }
+#resume { font-size: 17dp; font-weight: bold; letter-spacing: 2dp; }
+#quit { font-size: 15dp; font-weight: bold; }
+.ab { display: inline-block; width: 24dp; height: 24dp; line-height: 24dp; border-radius: 12dp; margin-left: 10dp;
+      background-color: #2F7D3A; color: #FFFFFF; font-size: 12dp; font-weight: bold; text-align: center;
+      letter-spacing: 0dp; }
+#fh { float: right; font-size: 14dp; line-height: 52dp; }
+#fh .key { margin-left: 6dp; }
+.bb { display: inline-block; width: 20dp; height: 20dp; line-height: 20dp; border-radius: 10dp;
+      background-color: #B5443A; color: #FFFFFF; font-size: 10dp; font-weight: bold; text-align: center; }
+/* the report's Cancel: its B the same size and spacing as Save report's A beside it (2026-11-13: the smaller
+ * chip looked off next to A); the footer's smaller B hint stays as it is */
+#cancel .bb { width: 24dp; height: 24dp; line-height: 24dp; border-radius: 12dp; margin-left: 10dp; font-size: 12dp; }
+
+.yb { display: inline-block; width: 22dp; height: 22dp; line-height: 22dp; border-radius: 11dp; margin-left: 8dp;
+      background-color: #B8952E; color: #FFFFFF; font-size: 11dp; font-weight: bold; text-align: center; }
+#report-btn { font-size: 15dp; font-weight: bold; }
+
+/* Report a problem (mockup 08): shown instead of the Settings panel while body.reporting */
+#report { display: none; position: absolute; left: 50%; top: 50%; width: 616dp; margin-left: -308dp;
+          margin-top: -250dp; padding: 26dp 30dp 24dp 30dp; border-radius: 16dp; border-width: 1dp; }
+body.reporting #report { display: block; }
+body.reporting #panel, body.reporting #hint { display: none; }
+#rh { display: block; font-family: "Saira"; font-size: 24dp; font-weight: bold; }
+.flag { margin-right: 8dp; font-family: "Noto Sans Symbols 2"; }
+#rl { display: block; margin-top: 16dp; font-size: 16dp; }
+.strong { font-weight: bold; }
+#notebox { display: block; position: relative; margin-top: 8dp; }
+#note { display: block; box-sizing: border-box; width: 100%; height: 120dp; padding: 14dp 16dp; border-radius: 10dp;
+        border-width: 2dp; font-size: 16dp; cursor: text; }
+/* the mouse pointer as in any app (snatcherLeo, 2026-11-09): the text cursor over the box (and its placeholder), a hand over
+ * what can be clicked; RmlUi has no built-in styles, so nothing asked for them before */
+#ph { cursor: text; }
+.btn, .tab, .row, .lr { cursor: pointer; }
+/* one cursor while a slider is dragged, wherever the mouse goes (snatcherLeo, 2026-11-12: "It should stay as 1 cursor, the
+ * open hand pointer finger, as I drag ... This goes for all sliders in our settings menu") */
+.track, .thumb, .fillbar { cursor: pointer; }
+body.dragging, body.dragging * { cursor: pointer; }
+.row.disabled { cursor: default; }
+#ph { position: absolute; left: 18dp; top: 16dp; font-size: 16dp; pointer-events: none; } /* clicks reach the box */
+body.hasnote #ph { display: none; }
+#auto { display: block; margin-top: 18dp; padding: 16dp 18dp; border-radius: 12dp; border-width: 1dp; }
+#autot { display: block; font-size: 15dp; }
+#chips { display: block; margin-top: 12dp; }
+.chip { display: inline-block; padding: 6dp 12dp; margin-right: 8dp; margin-bottom: 6dp; border-radius: 8dp;
+        border-width: 1dp; font-size: 15dp; font-weight: bold; }
+#autos { display: block; margin-top: 10dp; font-size: 14dp; }
+#rfoot { display: block; margin-top: 20dp; text-align: right; height: 52dp; }
+#rfoot .btn { margin-right: 0dp; margin-left: 12dp; font-size: 16dp; font-weight: bold; }
+/* the saved screen (2026-11-23, Studio's flow; the same as the hub's): the note and the "included" box give way */
+#rsaved, #ropen, #rdone { display: none; }
+body.reportsaved #rsaved { display: block; }
+body.reportsaved #ropen, body.reportsaved #rdone { display: inline-block; }
+body.reportsaved #rl, body.reportsaved #notebox, body.reportsaved #auto, body.reportsaved #cancel,
+body.reportsaved #savebtn { display: none; }
+#rsavedmsg { display: block; margin-top: 14dp; font-size: 16dp; }
+#rfile { display: block; margin-top: 18dp; padding: 0dp 16dp; height: 46dp; line-height: 46dp; border-radius: 10dp;
+         border-width: 1dp; }
+#rfilename { font-size: 15dp; font-weight: bold; }
+#rfilesize { float: right; font-size: 14dp; }
+#rbig { display: block; margin-top: 8dp; font-size: 14dp; }
+#rdone .ab { width: 24dp; height: 24dp; line-height: 24dp; border-radius: 12dp; margin-left: 10dp; font-size: 12dp; }
+#ropen .yb { width: 24dp; height: 24dp; line-height: 24dp; border-radius: 12dp; margin-left: 10dp; font-size: 12dp; }
+
+/* ---- Graphite, dark (mockup 13) ---- */
+body.dark #report { background-color: rgba(22, 26, 24, 245); border-color: #2C322F; color: #E9EDEA; }
+body.dark #note { background-color: #1B1F1D; border-color: #6F8A6A; color: #E9EDEA; }
+body.dark #ph, body.dark #autos, body.dark #autot { color: #8A938E; }
+body.dark #auto { background-color: #1B1F1D; border-color: #2C322F; }
+body.dark .chip { background-color: #232826; border-color: #3A423E; color: #E9EDEA; }
+body.dark #cancel { background-color: #232826; border-color: #3A423E; color: #E9EDEA; }
+body.dark #savebtn { background-color: #8FA98A; border-color: #8FA98A; color: #13200F; }
+body.dark #ropen { background-color: #232826; border-color: #3A423E; color: #E9EDEA; }
+body.dark #rdone { background-color: #8FA98A; border-color: #8FA98A; color: #13200F; }
+body.dark #rfile { background-color: #1B1F1D; border-color: #2C322F; }
+body.dark #rfilesize { color: #8A938E; }
+body.dark #rfilesize.big, body.dark #rbig { color: #E0705E; }
+body.dark #report-btn { background-color: #232826; color: #E9EDEA; border-color: #3A423E; }
+body.dark #panel { background-color: rgba(22, 26, 24, 240); border-color: #2C322F; color: #E9EDEA; }
+body.dark .key { background-color: #3A423E; color: #E9EDEA; }
+body.dark #gs, body.dark .s, body.dark #live, body.dark #fh, body.dark .tab { color: #B4BCB7; }
+body.dark .tab.on { color: #E9EDEA; border-color: #E8955A; }
+body.dark .tab:hover { color: #E9EDEA; }
+body.dark .row { border-color: #232826; }
+body.dark .row.f { border-color: #E8955A; background-color: #1B201D; }
+body.dark .sel { border-color: #3A423E; background-color: #232826; color: #E9EDEA; }
+/* the switch (mockup item 2): off a dark track with a grey edge; on sage, or amber for accurate mode (.acc) */
+body.dark .tog .tf { image-color: #0E100F; } body.dark .tog .te { image-color: #4A524E; }
+body.dark .tog.on .tf, body.dark .tog.on .te { image-color: #8FA98A; }
+body.dark .tog.on.acc .tf, body.dark .tog.on.acc .te { image-color: #E0B45C; }
+body.dark .knob .kf { image-color: #D4DAD6; }
+body.dark .tog.on .knob .kf { image-color: #FFFFFF; }
+body.dark .ck { color: #4C6847; }
+body.dark .tog.acc .ck { color: #9A6E1E; }
+body.dark .track { background-color: #3A423E; }
+body.dark .fillbar { background-color: #8FA98A; }
+body.dark .thumb .tk { image-color: #A9C3A3; }
+body.dark #resume { background-color: #8FA98A; color: #13200F; border-color: #8FA98A; }
+body.dark #quit { background-color: #232826; color: #E9EDEA; border-color: #3A423E; }
+body.dark .btn.f { border-color: #C9DCC4; }
+
+/* ---- Graphite, light (mockup 13a) ---- */
+body.light #report { background-color: rgba(242, 244, 241, 245); border-color: #D5DCD4; color: #18201B; }
+body.light #note { background-color: #FFFFFF; border-color: #7E9B78; color: #18201B; }
+body.light #ph, body.light #autos, body.light #autot { color: #66726B; }
+body.light #auto { background-color: #FFFFFF; border-color: #D5DCD4; }
+body.light .chip { background-color: #F0F3EF; border-color: #B8C2B6; color: #18201B; }
+body.light #cancel { background-color: #F0F3EF; border-color: #B8C2B6; color: #18201B; }
+body.light #savebtn { background-color: #5D7A57; border-color: #5D7A57; color: #FFFFFF; }
+body.light #ropen { background-color: #F0F3EF; border-color: #B8C2B6; color: #18201B; }
+body.light #rdone { background-color: #5D7A57; border-color: #5D7A57; color: #FFFFFF; }
+body.light #rfile { background-color: #FFFFFF; border-color: #D5DCD4; }
+body.light #rfilesize { color: #66726B; }
+body.light #rfilesize.big, body.light #rbig { color: #B5443A; }
+body.light #report-btn { background-color: #F0F3EF; color: #18201B; border-color: #B8C2B6; }
+body.light #panel { background-color: rgba(242, 244, 241, 240); border-color: #D5DCD4; color: #18201B; }
+body.light .key { background-color: #B8C2B6; color: #18201B; }
+body.light #gs, body.light .s, body.light #live, body.light #fh, body.light .tab { color: #45514A; }
+/* a note about something the player must fix first (e.g. "Add your disc first"), in red (snatcherLeo, 2026-11-13); a softer red
+ * on dark so it reads without glaring, a deeper one on light */
+body.dark #live.err { color: #EE6A5F; }
+body.light #live.err { color: #C0392B; }
+body.light .tab.on { color: #18201B; border-color: #C2522F; }
+body.light .tab:hover { color: #18201B; }
+body.light .row { border-color: #DDE3DC; }
+body.light .row.f { border-color: #C2522F; background-color: #E6ECE4; }
+body.light .sel { border-color: #B8C2B6; background-color: #F0F3EF; color: #18201B; }
+/* the switch, light (not in the mockups, which are dark: the same shape in the light palette; the project's helper's choice,
+ * 2026-11-16): a pale track with a grey edge and a white knob; on sage, or the Saves page's light amber */
+body.light .tog .tf { image-color: #DDE3DC; } body.light .tog .te { image-color: #9AA59E; }
+body.light .tog.on .tf, body.light .tog.on .te { image-color: #5D7A57; }
+body.light .tog.on.acc .tf, body.light .tog.on.acc .te { image-color: #C99A3E; }
+body.light .knob .kf { image-color: #FFFFFF; }
+body.light .ck { color: #3F5A3A; }
+body.light .tog.acc .ck { color: #8A6420; }
+body.light .track { background-color: #B8C2B6; }
+body.light .fillbar { background-color: #5D7A57; }
+body.light .thumb .tk { image-color: #4C6847; }
+body.light #resume { background-color: #5D7A57; color: #FFFFFF; border-color: #5D7A57; }
+body.light #quit { background-color: #F0F3EF; color: #18201B; border-color: #B8C2B6; }
+body.light .btn.f { border-color: #3F5A3A; }
+
+/* the mouse over a setting's row, in the side menu and in the full Settings window (snatcherLeo, 2026-11-13: "within each
+ * settings menu, like, for examlpe, "Audio" - those sub options, we can make them hoverable as well ... This goes for
+ * both the quick menu setting, and then when you have teh expanded setteings opened"): the same soft tint as the side
+ * menu's categories, rounded like the focused row; greyed rows ("Coming later") get none. Last in the file so the
+ * controller's focus (.row.f, above) keeps its own look under the mouse */
+.row:hover { border-radius: 8dp; }
+body.dark .row:hover { background-color: rgba(255, 255, 255, 10); }
+body.light .row:hover { background-color: rgba(24, 32, 27, 9); }
+body.dark.panel .row:hover { background-color: rgba(255, 255, 255, 14); }
+body.light.panel .row:hover { background-color: rgba(24, 32, 27, 12); }
+body.dark .row.disabled:hover, body.light .row.disabled:hover { background-color: transparent; }
+body.dark .row.f:hover { background-color: #1B201D; }
+body.light .row.f:hover { background-color: #E6ECE4; }
+body.dark.panel .row.f:hover { background-color: rgba(232, 149, 90, 34); }
+body.light.panel .row.f:hover { background-color: rgba(194, 82, 47, 30); }
+/* the full Settings window's ‹ BACK and the hub's gear (lit while Settings is open), under the mouse (snatcherLeo, 2026-11-13:
+ * "I was debating on having "back" and settings gear icon be hoverable as well"): BACK as the hub's own buttons
+ * (hub.rcss .btn:hover), the gear a deeper shade of its accent */
+#hubgear { cursor: pointer; }
+body.inhub.dark #resume:hover { background-color: #232826; border-color: #C9DCC4; }
+body.inhub.light #resume:hover { background-color: #EEF2EC; border-color: #5D7A57; }
+body.inhub.dark #hubgear:hover { background-color: #3A2A1E; border-color: #F2A774; color: #F2A774; }
+body.inhub.light #hubgear:hover { background-color: #F0D9C6; border-color: #A8421F; color: #A8421F; }
+
+/* ---- Settings › Enhancements › Speed (snatcherLeo, 2026-11-16, mockup s7 "A rearranged": "SOunds good";
+ * pc_settings_overlay.cpp) ----
+ * The groups (FAST-FORWARD, ALWAYS FASTER, SOUND): a small caps label, grey, with a thin line above like a row's; on
+ * the full page its short line under it; in the side menu the label alone, inside the card */
+.grp { display: block; padding: 26dp 8dp 4dp 8dp; border-top-width: 1dp; }
+.gl { display: block; font-size: 13dp; font-weight: bold; letter-spacing: 2.4dp; }
+.gs { display: block; font-size: 14dp; line-height: 20dp; margin-top: 4dp; }
+body.panel .grp { padding: 12dp 12dp 4dp 12dp; border-top-width: 0dp; }
+body.panel .gl { font-size: 11dp; }
+body.dark .grp { border-color: #232826; } body.light .grp { border-color: #DDE3DC; }
+body.dark .gl, body.dark .gs { color: #8A938E; } body.light .gl, body.light .gs { color: #66726B; }
+/* the Fast-forward row: a short box, then the device's button as a green link (its own stop: an orange edge with the
+ * controller on it, underlined under the mouse, as General's "What it turns off ›") */
+.c-ff2 { display: flex; align-items: center; width: 268dp; }
+.c-ff2 .sel { width: 60dp; flex: 0 0 auto; }
+body.panel .c-ff2 { width: 232dp; }
+body.panel .c-ff2 .sel { width: 48dp; }
+.dlink { display: inline-block; margin-left: 10dp; padding: 1dp 5dp; border-radius: 6dp; border-width: 2dp;
+         border-color: transparent; font-size: 15dp; font-weight: bold; line-height: 24dp; white-space: nowrap;
+         cursor: pointer; }
+body.panel .dlink { margin-left: 6dp; font-size: 12.5dp; line-height: 20dp; }
+.dlink:hover { text-decoration: underline; }
+.dlink .kc { display: inline-block; min-width: 22dp; height: 20dp; line-height: 20dp; padding: 0dp 6dp; border-radius: 5dp;
+             font-size: 12dp; text-align: center; }
+body.panel .dlink .kc { height: 18dp; line-height: 18dp; font-size: 11dp; padding: 0dp 5dp; }
+.dlink .dot { margin: 0dp 5dp; }
+.dlink .chev { margin-left: 4dp; font-size: 17dp; }
+body.dark .dlink { color: #A9C3A3; } body.light .dlink { color: #4E6B49; }
+body.dark .dlink.f { border-color: #E8955A; } body.light .dlink.f { border-color: #C2522F; }
+body.dark .dlink .kc { background-color: #3A423E; color: #E9EDEA; } body.light .dlink .kc { background-color: #DDE3DC; color: #18201B; }
+body.dark .dlink .dot { color: #6F7A73; } body.light .dlink .dot { color: #8A938E; }
+/* "Recommended": a sage pill in the box (full page) and in the open list (both) */
+.rec { display: inline-block; height: 18dp; line-height: 16dp; padding: 0dp 6dp; margin-left: 8dp; border-radius: 5dp;
+       border-width: 1dp; font-size: 11dp; font-weight: bold; }
+body.dark .rec { color: #A9C3A3; border-color: rgba(143, 169, 138, 140); background-color: rgba(143, 169, 138, 31); }
+body.light .rec { color: #4E6B49; border-color: rgba(78, 107, 73, 120); background-color: rgba(78, 107, 73, 20); }
+/* the side menu's help box grown to four lines on Enhancements (was two: 64 dp), the list ending 38 dp higher */
+body.panel.lvl1.tallhelp #phelp { height: 102dp; }
+body.panel.lvl1.tallhelp #list { bottom: 188dp; }
+body.panel.lvl1.tallhelp #live { bottom: 174dp; }
+/* the full page's list scrolls when a category is taller than the window (Enhancements with Speed's groups; the hub's
+ * General ran under the bottom bar before, as noted 2026-11-16); the focused row is kept in view (refresh) */
+body.inhub #list { bottom: 70dp; overflow-y: auto; }
+/* every scrolling list needs its scrollbar's width set (as the hub's lists do): RmlUi gives an unstyled vertical
+ * scrollbar the box's whole width, which squeezed the rows into a strip at the left the moment a list grew taller than
+ * its box (*found 2026-11-16* in the side menu's Enhancements, the first page there to scroll at 1600 x 960, and in
+ * Controls' side panel; snatcherLeo's screenshots). All platforms (RmlUi) */
+#list scrollbarvertical { width: 6dp; }
+#list scrollbarvertical sliderbar { border-radius: 3dp; }
+body.dark #list scrollbarvertical sliderbar { background-color: #3A423E; }
+body.light #list scrollbarvertical sliderbar { background-color: #B8C2B6; }
+body.inhub #list scrollbarvertical { width: 8dp; }
+/* a choice box's words are cut before the caret, never under it (the pseudo language's "Same as Game speed" ran under
+ * it): the words in their own block, ending 18 dp before the box's right edge, and the caret placed there on its own
+ * (absolute, not floated). Two tries that came out with the words missing, in RmlUi: a block beside the floated caret,
+ * and an inline-block with max-width and overflow: hidden */
+.sel { position: relative; }
+.sel .st { display: block; margin-right: 18dp; overflow: hidden; white-space: nowrap; }
+.sel .st + .caret { position: absolute; right: 16dp; top: 0dp; float: none; }
+body.panel .sel .st + .caret { right: 12dp; }
+
+/* About's small icon buttons (2026-11-23; snatcherLeo, agreed with Studio so both About tabs look alike): the logs folder's
+ * folder, the version row's download / restart arrow. Studio's folder button: a 32 square, corner 8, a 1 line border
+ * on the page's colour, a fill on hover, the icon 18 centred and tinted the text colour. .off: faded, no hover, not
+ * clickable (nothing to do). */
+/* *Resized 2026-11-23 (snatcherLeo: "Make them bigger, so that, their left-edge starts at where the sliders are"):* the
+ * switch's 56 x 32, in the switch's column, so the left edges line up; the icon 20 */
+.c-ib { width: 56dp; }
+.ibtn { display: inline-block; width: 56dp; height: 32dp; border-radius: 8dp; border-width: 1dp; cursor: pointer;
+        text-align: center; margin-top: 6dp; }
+.ibtn img { width: 20dp; height: 20dp; margin-top: 5dp; }
+.ibtn.off { opacity: 0.35; cursor: default; }
+body.dark .ibtn { background-color: #161A18; border-color: #3A423E; }
+body.dark .ibtn img { image-color: #B4BCB7; }
+body.dark .ibtn:hover { background-color: #2B312E; border-color: #C9DCC4; }
+body.dark .ibtn:hover img { image-color: #E9EDEA; }
+body.dark .ibtn.off:hover { background-color: #161A18; border-color: #3A423E; }
+body.light .ibtn { background-color: #FFFFFF; border-color: #B8C2B6; }
+body.light .ibtn img { image-color: #45514A; }
+body.light .ibtn:hover { background-color: #E9EEE7; border-color: #5D7A57; }
+body.light .ibtn.off:hover { background-color: #FFFFFF; border-color: #B8C2B6; }
+/* the version row's status: the accent when there is something to do, soft red for a failure; "Check now" a link */
+body.dark .ust.acc { color: #E8955A; } body.light .ust.acc { color: #C2522F; }
+body.dark .ust.err { color: #E0705E; } body.light .ust.err { color: #B5443A; }
+.checknow { cursor: pointer; text-decoration: underline; }
+body.dark .checknow { color: #C9DCC4; } body.light .checknow { color: #3F5A3A; }

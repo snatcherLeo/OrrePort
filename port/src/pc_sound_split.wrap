@@ -1,0 +1,26 @@
+# pc_sound_split.wrap: the MusyX calls the game exe is linked with --wrap=<name> for (port/tools/firstlink.py reads
+# this list). The sound split prototype (pc_sound_split.c, docs/port/sound-split.md) gives each to both MusyX
+# instances; with ORRE_SOUND_SPLIT off, each wrapper only calls the real function with the same arguments.
+# Only calls that change the sound are listed: calls that ask (sndFXCheck, sndSeqGetValid, sndCheckEmitter,
+# sndIsInstalled) and the movies' streams (sndStream*) stay the game instance's alone.
+sndInit
+sndQuit
+sndSetHooks
+sndSetSampleDataUploadCallback
+sndPushGroup
+sndSetAuxProcessingCallbacks
+sndAuxCallbackPrepareReverbHI
+sndAuxCallbackUpdateSettingsReverbHI
+sndOutputMode
+sndMasterVolume
+sndVolume
+sndFXStartEx
+sndFXCtrl
+sndFXKeyOff
+sndSeqPlayEx
+sndSeqStop
+sndSeqContinue
+sndSeqVolume
+sndAddEmitter
+s3dSetListener
+s3dUpdateListener

@@ -1,0 +1,6 @@
+{
+  "_note": "the reference playthrough, before P10 (snatcherLeo, 2026-11-05): Rex (FERALIGATR, 160) learns ICE BEAM (58) in place of BITE (44); nothing else changes",
+  "replace_move": [
+    {"species": 160, "from": 44, "to": 58}
+  ]
+}

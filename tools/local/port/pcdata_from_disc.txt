@@ -1,0 +1,19 @@
+# pcdata.py: main-program tables the PC build does not carry. Each is defined without contents (type, size, alignment
+# only) and filled at start-up from the player's own main.dol (pc_disc_dol_read, pc_disc_check.c), checked by CRC-32,
+# before the pointer slots are filled. the reference playthrough Part 1 item 2c step 5 (docs/port/disc-data-loading.md), 2026-11-01.
+# Format: NAME [SIZE]   (SIZE overrides the symbol's size when the table runs on past the next symbol)
+
+# the embedded message bank (684 messages)
+lbl_802CF810
+# the menu textures (type-9 headers): 156x103 RGBA8 and 186x87 RGBA8
+lbl_803156E0
+lbl_803254E0
+# the Nintendo logo screen, 640x480 CMPR: header 0x80 + 153,600 bytes, split by dtk at lbl_803381EA (its second half);
+# GStextureLoad reads the whole image from lbl_803357E0, so the PC table is the full 0x25880 bytes
+lbl_803357E0 0x25880
+# the GBA / e-Reader link's per-port tables (gba_conv.c, cardesavedata.c), split by dtk into 1 + 3 bytes: 0x80478950 is
+# one controller-port enable bit per port (01 02 04 08 on the disc), read as [port] for ports 0-3; 0x80478954 (01 02 03
+# 00) is read the same way. At size 1, [1]-[3] read 0 on the PC, so ports 2-4 were never switched off for the link
+# (port-gaps 61's class audit, 2026-11-04). No code names the 3-byte halves (lbl_80478951 / lbl_80478955).
+lbl_80478950 4
+lbl_80478954 4

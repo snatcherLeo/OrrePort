@@ -1,0 +1,11 @@
+{
+ "_what": "E4 (snatcherLeo, 2026-10-24): the Ho-Oh team, all six in the story party at Lv 100, changed in place (identity, purified state and EVs kept). Gengar is unchanged (already Lv 100: Psychic, Hypnosis, Fire Punch, Ice Punch). Hidden Power types from the IVs, as the game computes them (pokemonGetMezamerupower): Raikou 31/30/30/31/31/31 (HP, Atk, Def, SpA, SpD, Spe) = Ice 70, Suicune 31/31/31/30/31/31 = Electric 70. Tyranitar and Metagross keep their own IVs.",
+ "template_slot": 0,
+ "modify_pokemon": [
+  {"species": 150, "level": 100, "moves": [94, 58, 85, 182], "_note": "Mewtwo: Psychic, Ice Beam, Thunderbolt, Protect (Recover replaced)"},
+  {"species": 243, "level": 100, "moves": [85, 242, 182, 237], "ivs": [31, 30, 30, 31, 31, 31], "_note": "Raikou: Thunderbolt, Crunch, Protect, Hidden Power Ice"},
+  {"species": 245, "level": 100, "moves": [57, 58, 182, 237], "ivs": [31, 31, 31, 30, 31, 31], "_note": "Suicune: Surf, Ice Beam, Protect, Hidden Power Electric"},
+  {"species": 248, "level": 100, "moves": [89, 157, 242, 182], "_note": "Tyranitar: Earthquake, Rock Slide, Crunch, Protect"},
+  {"species": 400, "level": 100, "moves": [309, 89, 97, 182], "_note": "Metagross: Meteor Mash, Earthquake, Agility, Protect"}
+ ]
+}

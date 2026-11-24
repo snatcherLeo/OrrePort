@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- OrrePort menu icon: General (two sliders). Filled shapes only (port/src/pc_svg.cpp); drawn white, tinted by the menu. -->
+<path fill="#FFFFFF" d="M3 6.1 H21 V7.9 H3 Z"/>
+<path fill="#FFFFFF" d="M3 16.1 H21 V17.9 H3 Z"/>
+<path fill="#FFFFFF" d="M12.4 7 Q12.4 4.4 15 4.4 Q17.6 4.4 17.6 7 Q17.6 9.6 15 9.6 Q12.4 9.6 12.4 7 Z"/>
+<path fill="#FFFFFF" d="M6.4 17 Q6.4 14.4 9 14.4 Q11.6 14.4 11.6 17 Q11.6 19.6 9 19.6 Q6.4 19.6 6.4 17 Z"/>
+</svg>

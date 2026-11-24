@@ -1,0 +1,1613 @@
+# OrrePort's words in English: the source for every translation.
+#
+# HOW TO TRANSLATE (thank you!)
+#   1. Copy this file and name the copy with your language's code: de.txt (German), fr.txt (French), es.txt (Spanish),
+#      pt-BR.txt (Brazilian Portuguese), ja.txt (Japanese), and so on. Keep it in this folder (ui/lang/).
+#   2. Change only the text AFTER each "=". Never change the key before it (the part with the dots).
+#   3. Save it as UTF-8 (most editors do; in Notepad choose "UTF-8" when saving).
+#   4. Set the "language.name" and "plural" lines below for your language.
+#   5. Start OrrePort: it picks your file when Windows is set to your language, or set "language = de" (your code) in
+#      user/settings.ini. No rebuild, nothing to install.
+#   6. Check your file: python tools/local/lang_check.py de  (lists missing lines, extra lines and broken {names}).
+#   Anything you leave out shows in English, so a half-done file is fine to share.
+#
+# RULES FOR THE TEXT
+#   {name}  OrrePort puts a value there (a file name, a number, a date). Keep it exactly as written, braces included;
+#           you may move it anywhere in the sentence.
+#   \n      starts a new line.
+#   "#"     at the start of a line is a note for translators, like this one. Notes say where a text shows and, for
+#           tight spots, how long it may be ("short").
+#   Button names printed on controllers (A, B, X, Y, L, R, START) are not in this file: they stay as they are.
+#   Please don't use < or & in a text (the screens would read them as layout).
+#   Test your layout: set "language = pseudo" to see every text made longer and accented, so you can spot what is cut off.
+#
+# COUNTS ("1 picture", "5 pictures")
+#   A text with a count has a line per form: key.one, key.few, key.many, key.other. Which forms your language uses is
+#   set by "plural" below:
+#     one-other     1 is "one", everything else "other" (English, German, Spanish, Italian, Dutch, Swedish, ...)
+#     french        0 and 1 are "one" (French, Brazilian Portuguese)
+#     east-slavic   one / few / many (Russian, Ukrainian, Belarusian)
+#     polish        one / few / many (Polish)
+#     czech         one / few / other (Czech, Slovak)
+#     none          only "other" (Japanese, Chinese, Korean)
+#   Write the forms your language needs; a missing form uses "other".
+
+# ---- About this file ----
+# the language's own name, as its speakers write it (shown when choosing a language)
+language.name = English
+plural = one-other
+
+# ---- Dates ----
+# when a save was last written, on the hub's save card, e.g. "Nov 15, 2026 6:19 AM"; {month} (short) {day} {year}
+# {time}, in your order (snatcherLeo, 2026-11-15: month first in English, no comma before the time)
+date.time = {month} {day}, {year} {time}
+# the same on the Saves page, with the month written out, e.g. "November 15, 2026 6:19 AM"
+date.time.long = {monthlong} {day}, {year} {time}
+# the time of day; which one is used follows the computer's own clock setting (12- or 24-hour). {h} the hour without a
+# leading zero, {hh} with one, {mm} the minutes, {ampm} the next two lines
+time.12 = {h}:{mm} {ampm}
+time.24 = {hh}:{mm}
+time.am = AM
+time.pm = PM
+# full month names (the Saves page)
+month.long.1 = January
+month.long.2 = February
+month.long.3 = March
+month.long.4 = April
+month.long.5 = May
+month.long.6 = June
+month.long.7 = July
+month.long.8 = August
+month.long.9 = September
+month.long.10 = October
+month.long.11 = November
+month.long.12 = December
+# short month names
+month.1 = Jan
+month.2 = Feb
+month.3 = Mar
+month.4 = Apr
+month.5 = May
+month.6 = Jun
+month.7 = Jul
+month.8 = Aug
+month.9 = Sep
+month.10 = Oct
+month.11 = Nov
+month.12 = Dec
+
+# ---- Words used in many places ----
+common.cancel = Cancel
+common.back = Back
+common.save = Save
+common.dont_save = Don't save
+common.settings = Settings
+
+# ---- The hub: the first screen ----
+# the window's page name (not shown on screen today)
+hub.page = OrrePort hub
+# the game chips under the disc (short)
+hub.game.colosseum = Colosseum
+hub.game.xd = XD
+# small tag on the XD chip (short, capitals)
+hub.game.soon = NOT OUT YET
+# the game's name as the big title (use the official name in your language if it has one)
+hub.game.colosseum.title = Pokémon Colosseum
+# the line above the title (capitals, short)
+hub.status.ready = DISC READY
+hub.status.no_disc = NO DISC YET
+hub.status.checking = CHECKING YOUR DISC
+# the line under the title before a disc is added
+hub.sub.no_disc = Add your Pokémon Colosseum disc (USA) to play
+# the big button (capitals, very short)
+hub.play = PLAY
+# the save slot's name, on PLAY and on the save card; {n} is the slot number
+hub.save.slot = Save {n}
+# the save card under PLAY (capitals, short)
+hub.save.heading = CURRENT SAVE
+# the save's file and when it was last written, e.g. "colosseum-main.gci · 12 Nov 2026, 02:36"
+hub.save.line = {file} · {date}
+hub.save.none = No save yet · a new game
+# the tag beside the save's name on the save card while PLAY will start that save's autosave (after "Play the autosave"
+#   on the Saves page; "autosave" = OrrePort's automatic save). Capitals like the GCI tag beside it; short (about 9
+#   letters)
+hub.save.autosave_tag = AUTOSAVE
+# the save card's line under the name in that case (the AUTOSAVE tag above it says what it is): the autosave's own
+#   place (the game's place name), trainer, play time (hours:minutes) and the date it was made, e.g. "PHENAC CITY · WES ·
+#   5:32 played · 21 Nov 2026, 14:02". One line on the card (it is cut at its end: keep it short); the second form when
+#   the place isn't known
+hub.save.autosave_line = {place} · {trainer} · {time} played · {date}
+hub.save.autosave_line_noplace = {trainer} · {time} played · {date}
+# PLAY's target in that case, after the word PLAY: the save's name and that it's the autosave, e.g. "Save 1 (autosave)".
+#   short
+hub.save.play_autosave = {name} (autosave)
+# the save card's right side, before its ">" and the Y button: the whole card opens the Saves page (short)
+hub.save.all = All saves
+# the links under the save card (the Saves page opens from the card itself)
+hub.link.studio = Open Studio
+# the same link while Studio is open (snatcherLeo's words, 2026-11-23): a click brings Studio's window forward. short
+hub.link.studio_open = Studio is opened
+hub.link.report = Report a problem
+# the hint bar at the bottom: what each button does (short)
+hub.hint.disc = Disc
+hub.hint.play = Play
+hub.hint.browse = Browse
+hub.hint.change = All saves
+hub.hint.label = Label
+hub.hint.category = Category
+hub.hint.choose = Choose
+hub.hint.move = Move
+hub.hint.zoom = Zoom
+# LB / RB on the disc art page: turn the picture a quarter (short)
+hub.hint.turn = Turn
+hub.hint.add = Add
+hub.hint.all = All
+# controller words in the hint bar (short, capitals)
+hub.key.dpad = D-PAD
+hub.key.lstick = L-STICK
+# the note line under the links
+hub.note.xd = Pokémon XD isn't out yet in OrrePort. It's coming later.
+# "Open Studio" in a build without Studio beside it (a development build), or when Windows refused to start it
+hub.note.studio = Studio isn't in this OrrePort folder.
+# (a saved report now shows on the panel's saved screen: report.saved_body etc., 2026-11-23)
+hub.note.report_failed = The report could not be saved (see the log).
+hub.note.checking = Your disc was found. Checking it (the first time takes a few seconds)...
+
+# ---- The Saves page (opened from the hub's save card, "All saves", or Y) ----
+saves.title = Saves
+# next to the Import button (short)
+saves.drop_hint = or drop a .gci, .orresave or memory card (.raw) here
+saves.import = Import a save…
+# the button left of Import that makes an empty save (no game in it yet: playing it starts a New Game). short
+saves.new_save = New save
+# the name a new empty save gets (the player can rename it); "(1)", "(2)" are added when it's taken
+saves.new_save_name = New save
+# the note after making one
+saves.made_new = A new, empty save is at the top. Play it to start a New Game.
+saves.err.new_save = Couldn't make a new save.
+# the search box's hint, while it is empty
+saves.search = Search saves by name or trainer
+# the sort button's four orders (short)
+saves.sort.order = Your order
+saves.sort.last_played = Last played
+saves.sort.name = Name
+saves.sort.play_time = Play time
+# a save's line in the list and on the hub's save card; {trainer} the trainer's name, {time} play time (hours:minutes), {date} when it was last saved
+saves.row = {trainer} · {time} played · {date}
+saves.not_started = Not started · New Game begins here
+# the tag on a save that was just imported (short, capitals)
+saves.new = NEW
+# beside the save Play starts (short, capitals)
+saves.play_starts = PLAY STARTS THIS
+# under the list when it is longer than the page draws at once; {n} how many more
+saves.more.one = and {n} more save: search to find it
+saves.more.other = and {n} more saves: search to find them
+saves.none = No saves yet. Import a save, or start a new game.
+saves.no_match = No save matches your search.
+saves.empty = Choose a save on the left.
+# the chosen save's details (labels short)
+saves.trainer = Trainer
+saves.play_time = Play time
+saves.last_saved = Last saved
+saves.came_from = Came from
+saves.came_from.made = Made in OrrePort
+saves.came_from.imported = Imported (your file is unchanged)
+saves.came_from.duplicated = A copy of another save
+saves.came_from.found = Found in the Saves folder
+saves.came_from.gcopy = A GameCube copy of another save
+# ---- Where a save comes from: a coloured word leading the save's line (US blue, PAL green, JPN red) ----
+# the region word, on the Saves page (each row and the details) and the hub's save card (short, capitals; the usual
+# abbreviations: US = the North American version, PAL = the European version, JPN = the Japanese version)
+saves.region.us = US
+saves.region.pal = PAL
+saves.region.jpn = JPN
+# a European (PAL) save's word with the language it was played in, e.g. "PAL · Spanish" (Saves page) or "PAL · ES"
+# (the hub's save card); {region} the word above, {language} one of the lines below (short)
+saves.region.with_language = {region} · {language}
+# the European game's five languages, written out (the Saves page and the GameCube copy window)
+saves.language.2 = English
+saves.language.3 = German
+saves.language.4 = French
+saves.language.5 = Italian
+saves.language.6 = Spanish
+# the Japanese game's language, written out (the GameCube copy window, when Japanese names aren't available)
+saves.language.1 = Japanese
+# the European game's five languages again, as short codes (the hub's save card; short, 2-3 letters)
+saves.language.short.2 = EN
+saves.language.short.3 = DE
+saves.language.short.4 = FR
+saves.language.short.5 = IT
+saves.language.short.6 = ES
+# a save's line in the list and on the hub's save card, with its region word first; {region} the coloured word above,
+# {trainer} {time} {date} as in saves.row
+saves.row.region = {region} · {trainer} · {time} played · {date}
+# the chosen save's details: the region row's label (short)
+saves.region = Region
+# its text for a save started in OrrePort; {region} the coloured word (US)
+saves.region.made = {region} · started in OrrePort (OrrePort plays the US version of the game)
+# the chosen save's buttons (short)
+saves.play_this = Play this save
+saves.rename = Rename
+saves.duplicate = Duplicate
+saves.show_folder = Show in folder
+saves.delete = Delete…
+saves.restore = Restore from previous version…
+saves.versions_note = OrrePort keeps the last 10 versions of this save, so you can go back.
+# the chosen save's autosave (OrrePort saves on its own as you enter rooms): the button that plays it (short); the line
+# under it, {place} where it was made (the game's own place name), {ago} how long ago (saves.autosave.ago.*); the line
+# without a place when none is known
+saves.autosave.play = Play the autosave
+saves.autosave.line = Autosave · {place} · {ago}
+saves.autosave.line_noplace = Autosave · {ago}
+# how long ago the autosave was made, inside saves.autosave.line; {n} a number
+saves.autosave.ago.now = just now
+saves.autosave.ago.minutes.one = {n} min ago
+saves.autosave.ago.minutes.other = {n} min ago
+saves.autosave.ago.hours.one = {n} hour ago
+saves.autosave.ago.hours.other = {n} hours ago
+saves.autosave.ago.days.one = {n} day ago
+saves.autosave.ago.days.other = {n} days ago
+# in the GameCube copy window: a long name's label when it isn't a Pokémon's nickname (short); {n} the box's number
+saves.names.trainer = Trainer
+saves.names.partner = Rui
+saves.names.box = Box {n}
+# a nickname whose species isn't known yet (saved before the species was recorded)
+saves.names.pokemon = Pokémon
+# the GameCube copy button and the line beside it
+saves.gcopy = Make a GameCube copy…
+saves.gcopy_note = a .gci any GameCube or Dolphin can load
+# the GameCube copy window (mockup 104b); {name} the save's name
+gcopy.title = Make a GameCube copy of “{name}”
+# the line under the title: how many things differ; {count}
+gcopy.summary.one = 1 thing is different in the copy.
+gcopy.summary.other = {count} things are different in the copy.
+gcopy.ready = This save is already GameCube-ready: the copy is the same save.
+gcopy.blocked = This save can’t become a GameCube save.
+# the sections (short, capitals), with their small notes
+gcopy.section.changes = CHANGES IN THE COPY
+gcopy.section.stays = STAYS IN ORREPORT
+gcopy.section.stays_note = Comes back if you bring the copy into OrrePort.
+gcopy.section.off = TURNED OFF IN THE COPY
+gcopy.section.off_note = Mods work in OrrePort only.
+gcopy.section.blocks = CAN’T BE COPIED
+# a folded section's last line; {count}
+gcopy.more = and {count} more…
+# a row's text: a name kept in OrrePort, and the one the copy has; {kept} {copy}
+gcopy.note.name = {kept} → {copy}
+# a "stays in OrrePort" row: a name with emoji (or other letters a GameCube can't store); {kept} the full name
+gcopy.note.emoji = The emoji in {kept} (a GameCube can’t show them)
+# why a save can't be copied (the row's left column shows the save's name)
+gcopy.note.no_save = There’s no game in this save yet.
+gcopy.note.unreadable = Its save file couldn’t be read, so no copy can be made.
+# ---- A GameCube copy for another version of the game (the US, European "PAL" or Japanese "JPN" one) ----
+# the copy window's pickers: the labels before the region words and before PAL's five languages (short)
+gcopy.pick.region = Copy for
+gcopy.pick.language = Language
+# a "changes" row when the copy is for another version; its left column is saves.region ("Region"); {kept} the save's
+# region word now ("PAL · Spanish"), {copy} the copy's ("US")
+gcopy.note.region = {kept} → {copy}
+# a row's left column for the memory card screen's picture and words (short)
+gcopy.what.card = Memory card
+# that row: the copy can't carry that version's own banner and words, because its disc isn't added; {copy} the region
+# word (PAL or JPN)
+gcopy.note.region_card = Shows the US banner or words, not the {copy} version’s: add that disc under Language discs for its own.
+# a row's left column for a European copy's language (short)
+gcopy.what.language = Language
+# that row: the European game continues a story only in the language it was saved in; {copy} the language ("German")
+gcopy.note.pal_language = {copy}: set the European game’s Options to {copy} to continue this story.
+# a row's left column for a Pokémon that has no nickname (short)
+gcopy.what.no_nickname = No nickname
+# that row: its species' name in the copy's language; {kept} the name it has now, {copy} the name the copy gets
+gcopy.note.species = {kept} → {copy}
+# a "stays" row: the names in that language aren't available, so they aren't changed; {kept} the language ("Japanese"),
+# {copy} the region word of the disc that has them (PAL or JPN)
+gcopy.note.species_no_target = Their names stay as they are: add the {copy} disc under Language discs to have them in {kept}.
+gcopy.note.species_no_source = Names in {kept} stay as they are: add the {copy} disc under Language discs to change them.
+# a "changes" row: a name has letters that version's font doesn't have (they show as gaps there); the left column says
+# whose name; {kept} the name, {copy} the region word
+gcopy.note.region_letters = {kept} has letters the {copy} version can’t show.
+gcopy.foot = Your save here never changes. The copy is a new file.
+# the window's button (short)
+gcopy.choose = Export to GCI…
+# after the copy; {file} the copy's file name
+gcopy.done = GameCube copy saved: {file}
+gcopy.err = The GameCube copy could not be written.
+# accurate mode on and Play pressed on a save with long names (mockup 104 D); {name} the save's name
+gcopy.accurate_title = This save uses OrrePort’s long names
+gcopy.accurate_body = GameCube-accurate mode plays saves exactly as a GameCube would, so it plays .gci saves only. “{name}” keeps names a GameCube can’t hold. A GameCube copy uses their GameCube names and plays in accurate mode.
+# in the GameCube copy window when it was opened for accurate play: where the copy goes besides the file you pick
+gcopy.accurate_adds = The copy is also added to your saves, set to GameCube-accurate mode, and Play starts it.
+# the name that added copy gets; {name} the original save's name
+saves.gcopy_name = {name} (GameCube)
+# after a copy for accurate play; {file} the copy's file name, {name} the new save's name
+gcopy.done_accurate = GameCube copy saved: {file}. “{name}” is in your saves, in accurate mode.
+saves.accurate.add_failed = It couldn’t be added to your saves; import the file to play it.
+# ---- GameCube-accurate mode on the Saves page (each save keeps its own setting; changed only while the game is closed)
+# the badge on a save that plays in accurate mode, in the list, the details and the hub's save card (short). *Changed
+#   2026-11-21 (snatcherLeo: "it can fit the wording"):* the same words as the in-game badge (game.main_menu.accurate_tag);
+#   was "Accurate"
+saves.badge.accurate = GameCube-accurate
+# the switch in a save's details: its name (short), and the line under it, one per case
+saves.details.accurate = GameCube-accurate mode
+saves.details.accurate.on = This save plays exactly like on a GameCube: same timing, same random rolls.
+saves.details.accurate.off = Off: OrrePort’s tweaks and conveniences are on for this save.
+saves.details.accurate.orresave = This save holds things a GameCube save can’t, so accurate mode plays it through a GameCube copy.
+# a note under that line, and in the GameCube copy window, on a save last made through PC MENU (2026-11-21): in the normal
+#   mode it continues from that spot, in accurate mode, a GameCube copy and Dolphin from the last PC used. "PC MENU" is
+#   the pause menu's own word (game.field_menu.pc); one or two lines
+saves.pc_menu_spot = This save was made with PC MENU anywhere. In GameCube-accurate mode it continues from your last PC, as on a GameCube.
+# the bubble after the switch; {name} the save's name
+saves.accurate.on_done = “{name}” now plays in GameCube-accurate mode.
+saves.accurate.off_done = “{name}” now plays with OrrePort’s tweaks.
+saves.accurate.err = The setting couldn’t be saved.
+# the window when the switch is turned on for an .orresave (its button is "Make a GameCube copy…"); {name} the save's name
+saves.accurate.orre_title = Accurate mode needs a GameCube save
+saves.accurate.orre_body = GameCube-accurate mode plays saves exactly as a GameCube would, so it plays .gci saves only. “{name}” holds things a GameCube save can’t, so it stays as it is. Make a GameCube copy instead: it is added to your saves in accurate mode.
+# ---- "What it turns off": the list of what GameCube-accurate mode changes (Settings › General and the Saves page)
+# the link (short) and the window's title
+accurate.what_off.link = What it turns off
+accurate.what_off.title = What GameCube-accurate mode turns off
+accurate.what_off.intro = In accurate mode a save plays exactly as it would on a GameCube: the same button presses give the same random rolls at the same moments. So OrrePort’s changes to how the game plays are off. Look and sound changes that keep the random numbers stay on.
+# the three headings (short, capitals)
+accurate.what_off.head_off = TURNED OFF
+accurate.what_off.head_gc = WORKS AS ON THE GAMECUBE
+accurate.what_off.head_same = STILL WORKS
+# the rows, one sentence each
+accurate.what_off.pc_menu = Access PC menu anywhere: PC MENU in the pause menu, and Start closing it
+accurate.what_off.main_menu = Main Menu on the PC screen
+accurate.what_off.wrap = Menu cursors that wrap round from the bottom to the top
+accurate.what_off.pc_exit = The quicker way out of PC screens
+accurate.what_off.continue_yes = Continue and New Game starting on YES
+accurate.what_off.load_question = “Continue your story now?” after LOAD, and CONTINUE naming your save
+accurate.what_off.keyboard = OrrePort’s naming keyboard and names longer than the GameCube’s
+accurate.what_off.name_back = B leaving Wes’s name menu
+accurate.what_off.rewrap = Dialogue lines re-wrapped to fit their box
+accurate.what_off.options_b = B keeping your choices on the Options screen
+# (smooth: Smooth battle start was dropped from this row on 2026-11-20 while it is parked and hidden; it is still off here)
+# (2026-11-21: a describing phrase now that the tweak has no switch and this is the only place players see it; the project's draft)
+accurate.what_off.smooth = The party screen showing every portrait at once
+accurate.what_off.keep_using_item = The party list staying open after you use or give an item, and starting on the last Pokémon you chose
+accurate.what_off.tm_party_list = The LEARNED label on a TM’s party list
+accurate.what_off.infinite_tms = Infinite TMs
+accurate.what_off.scent_memory = Scents listed Vivid first and remembering the last one
+accurate.what_off.bag_options = READ, CHECK, TOSS for TMs, and no USE on items that can't be used
+accurate.what_off.relic_forest = Relic Forest shortcuts: PURIFY in the party menu, and the Time Flute anywhere there
+accurate.what_off.cstick_walk = The right stick working like the left one
+accurate.what_off.extras = Anything a GameCube save can’t hold: long names, extra boxes, items past 99, mods that change the game
+accurate.what_off.fast_loading = Loading and saving take as long as on the GameCube
+accurate.what_off.stick = The stick’s range is the GameCube’s, with a dead zone of at most 10
+accurate.what_off.same_display = Resolution, frame rate, anti-aliasing, texture filtering, window and full screen
+accurate.what_off.same_speed = Game speed
+accurate.what_off.same_battles = Battles’ own speed
+accurate.what_off.same_ff = The fast-forward button
+accurate.what_off.same_badge = The speed badge
+accurate.what_off.same_music = Music when faster
+accurate.what_off.same_text = Languages, OrrePort’s sharp letters and its extra fonts (routes and recordings made on the US disc play out the same only in English)
+accurate.what_off.same_sound = Volume
+accurate.what_off.same_buttons = Your button mapping
+accurate.what_off.same_load_save = The main menu’s LOAD SAVE list, showing your accurate-mode saves
+accurate.what_off.same_menu = The OrrePort menu, Report a problem and Quit to hub
+# GameCube-accurate mode's "What it turns off" list, the "still works" part: the Cheats menu (2026-11-20)
+accurate.what_off.same_cheats = Cheats, all off until you turn one on; while one is on, the game plays differently from a GameCube
+# the rename window
+saves.rename_title = Rename this save
+saves.rename_note = Type any name. The save's file gets a tidied copy of it, so it works on every computer.
+# the go-back window (mockup 74; snatcherLeo: "SIMPLE and EFFORTLESS and EASY TO READ"); the save's name shows under the title
+saves.restore_title = Go back to an earlier save
+# the greyed line above the list: the save as it is now; {trainer} {time} {date} as in saves.row
+saves.now = Now: {trainer} · {time} played · {date}
+# a version's line; {time} as in saves.row
+saves.version_line = {time} played
+# on the chosen line (short)
+saves.restore_one = Go back
+saves.no_versions = Nothing earlier to go back to yet. A version is kept each time you save in the game.
+# at the bottom of the go-back window, before the click (so no "Are you sure?" is needed)
+saves.restore_safe = Changed your mind? You can undo it right after.
+# why a version was kept (short)
+saves.why.launch = when you started playing
+saves.why.before_save = before you saved
+saves.why.before_restore = before you went back
+saves.why.before_import = before an import
+# dates in the go-back window and its notice; {time} the time of day (time.12 / time.24 above)
+saves.today = Today, {time}
+saves.yesterday = Yesterday, {time}
+# the delete window; {name} the save's name
+saves.delete_ask = Delete {name}?
+saves.delete_note = It goes to the Recycle Bin with its earlier versions, so you can still get it back from there.
+saves.delete_yes = Delete
+# the hints at the bottom of the Saves page (short)
+saves.hint.play = Play this save
+saves.hint.versions = Previous versions
+# notices under the list
+saves.imported_one = Imported as a new save. Rename it any time.
+# {n} how many
+saves.imported_many.one = {n} save imported. Rename it any time.
+saves.imported_many.other = {n} saves imported. Rename them any time.
+# {name} the save it matches
+saves.already = This is already the save "{name}". Import it again as a new save?
+# an .orresave whose long names don't belong to the save inside it (changed or badly made); {file}
+saves.err.tampered = "{file}" doesn't fit together: its long names don't belong to the save inside it. Import just the save, as a GameCube save?
+# that window's button (short)
+saves.import_just_save = Import just the save
+# the chosen save's button for a save with long names (2.4 part 5): one .orresave file to share or keep
+saves.export_orresave = Export this ORRESAVE…
+# after it; {file} the file's name
+saves.exported_orresave = Saved as one file: {file}
+saves.err.export = The save could not be exported.
+# the same question when that save keeps long names: the file is its GameCube copy; {name}
+saves.already_copy = This is a GameCube copy of "{name}" (the same game, with GameCube names). Import it as a new save? Its long names come back.
+saves.import_again = Import again
+# the box in that window (snatcherLeo: "a "Don't show this to me again" checkbox")
+saves.dont_ask = Don't ask me again
+# the note when the same save is imported without asking; {name} the save it matches
+saves.imported_same = Imported. It's the same as the save "{name}".
+# ---- The import question (3.5; UI id saves.import_ask): a window right after importing a GameCube save, asking how
+# to play it. Enhanced = OrrePort's normal mode, GameCube-accurate = the save's accurate mode switch on ----
+# the window's title for one save, and for several imported at once ({n} how many)
+saves.import_ask.title.one = How do you want to play this save?
+saves.import_ask.title.other = How do you want to play these {n} saves?
+# the line under the title
+saves.import_ask.note = You can change it any time in a save's details on the Saves page.
+# the first answer's name (short), and the tag after it (short)
+saves.import_ask.enhanced = Enhanced
+saves.import_ask.recommended = Recommended
+# what the first answer means (one line)
+saves.import_ask.enhanced.sub = Plays with OrrePort's improvements, like quicker menus and PC MENU anywhere.
+# the second answer's name (short; the same words as the save's switch, saves.details.accurate)
+saves.import_ask.accurate = GameCube-accurate
+# what the second answer means (one line)
+saves.import_ask.accurate.sub = Plays exactly like on a GameCube: same timing, same random rolls, OrrePort's changes off.
+# the tick under the answers: the answer becomes the default for new saves and the question stops
+saves.import_ask.always = Use this for every import (don't ask again)
+# the quiet line at the bottom, after the B button: closing the window changes nothing
+saves.import_ask.later = Decide later: it plays as your default for new saves
+# the bubble after answering ({n} how many saves)
+saves.import_ask.done_enhanced.one = This save plays Enhanced.
+saves.import_ask.done_enhanced.other = These {n} saves play Enhanced.
+saves.import_ask.done_accurate.one = This save plays GameCube-accurate.
+saves.import_ask.done_accurate.other = These {n} saves play GameCube-accurate.
+# added to the bubble when the tick was on (Settings › General is where the question comes back)
+saves.import_ask.done_always = From now on every import plays this way; Settings › General can ask again.
+saves.duplicated = Duplicated. The copy is right under the original.
+saves.deleted = Deleted. It's in the Recycle Bin.
+# after going back, with Undo next to it; {date} the version's date (as saves.today or a date), {time} its play time
+saves.went_back = Went back to your save from {date} ({time} played).
+# the button in that notice, and Y's hint while it shows (short)
+saves.undo = Undo
+saves.undone = Undone. Your save is back as it was.
+# problems; {file} the file's name
+saves.err.read = Couldn't read {file}.
+saves.err.not_save = {file} isn't a GameCube save or memory card.
+saves.err.other_game = {file} is a save for another game.
+saves.err.xd = XD support comes later.
+saves.err.region = {file} is a Colosseum save from a version OrrePort doesn't know (US, European and Japanese saves can be imported).
+saves.err.damaged = {file} is damaged (its own check doesn't match), so it wasn't imported.
+saves.err.no_colosseum = No Colosseum save found on this memory card.
+saves.err.write = The new save couldn't be written. Is the disk full?
+saves.err.rename = The save couldn't be renamed (is its file open in another program?).
+saves.err.duplicate = The save couldn't be duplicated.
+saves.err.delete = The save couldn't be deleted.
+saves.err.restore = That version couldn't be restored.
+saves.err.undo = The save couldn't be put back.
+
+# ---- Adding a disc (before the first disc is added) ----
+# ---- updates (step 4.4, 2026-11-23; port/src/pc_update.c). Shared with Studio: every update.* line is read by Studio
+# too (docs/port/translation.md), so renaming one changes Studio's. {version} like "0.1.2", {size} like "48 MB",
+# {percent} 0-100 ----
+# (merged with Studio's lines 2026-11-23: one wording where both programs say the same thing; {program} is "OrrePort"
+# or "Studio", names that aren't translated; {mb} like "48")
+# both programs: an update was found, what it is, its size, Download, what's new
+update.available = Version {version} is available
+update.both = OrrePort and Studio update together. Saves, settings and mods aren't touched.
+update.size = {mb} MB
+update.download = Download
+update.notes = What's new
+update.notes_hide = Hide what's new
+update.downloading = Downloading {version}: {percent}%
+update.ready = Update ready: {version}
+update.restart = Restart now
+# the swap waits while the other program from the folder is open
+update.close_other = Close {program} to finish the update.
+# the button that does it for the player (the hub's "Close Studio", Studio's "Close OrrePort"; the other program closes
+# its usual way, saving first). short
+update.close_button = Close {program}
+# while OrrePort's game runs nothing is closed for the player (Studio's Home line)
+update.wait_game = The update applies once you quit the game. Nothing is closed for you.
+update.retry = Try again
+update.failed = The update couldn't be downloaded. It's tried again at the next start.
+update.failed.network = The update couldn't be reached. Check your connection; it's tried again at the next start.
+update.failed.signature = The update failed its safety check and wasn't used. It's tried again at the next start.
+update.failed.unpack = The update couldn't be unpacked. It's tried again at the next start.
+# Settings (the hub's General, Studio's About): the version, checking, the two switches, Go back
+update.version = OrrePort {version}
+update.shared_version = The hub and Studio share one version.
+update.check = Check for updates
+# About's link under the status, the manual check (short; 2026-11-23, both programs)
+update.check_now = Check now
+update.checking = Checking for updates…
+update.up_to_date = You have the newest version.
+update.off = Checking for updates is off.
+update.unavailable = Updates aren't available in this copy.
+update.auto = Download updates automatically
+update.auto_help = Off: you're asked first. Either way, an update installs only when you restart.
+update.check_setting = Check for updates
+update.check_help = Off: OrrePort stays fully offline and never asks for updates.
+update.go_back = Go back to {version}
+update.go_back_help = Something wrong with this version? Go back to {version}. OrrePort and Studio always go back together.
+# Go back's "are you sure" pop-up (snatcherLeo, 2026-11-23: "Yes use it"; the same in both programs): its title, the question,
+# and the warning under it. {program} is the program asking (OrrePort or Studio), {current} the version running now.
+# _ask_later: in OrrePort's game, where nothing restarts under the player and Go back applies at the next start
+update.go_back_title = Go back to {version}?
+update.go_back_ask = OrrePort and Studio both go back to {version}. {program} closes and opens again on its own.
+update.go_back_ask_later = OrrePort and Studio both go back to {version} the next time you start {program}.
+update.go_back_warn = Anything you made or changed with {current} may not open in {version}. Your saves and mods aren't touched, and you can update again at any time.
+update.go_back_close = Close {program} first, then go back from here.
+# Go back's button (short), and what it says in game, where it applies at the next start
+update.go_back_button = Go back
+update.go_back_next = Going back to {version} the next time you start OrrePort.
+# the hub only: the note beside the gear (short), and its panel's own lines (Not now, Later, no notes, ready text)
+update.note.ready = Update ready · restart OrrePort to apply
+update.note.failed = The update couldn't be downloaded · try again
+update.hub.not_now = Not now
+update.hub.later = Later
+update.hub.no_notes = No notes for this version.
+update.hub.ready_text = OrrePort {version} is ready. Restart to apply it; Studio updates with it.
+
+# the note when another US disc was added to the ROM folder while the hub is open (2026-11-23): the next start uses it
+hub.disc.newer = A newer disc was added to the ROM folder. Restart OrrePort to use it.
+hub.add.heading = ADD YOUR DISC
+hub.add.drop = Drop your disc image onto this window
+hub.add.drop.which = Pokémon Colosseum, the USA disc (GC6E01) · ISO, GCM, CISO or RVZ
+hub.add.drop.copy = OrrePort copies it into its ROM folder; your file stays where it is.
+# big button (capitals)
+hub.add.browse = BROWSE FOR YOUR DISC
+hub.add.folder = Open the ROM folder
+# the file picker's list of file kinds
+hub.add.filter.discs = GameCube disc images
+hub.add.filter.all = All files
+# a disc was found and checked: copy or move it
+hub.add.found = Pokémon Colosseum (USA) found
+# {file} the disc image's name, {size} e.g. "1.4 GB"
+hub.add.found.file = {file} · {size}
+hub.add.found.choice = Copy keeps your file where it is; Move saves {size} of disk space.
+# big button (capitals)
+hub.add.copy = COPY INTO ORREPORT
+hub.add.move = Move into OrrePort
+# {gb} is a number like 1.4
+hub.add.size = {gb} GB
+hub.add.copying = Copying your disc into OrrePort
+hub.add.moving = Moving your disc into OrrePort
+# {percent} is 0 to 100
+hub.add.copying.progress = Copying your disc into OrrePort's ROM folder: {percent}%
+hub.add.moving.progress = Moving your disc into OrrePort's ROM folder: {percent}%
+
+# ---- Discs: the words both programs use for the player's discs (OrrePort's Discs panel on the hub, Studio's
+# Settings › Discs; shared 2026-11-23 so the two lists say the same; Studio reads them from this file) ----
+# the three kinds of disc (the rows, and {disc} in the lines below)
+discs.us = US disc
+discs.eu = European disc
+discs.jp = Japanese disc
+# a row with no disc yet. short
+discs.not_added = Not added
+# a row's buttons (Add… and Replace… open the file window). short
+discs.add = Add…
+discs.replace = Replace…
+discs.remove = Remove
+# the choice once a disc is picked: copy (the original stays where it was) or move (no extra disk space). short
+discs.copy = Copy into OrrePort
+discs.move = Move
+# {gb} like 1.4
+discs.size = {gb} GB
+# a disc picked or dropped, waiting for the choice; {file} its file name, {size} like "1.4 GB"
+discs.found = {disc} found: {file} ({size}).
+discs.choice = Copy keeps your file where it is; Move saves {size} of disk space.
+# {percent} is 0 to 100
+discs.copying = Copying the {disc} into OrrePort: {percent}%
+discs.moving = Moving the {disc} into OrrePort: {percent}%
+discs.added = {disc} added.
+discs.copy_failed = The disc couldn't be copied: {error}
+discs.move_failed = The disc couldn't be moved: {error}
+discs.no_space = There isn't enough space on the drive: {size} is needed.
+# asked before Remove
+discs.remove_ask = Remove the {disc}? The file goes to the Recycle Bin.
+discs.remove_ask_us = Remove the US disc? OrrePort and Studio need it to start. The file goes to the Recycle Bin.
+discs.removed = The {disc} is removed (it's in the Recycle Bin).
+discs.remove_failed = The {disc} couldn't be moved to the Recycle Bin.
+
+# ---- The hub's Discs panel (the main page: a link in the row under the save card, and the panel it unfolds; it was
+# "Language discs" until the US disc joined it on top, 2026-11-23) ----
+# the link. short
+hub.discs.link = Discs
+# the panel's heading, in capitals like CURRENT SAVE. short
+hub.discs.heading = DISCS
+# the US disc's row: a second line saying it's the one played; {file} its file name
+hub.discs.us_line = The disc you play · {file}
+# the US disc can't be swapped while OrrePort has it open, so OrrePort restarts to finish (pc_hub_langdiscs.cpp says why)
+hub.discs.replace_ask_us = Replace your US disc with {file}? The old file goes to the Recycle Bin, and OrrePort restarts with the new one.
+hub.discs.remove_ask_us = Remove the US disc? OrrePort needs it to start: it restarts and asks for a disc. The file goes to the Recycle Bin.
+# a picked or dropped file that isn't a Pokémon Colosseum disc; {id} its game ID
+hub.discs.not_colosseum = That isn't a Pokémon Colosseum disc (game ID {id}).
+# a US disc that can't be used: Remove or Replace failed and the open disc stays
+hub.discs.us_failed = The US disc couldn't be changed: {error}
+# the panel's line above the European and Japanese rows: where the game's other languages come from (not a mod)
+hub.lang.line = The game's official translations come from your own European or Japanese disc.
+# the languages the European disc adds, each by its own name (keep these as they are in every language)
+hub.lang.name.de = Deutsch
+hub.lang.name.fr = Français
+hub.lang.name.es = Español
+hub.lang.name.it = Italiano
+# the Japanese disc's language in the hub. In its own name once the hub has a Japanese font (日本語); until then the
+#   hub's fonts can't draw it, so it is named in this file's language
+hub.lang.name.ja = Japanese
+# kept for XD only (not shown for Colosseum, whose Japanese text OrrePort shows since 2026-11-15): a Japanese disc's
+#   row while OrrePort can't show that game's Japanese text yet
+hub.lang.jp_later = Japanese text comes in a later update
+
+# ---- The Japanese release look: the Language discs panel's "What changes" list (one line per row of
+# ui/regions/jp_look.txt; in Japanese with the Japanese disc, the game shows these as the Japanese release did) ----
+# What changes: the boot screen's Nintendo logo (blue in Japan, red elsewhere)
+hub.lang.jp_look.logo_nintendo = The Nintendo logo at start-up is blue.
+# What changes: Rui (the girl who travels with Wes) in her Japanese outfit, one line for all five places it shows (her
+#   picture on the title screen, her models in battle, following Wes, in story scenes and on the bike; *changed
+#   2026-11-21*, snatcherLeo: "'Rui wears her Japanese outfit' is perfect for all of these")
+hub.lang.jp_look.rui_outfit = Rui wears her Japanese outfit.
+# What changes: Somek (the Mt. Battle master; an older man in a fur cape) with his moustache, one line for his
+#   portrait and both his models (*changed 2026-11-21*, snatcherLeo: "Somek ... has his moustache")
+hub.lang.jp_look.somek_moustache = Somek has his moustache.
+# What changes: the grey patterned background behind the menus
+hub.lang.jp_look.menu004 = The menus' grey marbled background is cloudier.
+# What changes: the ribbon and medal pictures (the same artwork, stored with more colours on the Japanese disc)
+hub.lang.jp_look.menu_024 = The ribbon and medal pictures, with more colours.
+# What changes: a small Poké Ball outline icon in the P★DA menu (the same artwork, more colours)
+hub.lang.jp_look.menu_025 = The P★DA's Poké Ball icon, with more colours.
+# What changes: a metal frame picture in the field menus (the same artwork, more colours)
+hub.lang.jp_look.menu_040 = A metal menu frame, with more colours.
+# What changes: the Teacher trainers (women in a yellow suit with glasses) standing on Mt. Battle and in Phenac's Pre
+#   Gym: their 3D model there has the Japanese release's shorter skirt (the US release lengthened it)
+hub.lang.jp_look.sensei_b1 = The Teachers on Mt. Battle and in the Pre Gym wear their shorter Japanese skirt.
+# What changes: the Teacher trainers in battle (their 3D battle model, the same shorter skirt)
+hub.lang.jp_look.sensei_a1 = The Teachers wear their shorter Japanese skirt in battle.
+# What changes: Jynx's 3D battle model (its face is the Japanese release's darker colour; the US release lightened it
+#   to purple). A player's own Jynx: no trainer in the game has one
+hub.lang.jp_look.rougela = Jynx's face has its darker Japanese colour in battle.
+# after a "What changes" line whose change OrrePort can't make yet (Rui's 3D models). short
+hub.lang.jp_look.later = (in a later update)
+# the Language discs panel's line about the Japanese release look (3.5 step 5; UI id hub.lang.jp_look), with the
+#   Japanese disc added: in Japanese the game also takes that release's own look (no switch of its own)
+hub.lang.jp_look.line_have = With your Japanese disc, the game in Japanese also takes the Japanese release's look: the blue Nintendo logo, Rui's outfit, the menu background and more.
+# the same line while no Japanese disc is added
+hub.lang.jp_look.line_add = Add your Japanese disc to get the Japanese release's look too when you play in Japanese.
+# the link after that line that opens the "What changes" window (one line per difference). short
+hub.lang.jp_look.what = What changes
+# that window's title
+hub.lang.jp_look.window = The Japanese release look
+# asked before a European or Japanese disc's Remove (it says more than discs.remove_ask: the languages leave);
+# {disc} is "European disc" or "Japanese disc"
+hub.lang.remove_ask = Remove the {disc}? Its languages leave the game's Options (English if one was in use). The file goes to the Recycle Bin.
+# a disc picked for a row that already has one; {file} its file name
+hub.lang.replace_ask = You already have a {disc}. Replace it with {file}? The old file goes to the Recycle Bin.
+hub.lang.added = {disc} added: Deutsch, Français, Español and Italiano are in the game's Options.
+hub.lang.added_jp = Japanese disc added: Japanese is in the game's Options.
+hub.lang.already = That {disc} is already added.
+# a European or Japanese disc found in the ROM folder (that folder is for the US disc that's played)
+hub.lang.moved_from_rom = A {disc} was in the ROM folder: it moved to ROM Other Regions for its languages.
+# a picked or dropped file that isn't a European or Japanese Pokémon Colosseum disc; {id} its game ID
+hub.lang.us_disc = That's the US disc: it's the one you play, and it's already added.
+hub.lang.not_lang = That isn't a European or Japanese Pokémon Colosseum disc (game ID {id}).
+# a European or Japanese disc whose main.dol isn't the original release's (snatcherLeo, 2026-11-23: refused, the same words in
+# the hub's Discs panel and Studio's Settings › Discs); {disc} is discs.eu / discs.jp; check.verify_hint
+# follows it
+hub.lang.not_original = This disc image says it is the {disc}, but its program file is not the original one (another revision, or a modified disc). Please use an unmodified image of the {disc}.
+hub.lang.unreadable = That file isn't a disc image OrrePort can read (ISO, GCM, CISO or RVZ).
+hub.add.copy_failed = The copy failed: {error}
+hub.add.move_failed = The move failed: {error}
+hub.add.folder_failed = Could not open the folder: {folder}
+hub.add.not_colosseum = The image in the ROM folder is not Pokémon Colosseum (USA). The log names it.
+# the check of a dropped or chosen file
+disc.unreadable = That file can't be read as a disc image (ISO, GCM, CISO or RVZ, the formats Dolphin reads).
+# the same, for a .zip, .7z or .rar file
+disc.archive = That is a packed archive. Unpack it first, then add the disc image inside it (ISO, GCM, CISO or RVZ).
+# {game} one of the disc names below, or "another game"; {id} its game ID such as GC6P01
+disc.wrong = That is {game} (game ID {id}). OrrePort needs Pokémon Colosseum, the USA disc (GC6E01).
+# the same check, for the European or Japanese Colosseum disc; {game} and {id} as above, {languages} the line below
+#   for that disc
+disc.wrong.region = That is {game} (game ID {id}). OrrePort plays the US version (NTSC-U, GC6E01), so add that disc to play. Keep this one: later it can be added alongside the US disc for its languages ({languages}).
+# the languages each disc adds as a language disc (each language in its own name)
+disc.languages.GC6P = Deutsch, Français, Italiano, Español
+disc.languages.GC6J = 日本語
+disc.name.unknown = another game
+disc.name.bonus = a Pokémon Colosseum bonus disc
+disc.name.GC6P = Pokémon Colosseum, the European version
+disc.name.GC6J = Pokémon Colosseum, the Japanese version
+disc.name.GXXE = Pokémon XD: Gale of Darkness (USA)
+disc.name.GXXP = Pokémon XD: Gale of Darkness, the European version
+disc.name.GXXJ = Pokémon XD: Gale of Darkness, the Japanese version
+# a window that opens when no disc can be found
+disc.missing.title = OrrePort: disc image not found
+disc.missing.text = OrrePort needs your Pokémon Colosseum disc image (USA, game ID GC6E01). Put it in this folder:\n\n{folder}
+disc.missing.formats = Any name works. Formats: ISO, GCM, CISO or RVZ (the formats Dolphin reads).
+disc.missing.empty = The folder is empty.
+disc.missing.others = The images there are not the USA disc:
+# one line per image found; {file} its name, {game} its name as above, {id} its game ID
+disc.missing.other_line = {file}: {game} (game ID {id})
+disc.missing.usa_only = OrrePort runs the USA version of Pokémon Colosseum for now.
+# added when one of those images is the European or Japanese Colosseum
+disc.missing.region_stays = A European or Japanese disc belongs in the "ROM Other Regions" folder next to this one: later it adds its languages from there. To play, put the US disc (NTSC-U, GC6E01) in this folder.
+# {n} how many files
+disc.missing.unreadable = None of the files there ({n}) could be read as a disc image.
+
+# the full check of a disc image (windows that open before the game starts)
+check.dol.title = OrrePort: this disc can't be used
+check.dol.text = This disc image says it is Pokemon Colosseum (USA), but its program file is not the one OrrePort is built for (another revision, or a modified disc). Please use an unmodified image of the USA disc.
+check.verify_hint = To check a disc image yourself: in Dolphin, right-click the game, choose Properties, open the Verify tab and click Verify Integrity. Dolphin then says whether it is a good dump.
+check.files.title_missing = OrrePort: this disc image can't be used
+check.files.title_differ = OrrePort: this disc image differs from the original
+check.files.missing = This disc image is missing files OrrePort needs, so the game can't start.
+check.files.not_exact = This disc image is not an exact copy of the original USA disc.
+# {n} how many files, {all} how many the disc has; a list of the files follows
+check.files.count_missing = {n} of the disc's {all} files are missing from or differ from the original Pokemon Colosseum (USA) disc:
+check.files.count_differ = {n} of the disc's {all} files differ from the original Pokemon Colosseum (USA) disc:
+# after a file's name in the list
+check.files.missing_tag = (missing)
+# {n} how many more files
+check.files.more = ... and {n} more
+# {n} the image's file table entries, {usa} the USA disc's
+check.files.table = the disc has {n} file table entries; the USA disc has {usa}
+check.files.use_complete = Please use a complete, unmodified image of the USA disc.
+check.files.damaged = So many differences usually mean a damaged or incomplete dump. The game may crash or behave wrongly with it.
+check.files.modified = This usually means a modified image (a hack, a translation or a randomizer) or a damaged dump. OrrePort is built and tested for the original disc: with these files the game may behave differently or crash.
+# the two buttons (short)
+check.files.quit = Quit
+check.files.play_anyway = Play anyway
+
+# a window when OrrePort's folder can't be written to; {folder} its place
+platform.unwritable.title = OrrePort cannot save here
+platform.unwritable.text = OrrePort keeps its saves, settings and logs in its own folder, and it cannot write there:\n\n{folder}\n\nPlease move the OrrePort folder somewhere you can write to (for example your Documents or Desktop folder, not Program Files), then start it again.
+
+# The launchers' message boxes (OrrePort.exe and "OrrePort Studio.exe", the small programs at the top of the OrrePort
+# folder). These lines are COMPILED INTO the launchers when they are built (tools/local/port/build_launcher.py), because
+# the boxes show exactly when the app folder (where this file lives; "bin" until 2026-11-22) is missing. So a change here shows only after the
+# launchers are rebuilt, and only the official languages are compiled in. {app} is "OrrePort" or "OrrePort Studio",
+# {file} the missing program's full path, {code} a Windows error number. The title is {app} itself.
+launcher.missing = {app} can't start: this file is missing:\n\n{file}\n\nThe app folder must stay next to {app}. Copy the whole OrrePort folder again.
+launcher.start_failed = {app} can't start {file} (Windows error {code}).
+launcher.no_folder = {app} can't find its own folder, so it can't find its app folder. Copy the whole OrrePort folder again.
+
+# ---- The disc art page (Settings › Appearance › Disc art) ----
+label.heading = Disc art
+label.done = Back to Hub
+# the shelf's built-in labels (short: about 18 letters)
+label.name.orreport = OrrePort's
+label.name.classic = Alternate
+label.name.banner = The game's banner
+label.name.new = New · not saved
+# the "All" tile: the word inside its circle (very short), the line under it with the number of pictures (short)
+label.tile.all_short = All
+label.tile.all = All {n}
+# the add tile (short)
+label.tile.add = Add a picture
+# the line under the big disc
+label.status.shown = Shown on your hub
+# {name} a label's name as on the shelf
+label.status.unsaved = Not saved yet: your hub still shows {name}.
+label.status.unsaved_saved = Not saved yet: your hub still shows it as it was saved.
+# the hub's own label, in the sentence above
+label.hub_name.orreport = OrrePort's label
+label.hub_name.classic = the alternate label
+label.hub_name.banner = the game's banner
+# tag on the shelf disc the hub shows (capitals, very short)
+label.on_hub = ON HUB
+# buttons under the disc
+label.saved = ✓ Saved
+label.zoom = Zoom
+# beside the ↺ ↻ buttons that turn the picture a quarter (short)
+label.turn = Turn
+# a button: the whole picture made to fit inside the disc (short)
+label.fit = Fit whole picture
+label.reset = Reset
+label.rename = Rename
+label.remove = Remove from the shelf
+label.hint = Drag the picture on the disc to move it. The mouse wheel zooms, Shift + wheel turns. Ctrl+Z undoes, Ctrl+Y redoes.
+label.template = Get the template (1024 × 1024)
+label.folder = Open the Disc labels folder
+# the "All" grid's heading and count
+label.all = All your labels
+label.count.one = {n} picture, the most recently worn first
+label.count.other = {n} pictures, the most recently worn first
+# the name box
+label.name_box = Name this disc art
+label.rename_box = Rename this disc art
+# leaving with something unsaved
+label.leave.changed.title = Save your changes?
+label.leave.new.title = Save your new disc art?
+label.leave.new = It isn't saved yet. Don't save lets it go.
+label.leave.changed = You moved or zoomed {name}. Don't save puts it back.
+# notes under the shelf
+label.note.saved_as = Saved as {name}.
+label.note.renamed = Renamed to {name}.
+label.note.place_it = Not saved yet: place it, then press Save.
+label.note.remove_failed = The picture couldn't be moved out of the shelf (is it open in another program?).
+label.note.removed = Moved to the Disc labels folder's Removed folder: move it back out to bring it back.
+label.note.template_failed = The template couldn't be saved ({error}).
+# the file picker's list of file kinds
+label.filter.pictures = Pictures
+# which pictures this build reads, e.g. "PNG, JPG, GIF, TGA, PSD, WebP or BMP"; {last} is the last one
+label.formats.list = {list} or {last}
+# problems with a picture; {error} is the system's own reason (in English)
+label.error.size = That picture is too large or too small (8 to 16,384 pixels a side).
+label.error.read = The picture couldn't be read.
+label.error.read_why = The picture couldn't be read ({error}).
+label.error.format = That isn't a picture OrrePort can read: use {formats}.
+label.error.open = The picture couldn't be opened ({error}).
+label.error.webp = The WebP picture couldn't be read.
+label.error.webp_moving = Moving WebP pictures can't be used: save one frame as a picture.
+label.error.webp_build = WebP pictures can't be read in this build: use {formats}.
+label.error.name = That name can't be used: type a few letters or numbers.
+label.error.rename = The picture couldn't be renamed ({error}).
+label.error.copy = The picture couldn't be copied into OrrePort's Disc labels folder ({error}).
+label.error.save = The picture couldn't be saved into OrrePort's Disc labels folder ({error}).
+
+# ---- Settings (the menu in game, and the full Settings page) ----
+settings.page = OrrePort Settings
+# big capitals over the menu while the game is paused
+settings.paused = PAUSED
+# the first screen's title (short)
+settings.menu = Menu
+# the heading over the categories (capitals, short)
+settings.heading = SETTINGS
+# the full page's back button (capitals, short)
+settings.back = BACK
+settings.back_to_game = Back to the game
+settings.open_full = Open full Settings
+settings.quit = Quit to hub
+settings.quit.question = Quit to hub? Progress since your last save is lost.
+settings.quit.dont_ask = Don't ask again
+# the full Settings window's Quit to hub dialog (in game): its bold question and the line under it
+settings.quit.title = Quit to hub?
+settings.quit.detail = Progress since your last save is lost.
+# the old bottom row (not shown at the moment)
+settings.resume = RESUME
+settings.resume_short = Resume
+settings.tabs = Tabs
+# the screen while OrrePort goes back to the hub
+settings.returning = Returning to the hub…
+# the categories (short)
+settings.tab.general = General
+settings.tab.appearance = Appearance
+settings.tab.graphics = Graphics
+settings.tab.audio = Audio
+settings.tab.controls = Controls
+settings.tab.enhancements = Enhancements
+# the last tab, as in Studio (2026-11-23): the version, updates, Go back, the logs folder
+settings.tab.about = About
+# About's last row: where both programs keep a log of each run, and its button (short; Studio's About has the same row)
+settings.logs = Logs folder
+settings.logs.sub = Where OrrePort and Studio keep a log of each run. A report adds the newest one by itself.
+settings.logs.open = Open folder
+# under each category on the first screen: what is set now; {values} are the choices as shown in the rows
+settings.summary.general = {window} · {pause}
+settings.summary.pauses = Game pauses
+settings.summary.runs = Game keeps running
+settings.summary.appearance = {theme} · {background}
+settings.summary.appearance_icon = {theme} · {icon} · {background}
+settings.summary.graphics = {renderer} · {resolution} · {filtering} filtering
+# {master} {music} {effects} are numbers from 0 to 100
+settings.summary.audio = Master {master} · Music {music} · Effects {effects}
+# {button} the menu button's name
+settings.summary.controls = Menu: {button} · Set up controller
+# {speed} Game speed's choice ("1× · normal", "2×")
+settings.summary.enhancements = Game speed: {speed}
+# the hint bar at the bottom of the menu (short)
+settings.hint.choose = Choose
+settings.hint.pick = Pick
+settings.hint.default = Default
+settings.hint.close = Close
+# keyboard keys, as your keyboards print them (short)
+settings.key.backspace = Backspace
+settings.key.enter = Enter
+settings.key.delete = Delete
+# the hint when the game starts; {button} is the menu button's name, shown in bold
+settings.toast.press = Press {button} for the OrrePort menu
+settings.toast.sub = Volume, graphics, controls and more. The game never sees this button.
+# a notice after Report a problem couldn't save (a saved one shows the panel's saved screen: report.saved_body etc.)
+settings.report.failed = The report could not be saved
+settings.report.failed.sub = The log says why.
+# a line in the menu
+settings.note.saving = The game is saving to the memory card. Try again in a moment.
+settings.note.restart_failed = OrrePort could not start again (see the log). Close the window to quit.
+settings.note.disc_art_in_hub = Disc art is changed in the hub: Quit to hub, then the pencil on the disc (or X).
+settings.note.disc_art_no_disc = Add your disc first: disc art goes on your disc.
+# on a setting not built yet (short)
+settings.coming_later = Coming later
+# the old opening hint (not shown at the moment)
+settings.oldhint.opens = opens and closes this menu
+settings.oldhint.keyboard = Keyboard
+settings.oldhint.only = This button only opens OrrePort's menu; the game never sees it.
+
+# the settings themselves: a name (short), then ".sub" the line under it, then the choices
+settings.window = Window
+settings.window.sub = Play in a window or fill the screen (F11 does the same).
+settings.window.windowed = Windowed
+settings.window.fullscreen = Fullscreen
+settings.language = Language
+settings.language.sub = The language of OrrePort's own screens. Applies the next time OrrePort starts.
+# the first choice; the others are each language file's own name
+settings.language.auto = Follow Windows
+# Settings › General, the row under Language: opens the hub's Language discs panel (the game's official translations
+#   come from the player's own European or Japanese disc). The title is short
+settings.lang_discs = More languages
+settings.lang_discs.sub = For the game's own text: add your European or Japanese disc (the official translations).
+# that row pressed with no US disc added yet, and in game (the panel is on the hub's main page)
+settings.note.lang_discs_no_disc = Add your US disc first: the Language discs are under it on the hub's main page.
+settings.note.lang_discs_in_hub = Language discs are added in the hub: Quit to hub, then "Add a language disc…" under the save.
+settings.pause = Pause the game while this menu is open
+settings.pause.sub = On: the game stops behind the menu. Off: it keeps running, as in Dolphin.
+settings.menu_hint = Menu hint at start
+settings.menu_hint.sub = On: shows how to open this menu for a few seconds when the game starts.
+settings.menu_size = In-game menu
+settings.menu_size.sub = What the menu button opens while you play. The hub always opens the full window.
+settings.menu_size.side_panel = Side panel
+settings.menu_size.full_window = Full window
+settings.quit_ask = Ask before Quit to hub
+settings.quit_ask.sub = On: Quit to hub asks first, since progress since your last save is lost.
+settings.report = Report a problem…
+settings.report.sub = Saves a report to share: what happened, plus the recording, save, log and a picture.
+settings.report.open = Open
+settings.debug = Debug tools
+settings.debug.sub = On: F1 (or Help › Debug menu) opens the developers' debug menu. Can change your save. Applies the next time OrrePort starts.
+settings.theme = Theme
+settings.theme.sub = Light, dark, or the same as Windows.
+settings.theme.follow = Follow Windows
+settings.theme.light = Light
+settings.theme.dark = Dark
+settings.window_icon = Window icon
+settings.window_icon.sub = The icon in the title bar's top-left corner. Game icons come from your imported ROMs.
+settings.window_icon.logo = OrrePort logo
+settings.window_icon.espeon_umbreon = Espeon and Umbreon
+settings.animations = Animations
+settings.animations.sub = On: the disc moves.
+settings.disc_art = Change disc art
+settings.disc_art.sub = The picture on the hub's disc: OrrePort's, the game's banner, or your own.
+settings.menu_bar = Always show the menu bar
+settings.menu_bar.sub = Off: File and Help appear only when the mouse is at the top of the window.
+settings.menu_bg = Menu background
+settings.menu_bg.sub = In game: see the game through the menu, or a solid panel.
+settings.menu_bg.see_through = See-through
+settings.menu_bg.solid = Solid
+settings.renderer = Renderer
+settings.renderer.sub = Vulkan suits most PCs. Applies the next time OrrePort starts.
+settings.resolution = Internal resolution
+settings.resolution.sub = How sharply the game is drawn. Higher needs a stronger graphics card.
+# the choices: keep the " · " between the parts (the closed box shows the first and last part)
+settings.resolution.0 = Match the window
+settings.resolution.1 = Native · 640 × 480 · 480p
+settings.resolution.2 = 2× · 1280 × 960 · for 720p
+settings.resolution.3 = 3× · 1920 × 1440 · for 1080p
+settings.resolution.4 = 4× · 2560 × 1920 · for 1440p
+settings.resolution.5 = 5× · 3200 × 2400
+settings.resolution.6 = 6× · 3840 × 2880 · for 4K
+settings.resolution.7 = 7× · 4480 × 3360
+settings.resolution.8 = 8× · 5120 × 3840 · for 5K
+settings.vsync = V-Sync
+settings.vsync.sub = On: frames wait for your monitor. Steadier, with a little more delay.
+settings.msaa = Anti-aliasing
+settings.msaa.sub = Smooths jagged edges. Applies the next time OrrePort starts.
+settings.aniso = Texture filtering
+settings.aniso.sub = Keeps floors and walls sharp at a low angle. Applies the next time OrrePort starts.
+settings.aniso.2 = 2× Anisotropic
+settings.aniso.4 = 4× Anisotropic
+settings.aniso.8 = 8× Anisotropic
+settings.aniso.16 = 16× Anisotropic
+# Settings › Graphics › Frame rate (frame smoothing, 2026-11-18): the row's name (short), its line under it, then the
+#   choices in the drop-down (short: the side menu's box is narrow); {hz} is the monitor's refresh rate (120), {fps}
+#   a fixed rate (60, 120, 144, 165, 240). *Shortened 2026-11-19* (snatcherLeo: "the drop down box can also be less wide"):
+#   the Match choice is one short word plus the rate, "Match (120 Hz)", so the box is the normal width (short)
+settings.frame_rate = Frame rate
+settings.frame_rate.sub = Smoother motion between the game's own frames. Smoothest at your display's rate or half of it.
+settings.frame_rate.off = Off (original)
+settings.frame_rate.match = Match display
+settings.frame_rate.match_hz = Match ({hz} Hz)
+settings.frame_rate.cap = {fps} FPS
+# the row's line instead, when a fixed rate is above the monitor's: it then runs at the monitor's rate
+settings.frame_rate.above = Your display shows up to {hz} pictures a second, so this runs at {hz}, like Match your display.
+# the row's line instead (Windows only), when the monitor can run faster than Windows has it set: {hz} now, {best}
+#   the fastest it offers. OrrePort never changes this setting itself
+settings.frame_rate.held_back = Your display can run at {best} Hz, but Windows has it at {hz} Hz. Change it in Windows' settings: System › Display › Advanced display.
+# the help box under the menu (the focused setting's description): {line} is the row's line above, then a sentence
+#   for players who time their presses to the frame
+settings.frame_rate.help = {line} The picture runs up to one game frame behind.
+settings.aspect = Aspect ratio
+# Settings › Graphics › Aspect ratio, its second line while the row is faded (widescreen comes later, with the UI Editor)
+settings.aspect.sub = Coming in a future update.
+# Settings › Graphics › Aspect ratio, the faded row's value: the game's own 4:3 shape (short; "original" as in Frame rate's "Off (original)")
+settings.aspect.original = 4:3 (original)
+# ---- Enhancements › Speed (mockup s7 "A rearranged", 2026-11-16) ----
+# the heading at the top of the speed settings, and its line
+settings.speed_note = Speed
+settings.speed_note.sub = Play faster, all the time or only while you hold a button.
+# the three groups: a small label in capitals (short), and on the full page one short line under it
+settings.speed.group_ff = FAST-FORWARD
+settings.speed.group_ff.sub = Hold a button to play faster; let go for normal speed.
+settings.speed.group_always = ALWAYS FASTER
+settings.speed.group_always.sub = Faster without holding anything. Most players leave these on Normal.
+settings.speed.group_sound = SOUND
+settings.speed.group_sound.sub = For fast-forward and the always-faster speeds alike.
+# the fast-forward speed's row (short; its line is the group's)
+settings.speed_ff = Fast-forward
+# the green link beside its box, naming the button: "[LB] · Change ›", or "Not set · Set ›" (each short); the link's
+# name and line show in the side menu's help box when the link has the controller
+settings.speed_ff.change = Change
+settings.speed_ff.set = Set
+settings.speed_ff.not_set = Not set
+settings.speed_ff.link = Fast-forward button
+settings.speed_ff.link.sub = Opens Controls on the Fast-forward row, to choose the button or key.
+settings.speed_ff_mode = Fast-forward works
+settings.speed_ff_mode.sub = Hold: fast while held. Press to switch: one press on, one press off.
+# its two choices (short)
+settings.speed_ff_mode.hold = Hold
+settings.speed_ff_mode.press = Press to switch
+settings.speed_badge = Speed badge
+settings.speed_badge.sub = Shows the speed in a corner for about a second when fast-forward starts or the game gets faster.
+# its two choices (short)
+settings.speed_badge.show = Show
+settings.speed_badge.hide = Hide
+settings.speed_game = Game speed
+settings.speed_game.sub = How fast the whole game runs.
+settings.speed_battle = Battles
+settings.speed_battle.sub = Battles can run at a speed of their own.
+settings.speed_sound = Music when faster
+settings.speed_sound.sub = Normal tempo: the music keeps its pace, and nothing waits on sounds. Faster too: music and sound speed up with the game, higher in pitch.
+# its two choices (short)
+settings.speed_sound.normal = Normal tempo
+settings.speed_sound.faster = Faster too
+# the small tag on the recommended choice, in a choice box and its open list (short: one word)
+settings.recommended = Recommended
+# the choices every speed row shares (short): 1×, and "follow the Game speed row"
+settings.speed.normal = Normal
+settings.speed.same = Same as Game speed
+# Settings › Enhancements, after Speed: the heading of the on/off gameplay tweaks (short), and its line below it
+settings.tweaks = Tweaks
+settings.tweaks.sub = Small changes to how the game plays. Off: as on the GameCube.
+# each tweak's name (short) and its line (one sentence; what "off" means is the heading's line).
+#   *2026-11-21 (snatcherLeo):* seven tweaks are built in now, with no row (Continue and New Game on YES, Smooth Party UI,
+#   Fast loading, Keep using an item, the LEARNED label, the scents' memory, the Relic Forest shortcuts): their keys are
+#   gone; accurate mode's "What it turns off" list still names them (accurate.what_off.*)
+# (smooth_battle_start: parked and hidden since 2026-11-20; its words stay for when the row comes back)
+settings.tweak.smooth_battle_start = Smooth battle start
+settings.tweak.smooth_battle_start.sub = Loads portraits while the trainers walk in, so battles don't pause after a send-out.
+# step 3.7's infinite TMs (2026-11-20; port/src/pc_bag_tweaks.cpp): name short, line one sentence
+settings.tweak.infinite_tms = Infinite TMs
+settings.tweak.infinite_tms.sub = Teaching a TM keeps it, as HMs already do.
+# step 3.7's right stick (2026-11-20; port/src/pc_cstick_walk.cpp): name short, line one or two sentences. *Changed
+#   2026-11-21* (snatcherLeo: the right stick copies the left one in story mode): was "Walk with the right stick". *Changed
+#   again 2026-11-21* (snatcherLeo: story battles too): the line names battles among what it does
+settings.tweak.cstick_walk = The right stick works like the left one
+settings.tweak.cstick_walk.sub = In story mode the right stick (C-Stick) does everything the left stick does: walking, running, battles and every menu. Battle Mode and the P★DA's Pokémon pictures keep its own use.
+# in place of a tweak's switch in the full Settings window while GameCube-accurate mode is on (short)
+settings.tweaks.accurate_off = Off in GameCube-accurate mode
+# the same tag in the in-game side menu, beside the tweak's name on one line, after a small lock (short: a word or two)
+settings.accurate.tag = Accurate mode
+# ---- GameCube-accurate mode in Settings (2.12; wording approved by snatcherLeo, 2026-11-16)
+# Settings › General's first row: its name and its line (the default every new save takes)
+settings.general.accurate_default = GameCube-accurate mode for new saves
+settings.general.accurate_default.sub = Plays exactly like the GameCube: same timing, same random rolls. Each save keeps its own setting; change it for a save on the Saves page.
+# Settings › General's accurate card, under the switch's line, above "What it turns off": how many OrrePort changes accurate
+# mode turns off ({n}, counted from the list), with two examples (PC MENU is the pause menu's own word, in capitals)
+settings.general.accurate_teaser.one = Turns off {n} OrrePort change, like PC MENU anywhere and quicker menus.
+settings.general.accurate_teaser.other = Turns off {n} OrrePort changes, like PC MENU anywhere and quicker menus.
+# the second line of General's "What it turns off" row (its name is accurate.what_off.link)
+settings.general.accurate_what.sub = The OrrePort changes accurate mode switches off, and what stays on.
+# Settings › General, the row right under the accurate card (3.5): whether importing a save asks how to play it
+#   (Enhanced or GameCube-accurate). The import window's tick "don't ask again" turns it off; turning it on brings the
+#   question back
+settings.general.import_ask = Ask how to play imported saves
+settings.general.import_ask.sub = On: importing a save asks Enhanced or GameCube-accurate. Off: imports take the default for new saves.
+# in game, in place of a locked row's line: General's accurate row, and the rows accurate mode turns off
+settings.accurate.closed = Close the game to change this
+# in game, while the running save plays in GameCube-accurate mode (2026-11-21): General's accurate row's line (in the
+#   full window, and the side menu's help box) in place of the one above
+settings.accurate.closed_this_save = This save plays in GameCube-accurate mode. Close the game to change this.
+# in game (2026-11-21, snatcherLeo): General's accurate row's name while a game runs; its greyed switch then shows the running
+#   save's own mode (in the hub the row is settings.general.accurate_default). Short: the side menu's one-line row
+settings.general.accurate_running = GameCube-accurate mode
+settings.accurate.locked = Locked off because this save is in accurate mode
+# the master volume's name on the menu's first screen (short)
+settings.volume = Volume
+settings.volume_master = Master volume
+settings.volume_master.sub = Everything you hear.
+settings.volume_music = Music
+settings.volume_music.sub = The game's songs.
+settings.volume_effects = Sound effects
+settings.volume_effects.sub = Moves, menus and footsteps.
+settings.controller = Set up controller
+settings.controller.sub = Change any button, the dead zone, rumble and the menu button.
+# Controls: shown only while Nintendo's GameCube adapter is plugged in and Windows can't read it yet
+settings.adapter = Set up GameCube adapter
+settings.adapter.sub = Windows can't read your GameCube adapter yet. One click sets it up; Windows asks first.
+# the screen over everything while it runs (snatcherLeo: "have a loading screen as it is installing")
+settings.adapter.busy = Setting up your GameCube adapter…
+settings.adapter.busy_sub = This can take a minute. Leave the adapter plugged in.
+# the step above its progress bar; {percent} how far, 0 to 100
+settings.adapter.step.find = Finding the adapter… {percent}%
+settings.adapter.step.prepare = Preparing the driver… {percent}%
+settings.adapter.step.install = Windows is installing the driver… {percent}%
+settings.adapter.step.done = Done. {percent}%
+# the notes under the rows after it runs (shown larger)
+settings.note.adapter_done = Your GameCube adapter is ready, and its controller is now Player 1.
+# set up, but no controller in the adapter yet
+settings.note.adapter_done_plug = Your GameCube adapter is ready. Plug a controller into it and it becomes Player 1.
+settings.note.adapter_none = No GameCube adapter found. Plug in its black USB plug (the grey one only powers rumble) and try again.
+settings.note.adapter_declined = Nothing was changed: Windows' question was answered No.
+settings.note.adapter_failed = The GameCube adapter couldn't be set up. logs\adapter setup.log has the details.
+settings.note.adapter_missing = "OrrePort Adapter Setup.exe" is missing from OrrePort's folder.
+# the setup program's own small window, when someone starts it by hand (OrrePort Adapter Setup.exe)
+adapter.helper.title = OrrePort: GameCube adapter
+adapter.helper.done = The GameCube adapter is set up. If a controller doesn't show, unplug the adapter and plug it back in.
+adapter.helper.already = The GameCube adapter is already set up. Nothing was changed.
+adapter.helper.none = No GameCube adapter found. Plug in its black USB plug (the grey one only powers rumble) and try again.
+adapter.helper.declined = Nothing was changed.
+adapter.helper.failed = The GameCube adapter couldn't be set up.
+# a choice that turns something off (short)
+common.none = None
+
+# ---- Controller setup (Settings › Controls › Set up controller) ----
+# Button names printed on the controllers (A, B, LB, L1, Create, Options, View, Menu, Home, Share, START, Z) are not
+# here: they stay as printed. Keyboard key names other than the few below come from the system, in English.
+controls.page = OrrePort controller setup
+controls.title = Controller setup
+controls.player1 = Player 1
+controls.keyboard = Keyboard
+controls.controller = Controller
+controls.no_controller = No controller
+controls.none_connected = Controller (none connected)
+# the profile picker; {name} the profile's name (short)
+controls.profile = Profile: {name}
+# the two built-in profiles' names
+controls.profile.default = Default
+controls.profile.gamecube = GameCube Controller
+# words for "no button" (short)
+controls.none = none
+controls.mouse = Mouse
+controls.dpad = D-pad
+controls.dpad.up = D-pad Up
+controls.dpad.down = D-pad Down
+controls.dpad.left = D-pad Left
+controls.dpad.right = D-pad Right
+# {name} is a paddle's code such as R1
+controls.paddle = Paddle {name}
+controls.touchpad = Touchpad
+controls.key.lshift = Left Shift
+controls.key.rshift = Right Shift
+controls.key.lctrl = Left Ctrl
+controls.key.rctrl = Right Ctrl
+controls.key.lalt = Left Alt
+# a stick direction's axis; {axis} is like X+ or Y- (as Dolphin names them)
+controls.axis.left = Left {axis}
+controls.axis.right = Right {axis}
+controls.axis.left_trigger = Left trigger
+controls.axis.right_trigger = Right trigger
+controls.left_stick = Left stick
+controls.right_stick = Right stick
+# the parts of the setup (short)
+controls.slot.control_stick = Control stick
+controls.slot.c_stick = C-Stick
+controls.slot.up = Up
+controls.slot.down = Down
+controls.slot.left = Left
+controls.slot.right = Right
+controls.slot.device = Device
+controls.slot.profile = Profile
+controls.slot.calibrate = Calibrate
+controls.slot.dead_zone = Dead zone
+controls.slot.range = Range
+controls.slot.walk = Walk
+controls.slot.walk_speed = Walk speed
+controls.slot.snap = Snap to 8 directions
+controls.slot.rumble = Rumble
+controls.slot.printed = Printed letters
+controls.slot.menu = Open OrrePort menu
+controls.slot.reset = Reset
+# a stick direction's full name; {dir} is Up, Down, Left or Right
+controls.dir.control_stick = Control Stick {dir}
+controls.dir.c_stick = C-Stick {dir}
+# the side panel's headings (capitals, short)
+controls.head.sticks = STICKS
+controls.head.triggers = TRIGGERS
+controls.head.controller = CONTROLLER
+controls.head.shortcuts = SHORTCUTS
+controls.stick.control = Control Stick (Left)
+controls.stick.c = C-Stick (Right)
+controls.calibrate.finish = Finish Calibration
+controls.calibrate.cancel = Cancel Calibration
+# while waiting for a button; {n} counts down the seconds
+controls.press_countdown = Press… {n}
+controls.hold_countdown = Hold, then let go… {n}
+controls.listen.key = Press a key…
+controls.listen.stick = Push the stick…
+# short labels beside the sliders
+controls.speed = Speed
+controls.dead = Dead
+controls.locked = Locked
+controls.accurate_note = In GameCube-accurate mode: range locked, dead zone up to 10. The game itself ignores tilts within ±10.
+controls.rumble.keyboard = The keyboard has no rumble
+controls.rumble.gamecube = A GameCube motor has one strength
+controls.rumble.test = Test
+controls.shortcut_how = Press one button, or hold two together. When you let go, what you held becomes the shortcut. The game never sees a shortcut's buttons.
+# the bar at the bottom
+controls.bot.hold = Hold the buttons you want, then let go.
+controls.bot.press_key = Press the key you want. Esc: no change.
+controls.bot.press_button = Press the button you want. Esc on the keyboard: no change.
+controls.bot.roll = Roll the stick around its edge
+controls.bot.finish = Finish
+controls.bot.change = Change
+controls.bot.any_key = Press any key: its button lights up here
+controls.bot.physical = Your controller's physical buttons:
+controls.bot.any_button = Press any button: it lights up here
+controls.reset.keyboard = Reset the keyboard
+controls.reset.controller = Reset this controller
+# {name} the profile's name (short)
+controls.save_to = Save to {name}
+controls.saved = Saved
+# the profile list
+controls.profiles.keyboard = KEYBOARD PROFILES
+controls.profiles.controller = CONTROLLER PROFILES
+controls.profiles.built_in = built in
+controls.profiles.new = New profile…
+controls.profiles.rename = Rename “{name}”…
+controls.profiles.delete = Delete “{name}”
+# questions
+controls.ask.save = Save your changes?
+controls.ask.save.keyboard = They are saved to the profile {name} and come back next time you use the keyboard.
+controls.ask.save.controller = They are saved to the profile {name} and come back next time you use this controller.
+controls.discard = Discard
+controls.ask.switch = Save your changes to “{name}” first?
+controls.ask.switch.then = Then “{name}” is loaded.
+controls.name.new = New profile
+controls.name.rename = Rename the profile
+controls.name.new.how = Starts as a copy of what is on screen now. Type a name (up to 24 letters). Enter or A: create; Esc or B: cancel.
+controls.name.rename.how = Type a name (up to 24 letters). Enter or A: rename; Esc or B: cancel.
+controls.name.empty = Type a name first.
+controls.name.taken = There is already a profile called {name}.
+controls.create = Create
+controls.ask.delete = Delete “{name}”?
+controls.ask.delete.keyboard = Its file moves to the profiles' Deleted folder, so it can be brought back. The keyboard goes back to {name}.
+controls.ask.delete.controller = Its file moves to the profiles' Deleted folder, so it can be brought back. This controller goes back to {name}.
+controls.delete = Delete
+# the line under the controller; {name} and {what} are filled in, bold
+controls.note.saved_to = Saved to {name}.
+controls.note.using = Using {name}.
+controls.note.new = New profile {name}.
+controls.note.deleted = {name} deleted (in the profiles' Deleted folder, if you want it back).
+controls.note.no_change = No change.
+controls.note.calib_cancelled = Calibration cancelled: no change.
+controls.note.nothing_pushed = Nothing pushed: no change.
+controls.note.nothing_pressed = Nothing pressed: no change.
+controls.note.calibrated.control = The Control stick is calibrated.
+controls.note.calibrated.c = The C-Stick is calibrated.
+controls.note.save_first = Save or undo your changes first, then switch controllers.
+controls.note.rumble_test = Rumble test: the GameCube motor's one strength.
+controls.note.snap_on = The sticks snap to the 8 directions.
+controls.note.snap_off = The sticks no longer snap.
+controls.note.printed_off = A, B, X and Y are back where a GameCube controller has them.
+controls.note.printed_on = The printed letters now match: A is A, B is B, X is X, Y is Y.
+controls.note.reset.keyboard = The keyboard is back to its default keys.
+controls.note.reset.controller = This controller is back to its defaults.
+controls.note.default = {name} is back to its default.
+controls.note.quit_cleared = Quit to hub has no shortcut now.
+controls.note.menu_reset = The menu shortcut is back to {name}.
+controls.note.calib_cleared = The calibration is cleared.
+# {name} a button or stick direction, {what} what now presses it
+controls.note.now = {name} is now {what}.
+controls.note.swapped = {name} swapped to {what}.
+controls.note.triggers_only = The triggers can only be L or R.
+controls.note.menu_taken = That is the menu's shortcut: choose other buttons for Quit to hub.
+# ---- the Fast-forward row (2026-11-16): one button or key per device
+# the row's name (short), and the line shown while it waits for a press
+controls.slot.ff = Fast-forward
+controls.ff_how = Hold this to play faster; let go for normal speed (or press once to switch, if Fast-forward works is set to Press to switch). The game never sees it.
+# the question when the button picked is already a game button; {button} the button picked, {what} its game button (both bold)
+controls.ask.ff = {button} is your {what} in the game. Use it for fast-forward anyway, or press another button?
+controls.ask.ff.then = Used anyway, it only fast-forwards: the game no longer gets that button from it.
+# the question's two buttons (short)
+controls.ff.use_anyway = Use it anyway
+controls.ff.press_another = Press another
+# the line under the controller; {name} a button (bold), {what} a game button (bold)
+controls.note.ff_default = Fast-forward is back to {name}.
+controls.note.ff_default_none = Fast-forward is back to its default: none here, or its usual button already does something else.
+controls.note.ff_cleared = Fast-forward has no button now.
+controls.note.ff_hidden = The game no longer gets {what} from it.
+controls.note.ff_trigger = The triggers are the game's L and R: choose a button for fast-forward.
+controls.note.ff_taken = That already opens OrrePort's menu, quits to the hub or walks: choose another for fast-forward.
+controls.note.ff_stick = That moves a stick in the game: choose another for fast-forward.
+# {why} one of the three reasons below
+controls.note.reserved = {why} Choose another key.
+controls.reserved.f11 = F11 is OrrePort's fullscreen key.
+controls.reserved.f2 = F2 opens OrrePort's Settings.
+controls.reserved.f8 = F8 is OrrePort's Report a problem key.
+
+# ---- Inside the game's own screens (drawn in the game's style) ----
+# the game's Options screen (from the title's main menu): the label of the first row, beside the language's name. short
+#   (about 10 letters at most: it sits in the same column as the game's own "Rumble" and "Sound")
+game.options.language = Language
+# the same screen: the help box at the bottom while the cursor is on that row. Two lines of about 34 letters each; \n
+#   starts the second line
+game.options.language_help = Choose the language for the game's\ntext and menus.
+# the same row's value: each language's own name, in capitals like the game's STEREO / MONO, shown when the player has
+#   added a European disc (its text is read from that disc). These are the languages' names in themselves, so keep
+#   them as they are in every language file. short (about 10 letters)
+game.options.lang.de = DEUTSCH
+game.options.lang.fr = FRANÇAIS
+game.options.lang.it = ITALIANO
+game.options.lang.es = ESPAÑOL
+# Japanese, from the player's Japanese disc (drawn in the game's own font, which has these kanji)
+game.options.lang.ja = 日本語
+# the title's main menu: the help box at the bottom while the glove is on the LOAD SAVE button (bottom row, left of
+#   OPTIONS; picking a save file there continues it). Two lines of about 34 letters each, like the game's own help
+#   lines on this menu; \n starts the second line. (The button's word itself is a picture, not text: in other
+#   languages it is drawn from that language's own menu words.)
+game.main_menu.load_save_help = Load a different save file and\ncontinue the Story Mode.
+# the same help box while the glove is on CONTINUE (Story Mode): names the save file that is loaded. Write it like the
+#   game's own CONTINUE line in your language (English: "Continue the Story Mode from where / it was last saved.").
+#   {name} is the save file's name as the save list and the hub show it (any length: OrrePort shortens it, ending with
+#   game.save_files.name_cut, when the line is too wide). Two lines of about 34 letters; \n starts the second line. Keep the first line short
+#   and give the name as much room as you can (English puts it alone on the second line). Use the quotation marks
+#   your language's game text uses. (UI Editor id: title.continue_help)
+game.main_menu.continue_help = Continue the Story Mode from\n"{name}".
+# the second line of the question after a save file is picked in the save list (LOAD): the first line is the game's
+#   "Your save file has been loaded!" (game.card.load_done below), then this, then the game's YES / NO (YES = play
+#   that save's story now, NO = back to the main menu with that save loaded). In the game's message window over its
+#   Continue screen. short: one line of about 37 letters. (UI Editor id: title.load_question)
+game.main_menu.continue_now = Continue your story now?
+# the mark at the end of a save file's name that is too long for its place (the save list's rows, CONTINUE's help line
+#   above): the name is cut and this goes after it, e.g. "Phenac save e...". Three periods in English (the game's own
+#   English text writes "..."); use what your language's game text uses (Japanese: …). short (1-3 letters)
+game.save_files.name_cut = ...
+# The field pause menu's new button, under POKéMON (Access PC menu anywhere): opens the PC menu (storage, save). In the
+#   game's language and its menu labels' font, upper case like POKéMON / ITEMS / EXIT. short: fits a 122 px button
+#   (each disc calls its PC menu "PC"; Japanese パソコン)
+game.field_menu.pc = PC MENU
+# The bag's option box (USE / GIVE / TOSS / CANCEL), step 3.7's USE rule: in the game's language and the options' font,
+#   upper case like USE / TOSS. short: must fit the box the game sizes for its own options (no longer than the
+#   language's CANCEL). READ replaces USE on the Ein Files (opens their text); CHECK replaces USE on the key items that
+#   can never be used (shows the item's description again)
+game.bag.read = READ
+game.bag.check = CHECK
+# The party list's label beside a Pokémon when teaching a TM, for one that already knows the move (the game's own
+#   labels: ABLE / NOT ABLE). short: no longer than the language's NOT ABLE (the longest label there)
+game.bag.learned = LEARNED
+# The party list's per-Pokémon menu (SUMMARY / SWITCH / ITEMS / CANCEL), step 3.7's Relic Forest shortcuts: shown in the
+#   Relic Forest for a Shadow Pokémon whose heart is open; starts the Relic Stone's purification for it. In the game's
+#   language and the menu's font, upper case like SUMMARY. short: fits the menu's 108 px buttons (no longer than the
+#   language's longest label there; Italian STRUMENTI). Words from each disc's own word for purifying (German Erlöst,
+#   French purifié, Italian purificato, Spanish purificado, Japanese リライブ)
+game.party_menu.purify = PURIFY
+# The PC screen's new row, between Save and Exit (every PC: PC MENU's and a PC walked up to): goes back to the title's
+#   main menu. In the game's language, in the PC screen's button font, written like its neighbours (POKéMON Storage,
+#   Item Storage, Save, Exit). short: fits a 200 px button word (about 16 letters). Approved words: Main Menu /
+#   Hauptmenü / Menu principal / Menu principale / Menú principal / メインメニュー. (The word under the icon on the
+#   PC screen's icon wheel is a picture traced in the wheel's lettering, not this text.)
+game.pc_menu.main_menu = Main Menu
+# The question Main Menu asks first, in the game's message window, with the game's own YES / NO (NO first). Two lines
+#   of about 34 letters each; \n starts the second line. "Unsaved" = not saved with the PC's Save since the last save.
+game.pc_menu.main_menu_question = Return to the main menu?\nUnsaved progress will be lost.
+# Shown in the game's message window (the player presses A) just before the PC's own "Would you like to save your
+#   progress?" when PC MENU saves in the middle of a story scene the game can't pick up again (for example right after
+#   Rui's sack is found): the save is still made, from just before that part of the scene, so the scene plays again on
+#   Continue. Two lines of about 34 letters each; \n starts the second line. "continue" = the main menu's CONTINUE
+#   (use your game text's word).
+game.save_window.notice = This scene will start again\nwhen you continue this save.
+# The question OrrePort asks when the game seems stuck after continuing a PC MENU save (a scene holds the player for
+#   20 seconds with nothing on screen to answer), in the game's message window, with the game's own YES / NO (YES
+#   first). YES puts the save's previous version back (kept in the save's Backups) and goes to the main menu; NO
+#   leaves things as they are. Two lines of about 34 letters each; "save" = the game's word for a save file.
+game.save_window.stuck_question = The game seems to be stuck.\nGo back to your previous save?
+# The same question when the save's autosave is newer than its previous version (OrrePort's autosave, written as you
+#   enter rooms): YES loads the autosave (the save itself is kept as it is) and goes to the main menu, where CONTINUE
+#   goes on from the autosave. Two lines of about 34 letters each; "autosave" = OrrePort's automatic save.
+game.save_window.stuck_autosave = The game seems to be stuck.\nGo back to your autosave?
+# the title of the save-file list LOAD opens (the bag-style list over the main menu), in capitals like the game's bag
+#   titles (ITEMS). short (it sits in the list's title bar, about 20 letters at most)
+game.main_menu.save_files_title = SAVE FILES
+# the yellow badge in a GameCube-accurate session (2026-11-21, snatcherLeo): on a pill like the GCI tag, at the right end of
+#   the game's own CONTINUE line's box and in the SAVE FILES list beside the GCI tag, in the bag's font 1 (UI Editor id:
+#   title.accurate_tag). Short: one or two words, the word at most 240 px (the pill's picture is 256); the hub's badge
+#   says "Accurate"
+game.main_menu.accurate_tag = GameCube-accurate
+# the help box under that list, for the highlighted save: two lines of about 34 letters each. The first line: where the
+#   save was made and when. {place} the game's own place name (from the game's text, so already in your language),
+#   {date} the save's date (game.save_files.date below), {gap} a few spaces OrrePort narrows when the line is too long.
+#   With no place name, the line is the date alone.
+game.save_files.where = {place}{gap}{date}
+# the second line: {time} play time (hours:minutes, as the game's Continue screen shows it), {snagged} and {purified}
+#   the Shadow Pokémon counts the game's Continue screen shows, {gap} as above. "Play Time" is the game's own label on
+#   its Continue screen (use your language's game wording). Keep the words short: with the largest numbers
+#   ("999:59", "9999") the line must still fit about 40 letters.
+game.save_files.progress = Play Time {time}{gap}Snagged {snagged}{gap}Purified {purified}
+# the same line, shorter, used only when the one above can't fit (very large numbers, from mods): the same placeholders
+game.save_files.progress_short = Time {time}{gap}Snagged {snagged}{gap}Purified {purified}
+# the date on the first line, e.g. "Nov 13, 9:41 PM": {month} the short month name (month.1 .. month.12), {day},
+#   {h} the hour on a 12-hour clock with {ampm} (game.save_files.am / pm), or {hh} the hour on a 24-hour clock; {mm}
+#   the minutes. In your order; no year (it stays short)
+game.save_files.date = {month} {day}, {h}:{mm} {ampm}
+# OrrePort's naming keyboard (the name screen, in the game's own font). The name of the PC keyboard's Shift key, on
+#   the key cap shown beside the X button's label while the PC keyboard is used. short (about 6 capitals)
+game.name_entry.shift = SHIFT
+# the X button's label on the symbols page: X shows the second set of symbols, and back. (On the letter pages the
+#   label is the game's own "lower" / "UPPER".) short (about 6 capitals, like the game's "BACK" / "DONE")
+game.name_entry.more = MORE
+# the space key at the end of the bottom row of letters. short (about 6 capitals)
+game.name_entry.space = SPACE
+# a small tag above the name field's right end while the computer's input method (for Japanese, Chinese, Korean) is on.
+#   {mark} is the input language's first letter (あ, 가 or 中). "IME" is the usual short name for an input method; keep
+#   it unless your language has a common short word. short (about 6 letters)
+game.name_entry.ime_tag = {mark} IME
+# one line under the name field while the input method is composing: its two keys (Space opens the list of choices,
+#   Enter keeps the letters as they are). Name the keys as they are printed on keyboards in your language. Small text,
+#   about 45 letters at most
+game.name_entry.ime_help = Space: choices    Enter: keep as typed
+# shown under the name field for 2 seconds when more letters were typed than the name can hold; the extra letters are
+#   left out. {n} is always 12. Small text, about 45 letters at most
+game.name_entry.ime_too_long = Only {n} letters fit
+game.save_files.am = AM
+game.save_files.pm = PM
+# the small tag on the help box's corner saying the highlighted save's file format: the format names, as the hub's
+#   save card shows them (usually kept as they are). short (the tag is as wide as the word)
+game.save_files.tag_gci = GCI
+game.save_files.tag_orresave = ORRESAVE
+# the coloured word on each save's row, just before its play time, saying which version of the game the save comes
+#   from (blue US = the North American version, green PAL = the European, red JPN = the Japanese; the same words as
+#   the hub's Saves page). short: about 4 letters at most (each letter taken from a save's name on the same row)
+game.save_files.region.us = US
+game.save_files.region.pal = PAL
+game.save_files.region.jpn = JPN
+# the help box after picking a save whose file was deleted or moved since the list opened (it drops out of the list).
+#   Two lines of about 34 letters. (Approved by snatcherLeo, 2026-11-14, rule R3)
+game.save_files.gone = This save file is no longer there.\nIt may have been moved or deleted.
+# the help box for a save file with no save in it yet (picking it starts a new game). Two lines of about 34 letters
+game.save_files.empty = This save file is empty. Picking it\nstarts a new Story Mode.
+
+# ---- The game's save and card messages, in OrrePort's words (snatcherLeo approved each, 2026-11-14; docs/port/save-messages.md)
+# They replace the game's "Memory Card in Slot A" messages. The game's boxes don't wrap text: \n starts a new line;
+# keep every line to about 37 letters and at most 4 lines. Never "PC" (it is also the game's own storage machine);
+# where a place is needed, "device". POKéMON and POKé COUPONS are written as the game writes them.
+game.card.load_reading = Loading your save file...
+game.card.load_done = Your save file has been loaded!
+game.card.no_save = There is no save file here yet.
+game.card.no_save_bang = There is no save file here yet!
+game.card.create_ask = This save file is empty.\nWould you like to create it now?
+game.card.creating = Creating your save file...
+game.card.created = Your save file was created!
+game.card.newgame_replace = Starting a new game will replace\nthis save file. Is that okay?
+game.card.newgame_replace_battle = Starting a new game will replace\nthis save file, including your\nregistered data in Battle Mode.\nIs that okay?
+game.card.no_progress = This save file has no Story Mode\nprogress to continue from!
+game.card.no_story = This save file has no Story Mode\ndata!
+game.card.not_loaded = No Story Mode save file is loaded.\nPick one with "LOAD", or select\n"NEW GAME" in the Story Mode.
+game.card.will_save = Your progress will be saved.
+game.card.saving = Saving...
+game.card.saved = Your progress has been saved!
+game.card.overwrite = Is it okay to overwrite your\nexisting save file?
+game.card.not_saved = Your progress was not saved!
+game.card.save_failed = The game could not be saved!
+game.card.save_ask = Would you like to save your progress?
+game.card.options_save = Would you like to save\nthese settings?
+game.card.coupons_progress = Would you like to save the POKé\nCOUPONS you've obtained and your\nprogress?
+game.card.coupons_pokemon = Would you like to save the POKé\nCOUPONS and POKéMON you've obtained?
+game.card.fail_none = Save failed!\nThere is no save file here yet.
+game.card.fail_mismatch = Save failed!\nThis save file doesn't match\nthe one you loaded.
+game.card.fail_damaged = Save failed!\nThis save file is damaged. Restore\nan earlier copy on the Saves page.
+game.card.suspend_saving = Saving your suspended battle...
+game.card.suspend_fail_none = Suspended battle save failed!\nThere is no save file here yet.
+game.card.suspend_fail_mismatch = Suspended battle save failed!\nThis save file doesn't match\nthe one you loaded.
+game.card.suspend_fail_damaged = Suspended battle save failed!\nThis save file is damaged. Restore\nan earlier copy on the Saves page.
+game.card.registering = Registering POKéMON...
+game.card.reg_lost = You can keep playing, but your\nregistered POKéMON data will be lost\nif you quit the game without saving.
+game.card.no_suspended = There is no suspended battle data.\nThe game cannot be resumed!
+game.card.reg_no_story = You cannot register because this\nsave file has no Story Mode data!
+game.card.reg_not_loaded = You cannot register because no save\nfile is loaded. Pick one with\n"LOAD" on the main menu.
+game.card.rules_save = Is it okay to save these rules?
+game.card.reg_over_suspend = If you register POKéMON, your current\nsuspended battle data will be lost.\nIs that okay?
+game.card.players_differ = The registered player and the Story\nMode player are not the same.\nThis can't be saved!
+game.card.coupon_prizes = Would you like to transfer the\nexchanged prize(s) to your save file?
+game.card.damaged = This save file is damaged. Restore\nan earlier copy on the Saves page.
+game.card.read_error_restoring = Error reading your save file!\nRestoring the previous copy...
+game.card.read_error_damaged = Error reading your save file!\nThis save file is damaged. Restore\nan earlier copy on the Saves page.
+game.card.restored = Your previous save file was restored!
+
+# ---- The menu bar over the game (File, Help) ----
+menu.file = File
+menu.help = Help
+menu.fullscreen = Fullscreen
+menu.open_folder = Open OrrePort folder
+menu.settings = Settings…
+menu.report = Report a problem…
+menu.debug = Debug menu…
+menu.about = About OrrePort
+menu.cheats = Cheats
+
+# ---- The Cheats menu (in the menu bar, between File and Help) ----
+# the line at the top of the open Cheats menu
+cheats.header = Each one works at once and switches off any time you want. Every switch is noted in a user log.
+# shown instead of the header in GameCube-accurate mode, where cheats can't be used
+cheats.header.accurate = Cheats are off in GameCube-accurate mode.
+cheats.instant_win = Instant win
+# small grey text beside Instant win (short)
+cheats.instant_win.sub = one attack knocks out
+cheats.instant_catch = Instant catch
+cheats.infinite_money = Infinite money
+cheats.items_never_run_out = Items never run out
+cheats.exp = EXP
+# the EXP line's value while it is at normal (short)
+cheats.exp.off = off
+cheats.exp.normal = Normal
+# {n} 2, 5 or 10 (short)
+cheats.exp.times = ×{n}
+cheats.put_in_pc = Put in the PC
+# a small tag beside "Put in the PC": it changes the save itself (short, capitals)
+cheats.changes_save = CHANGES SAVE
+# the line at the top of the "Put in the PC" list
+cheats.put_in_pc.header = Tops each up to 99 in the PC's Item Storage. Already 99 or more: nothing changes.
+cheats.item.master_ball = Master Balls
+cheats.item.rare_candy = Rare Candies
+cheats.item.max_revive = Max Revives
+cheats.item.max_elixir = Max Elixirs
+cheats.item.full_restore = Full Restores
+cheats.item.full_heal = Full Heals
+# small grey text beside each item (short)
+cheats.to_99 = to 99
+# the user log (Cheats log.txt in the logs folder): one line per switch; {what} a cheat's name; {state} on / off
+cheats.log.switch = {what}: {state}
+cheats.log.on = on
+cheats.log.off = off
+# {what} an item's name (Master Balls ...); {count} the count after
+cheats.log.put = Put in the PC: {what}, now {count}
+cheats.log.put_full = Put in the PC: {what}, not added (the PC's Item Storage is full)
+cheats.log.put_none = Put in the PC: {what}, already 99 or more
+cheats.log.put_no_game = Put in the PC: {what}, not added (no game loaded yet)
+
+# ---- About OrrePort ----
+about.thanks = Thanks to
+about.dolphin = Dolphin: ideas and reference figures for the controls (no code copied)
+about.libraries = Aurora, SDL, Dawn, RmlUi, FreeType, HarfBuzz, SheenBidi, libpng, libusb, nod, Dear ImGui, stb_image, libwebp: the libraries OrrePort is built on (their licences are in the licenses folder)
+# About window, under the libraries line: FreeType's licence asks for this sentence in the product's documentation
+# (docs/FTL.TXT); keep the wording, translate it
+about.freetype = Portions of this software are copyright © 2026 The FreeType Project (https://freetype.org). All rights reserved.
+about.decomp = The Pokémon Colosseum decompilation project
+about.fonts = Inter, Saira, Archivo, Roboto and Google’s Noto fonts (SIL Open Font License; their licences are in the Fonts folder)
+about.rights = Pokémon Colosseum is © Nintendo, The Pokémon Company, Creatures and Genius Sonority. OrrePort includes no game files: it runs your own disc.
+about.close = Close
+
+# ---- Report a problem (from the hub) ----
+report.heading = Report a problem
+report.what = What happened?
+report.optional = Optional
+# grey example text inside the empty box
+report.example = For example: the disc wouldn't add, or the hub looked wrong.
+report.included = Included automatically
+# small chips (short)
+report.chip.save = Save
+report.chip.log = Log
+report.chip.pc = PC details
+# in game, two more chips and another example
+report.chip.recording = Recording
+report.chip.picture = Picture
+report.example_game = For example: the camera went through the wall after the cutscene.
+report.where = Saved to a folder on your PC, ready to share. Your name and folders are left out.
+report.save = Save report
+# the saved screen of Report a problem, in the hub and in game (2026-11-23, snatcherLeo: like Studio's; the same words as
+# Studio's studio.report.saved_body / saved_not_copied / open_folder / done). The second line only when the clipboard
+# couldn't take the zip. No channel is named (snatcherLeo, 2026-11-13: the support place may change)
+report.saved_body = Report saved and copied. Paste it (Ctrl+V) where you share reports, or drag it from the reports folder.
+report.saved_not_copied = Report saved. Drag it from the reports folder to where you share reports.
+# the zip's size beside its name ({size} like "0.4 MB"), and the warning past about 10 MB (many share places refuse bigger
+# files)
+report.size = {size}
+report.too_big = {size}: bigger than many places accept (about 10 MB).
+# the saved screen's two buttons (short): Explorer opens on the reports folder with the zip selected; Done closes
+report.open_folder = Open folder
+report.done = Done
+# the bar at the next start after the program ended unexpectedly (a crash, a hang, or ended in Task Manager); shared
+# with Studio, so both programs say it the same way (5.1, snatcherLeo 2026-11-23). {program} is OrrePort or Studio. Make a
+# report opens Report a problem with the earlier run's log added; Not now hides the bar. short buttons
+report.crash_bar = {program} closed unexpectedly last time. Make a report?
+report.crash_report = Make a report
+report.crash_dismiss = Not now

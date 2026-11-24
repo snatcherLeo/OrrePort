@@ -1,0 +1,369 @@
+<rml>
+<head>
+	<title>[hub.page]</title>
+	<link type="text/rcss" href="hub.rcss"/>
+	<link type="text/rcss" href="hub-play.rcss"/>
+</head>
+<!-- The hub, after the project's mockup 01 (docs/design/mockups/01-hub-colosseum.webp) and the plan's "The hub" section:
+     pick a disc, pick a save, press Play. The disc's motion: sway C at rest, Lift and spin on Play (plan, values
+     table). Texts that change are written by pc_hub.cpp.
+     *Updated 2026-11-13:* every word is a "[key]" from ui/lang/<code>.txt, in the player's language (pc_text.h; snatcherLeo:
+     "whatefver way we can make it, so that, when I gain collaborators on discord to translate, it'll be very easy").
+     Texts with a {placeholder} are filled by pc_hub.cpp, never written here: RmlUi would read the braces as data
+     bindings. Controller button names (A, B, X, Y, L, R, START) stay as printed on the pads. -->
+<body id="body" class="dark">
+	<div id="top">
+		<img id="wordmark" src="brand://wordmark"/>
+		<!-- light mode's wordmark (snatcherLeo's "2c": the mirror, the notches black; hub.rcss shows one or the other) -->
+		<img id="wordmark-light" src="brand://wordmark-light"/>
+		<span id="gear" class="iconbtn">⚙</span>
+		<!-- the update note beside the gear (step 4.4, snatcherLeo approved Studio's mockup 2026-11-23: "For Hub I'm fine with
+		     it"): "Version 0.1.2 available", then the download's progress, then "Update ready"; hidden when there is
+		     nothing to say, and never during play. Click or SELECT opens #updpanel. UI ids: updnote, updpanel -->
+		<span id="updnote"></span>
+	</div>
+	<!-- the content in a centred 1600 x 960 dp block; the top and bottom bars reach the window's edges (snatcherLeo,
+	     2026-11-11, option 2 of the fullscreen mockups: "Let's go with 2") -->
+	<div id="block">
+	<div id="left">
+		<div id="discslot">
+			<!-- turning by hand (#discdrag, pc_hub.cpp), the sway's float, Play's lift, the sway's tilt, Play's spin: one
+			     box each, so no two motions overwrite
+			     each other. Inside the spin, bottom to top: the blank disc (the label without its printing; shown
+			     until the disc is recognised, body.nodisc), the 3 trail copies, OrrePort's own label (the design snatcherLeo
+			     and C signed off, drawn by pc_hub.cpp), the smeared disc (Play, hub-play.rcss). The player's banner
+			     (disc://banner) is the later "Disc label: Banner" option. -->
+			<div id="discdrag"><div id="discfloat"><div id="disclift"><div id="disc"><div id="spin">
+				<img id="blank" src="disc://blank"/>
+				<!-- no disc added (2026-11-21): the empty disc, the blank one with a grey top (hub.rcss #empty) -->
+				<img id="empty" src="disc://empty"/>
+				<img id="ghost1" class="ghost" src="disc://label"/>
+				<img id="ghost2" class="ghost" src="disc://label"/>
+				<img id="ghost3" class="ghost" src="disc://label"/>
+				<img id="label" src="disc://label"/>
+				<img id="smear" src="disc://smear"/>
+			</div></div></div></div></div>
+			<!-- the disc label page's way in from the mouse: a pencil at the disc's corner, shown while the mouse is
+			     over the disc (outside the disc's circle, so it never starts a turn by hand) -->
+			<!-- *Updated 2026-11-13 (snatcherLeo: "can we confirm, the outline on this pencil icon ... isn't choppy"):* its circle
+			     and outline are smooth pictures, not a round border (hub.rcss #b-label) -->
+			<div id="b-label"><img class="bface" src="hubicon://round"/><img class="bedge" src="hubicon://smallring"/><span class="bpen">✎</span></div>
+			<!-- no "GameCube-accurate" badge under the disc any more (snatcherLeo, 2026-11-13, on mockup 50: "we don't ned that
+			     here"); the preset is in Settings -->
+		</div>
+		<div id="discs">
+			<span class="key">L</span>
+			<span class="chip on"><span class="dot"></span> [hub.game.colosseum]</span>
+			<!-- XD's slot stays as a promise for later (snatcherLeo, 2026-11-10: "For the XD button, we can say that's "not out
+			     yet" or something small to indicate it's not a thing yet, but we can leave it there as a promise for the
+			     future") -->
+			<span class="chip add" id="b-xd">[hub.game.xd] <span class="soontag">[hub.game.soon]</span></span>
+			<span class="key">R</span>
+		</div>
+	</div>
+	<!-- The right-hand column after mockup 62 (snatcherLeo, 2026-11-13: "Yes, let's build it"; the design chat's layout, built
+	     with OrrePort's own pieces): DISC READY, the title, PLAY with the save on it, the current save's card, quiet
+	     links. "Disc checked" and the SAVES list went (snatcherLeo, on mockups 50 and 52) -->
+	<div id="right">
+		<div id="status"><span class="dot"></span> [hub.status.ready]</div>
+		<div id="title">[hub.game.colosseum.title]</div>
+		<div id="sub">NTSC-U · GC6E01</div>
+		<div id="ready">
+			<!-- PLAY's thin outer ring and the gap inside it (the mockup's ring and border). The ring is a smooth picture
+			     drawn at its exact size by pc_hub.cpp (update_rings), shown while PLAY has the controller's place -->
+			<div id="playring"></div>
+			<!-- "Save 1" (#playslot, #curname's slot) comes from pc_hub.cpp: it has a {n} -->
+			<div id="play"><span class="tri">▶</span> [hub.play] <span id="playtarget"><span id="playslot"></span> <span class="gp ga" id="playa">A</span></span></div>
+			<!-- the save Play starts. Its symbol and tag tell the two formats apart, each in its own colour in light and
+			     dark mode alike (snatcherLeo, 2026-11-13): a GameCube memory card in indigo for a .gci, OrrePort's file with the
+			     O in rust for an .orresave (body.orresave, pc_hub.cpp show_save). GCI / ORRESAVE are format names, as
+			     the files are named, so they aren't translated -->
+			<div id="cur">
+				<!-- the same ring round the card while it has the controller's place (A: Change save...) -->
+				<div id="curring"></div>
+				<img class="ic gci" src="hubicon://gci"/><img class="ic orre" src="hubicon://orresave"/>
+				<div id="curtext">
+					<div id="curlab">[hub.save.heading]</div>
+					<!-- the Accurate badge (UI id saves.badge.accurate; 2.12, snatcherLeo 2026-11-16): shown while the current save
+					     plays in GameCube-accurate mode (body.accsave, pc_hub.cpp show_save); its words are translated -->
+					<!-- the Autosave tag (UI id hub.card.autosave_tag; 2026-11-21, snatcherLeo: "make it clear that, the current save
+					     loaded, is an autosave (just in Hub)"): shown while PLAY will start the current save's autosave
+					     (body.autosavecur, pc_hub.cpp show_save) -->
+					<div id="curname"><span id="curslot"></span> <span class="ftag gci" id="curtag-gci">GCI</span><span class="ftag orre" id="curtag-orre">ORRESAVE</span><span class="ftag acc" id="curtag-acc">[saves.badge.accurate]</span><span class="ftag auto" id="curtag-auto">[hub.save.autosave_tag]</span></div>
+					<div id="cursub">[hub.save.none]</div>
+				</div>
+				<!-- *Changed 2026-11-15 (snatcherLeo, mockup A: "Let's do all saves"):* the whole card opens the Saves page; its
+				     right side says so ("All saves ›") where the Change save... button was, and the Saves link left the
+				     row below -->
+				<div id="b-change"><span id="allsaves">[hub.save.all]</span><span class="chev">›</span></div>
+				<span class="gp gy" id="cury">Y</span>
+			</div>
+			<div id="links">
+				<!-- Open Studio (snatcherLeo, 2026-11-09, via C; since 2026-11-23 it starts Studio, or shows it when open:
+				     "Studio is opened", pc_hub.cpp studio_link_frame) -->
+				<span class="lk" id="b-studio">[hub.link.studio] <span class="sym">↗</span></span>
+				<!-- the Language discs (snatcherLeo, 2026-11-15: "a small tagline (just like "Open Studio" ... that says "Add a
+				     language disc..."" that unfolds the panel below; click again to fold it). pc_hub_langdiscs.cpp sets
+				     its words ("Language discs" once one is added) and fills #langpanel -->
+				<span class="lk" id="b-lang"><img class="lkdisc" src="hubicon://globe"/><span id="b-langtext">[hub.discs.link]</span><span class="lkdown">▾</span><span class="lkup">▴</span></span>
+				<span class="lk quiet" id="b-report"><span class="sym">⚑</span> [hub.link.report]</span>
+			</div>
+			<!-- the previous run ended unexpectedly (5.1, snatcherLeo 2026-11-23; Studio's same bar): shown only then
+			     (body.crashed), until Make a report or Not now. pc_hub.cpp crash_bar_* -->
+			<div id="crashbar"><span id="cbtext"></span><span class="cbb cbgo" id="cb-report">[report.crash_report]</span><span class="cbb" id="cb-dismiss">[report.crash_dismiss]</span></div>
+			<div id="langpanel"></div>
+		</div>
+		<!-- no disc yet (plan "Adding a disc": drop it on the window, Browse..., or the ROM folder) -->
+		<div id="adddisc">
+			<div id="addhead">[hub.add.heading]</div>
+			<div id="dropbox">
+				<div id="droptitle">[hub.add.drop]</div>
+				<div id="dropsub">[hub.add.drop.which]</div>
+				<div id="dropsub2">[hub.add.drop.copy]</div>
+			</div>
+			<div id="b-browse"><span class="tri">▶</span> [hub.add.browse] <span class="ab">A</span></div>
+			<div id="addbuttons">
+				<div class="btn" id="b-folder">[hub.add.folder]</div>
+				<div class="btn" id="b-report2">[hub.link.report]</div>
+			</div>
+			<!-- the disc checked out: copy (the default) or move it into ROM\ (plan "Adding a disc", "Copy or move") -->
+			<div id="b-copy"><span class="tri">▶</span> [hub.add.copy] <span class="ab">A</span></div>
+			<div id="offerbuttons">
+				<div class="btn" id="b-move">[hub.add.move] <span class="xb">X</span></div>
+				<div class="btn" id="b-cancel">[common.cancel] <span class="bb">B</span></div>
+			</div>
+		</div>
+		<!-- the "Collection · COMING LATER" row went with the redesign (mockup 62); Launch Studio is the links' Open
+		     Studio -->
+		<div id="note"></div>
+	</div>
+	<!-- the disc label page (mockup 47's label shelf; snatcherLeo, 2026-11-13: "Yes, build it"): the label as it will look
+	     (drag to move, the wheel or the bar to zoom), the shelf (OrrePort's, the game's banner, the 5 most recently worn
+	     pictures, All, Add), and the All grid over it. pc_hub.cpp fills the editor, the shelf and the grid. -->
+	<div id="labels">
+		<!-- *Changed 2026-11-15 (snatcherLeo's mockup B: "B: title centred"):* the "‹ Settings" button went ("users can go back
+		     to the Hub ... that's where they are more likely to go"; the gear in the top bar still opens Settings);
+		     "‹ Back to Hub" sits top left where it was, B does the same; the page's name and the game sit centred over the
+		     disc -->
+		<div class="btn" id="ldone"><span class="larrow">‹</span> [label.done]</div>
+		<div id="lhead">[label.heading]</div>
+		<!-- the game whose disc this is (XD's joins later); the "Click a label ..." line went (snatcherLeo, 2026-11-13: "we don't
+		     need the text ..., doens't make sense") -->
+		<div id="lsub"><span class="chip on lgame"><span class="dot"></span> [hub.game.colosseum.title]</span></div>
+		<div id="leditbox"></div>
+		<!-- what the hub's own disc shows ("Shown on your hub", or what it still shows while something isn't saved) -->
+		<div id="lstatus"></div>
+		<div id="lshelf"></div>
+		<div id="ladjust">
+			<!-- Save, clearly (snatcherLeo, 2026-11-13: "there should be a button to "save" very clearly, so I know it's
+			     saved"): green while something is unsaved, "✓ Saved" after; Rename for a saved picture ("users can
+			     rename very easily") -->
+			<div class="btn lbtn" id="l-save">[label.saved]</div>
+			<!-- *Updated 2026-11-15 (snatcherLeo's mockup A: zoom out further, turn, fit):* − / + around the bar, whose middle
+			     mark is "just fills the disc" (left: a quarter size, right: 4x); Turn in quarter turns; Fit whole picture -->
+			<span class="lzl">[label.zoom]</span>
+			<div class="btn lico" id="l-zoomout">−</div>
+			<div id="lzoom"><div id="lzoomtrack"></div><div id="lzoomfill"></div><div id="lzoommark"></div><div id="lzoomknob"></div></div>
+			<div class="btn lico" id="l-zoomin">+</div>
+			<span class="lzl lturn">[label.turn]</span>
+			<div class="btn lico" id="l-turnl">↺</div>
+			<div class="btn lico" id="l-turnr">↻</div>
+			<div class="btn lbtn" id="l-fit">[label.fit]</div>
+			<div class="btn lbtn" id="l-reset">[label.reset]</div>
+			<div class="btn lbtn" id="l-rename">[label.rename]</div>
+			<div class="btn lbtn" id="l-remove">[label.remove]</div>
+		</div>
+		<div id="lhint">[label.hint]</div>
+		<div id="lfoot"><span class="llink" id="l-template">[label.template]</span>   ·   <span class="llink" id="l-folder">[label.folder]</span>   ·   <span id="lformats"></span></div>
+		<div id="lnote"></div>
+		<div id="lall">
+			<div id="lallhead">[label.all] <span id="lcount"></span><div class="btn lbtn" id="l-allback">[common.back] <span class="bb">B</span></div></div>
+			<div id="lgrid"></div>
+		</div>
+	</div>
+	<!-- the Saves page (step 2.1, mockup 72; snatcherLeo, 2026-11-13: one place to manage saves, "Import a save", "Restore
+	     from previous version"): every save on the left (search, sort), the chosen one's details and actions on the
+	     right. pc_hub_saves.cpp fills #svlist and #svdetail. -->
+	<div id="saves">
+		<div id="svhead">
+			<div class="btn" id="sv-back"><span class="larrow">‹</span></div>
+			<span id="svtitle">[saves.title]</span>
+			<span class="chip on svgame"><span class="dot"></span> [hub.game.colosseum.title]</span>
+			<span id="svdrop">[saves.drop_hint]</span>
+			<!-- the import badge (UI id saves.import_badge; 2026-11-21, snatcherLeo: "a kind of green badge that fades away
+			     quickly"): over the drop hint's spot for about two seconds after a save is imported (pc_hub_saves.cpp
+			     badge); its words are saves.imported_one -->
+			<span id="svbadge"></span>
+			<div class="btn" id="sv-new">+ [saves.new_save]</div>
+			<div class="btn svgo" id="sv-import">⤓ [saves.import]</div>
+		</div>
+		<div id="svleft">
+			<div id="svtools">
+				<input type="text" id="svsearch" size="30" maxlength="60"/>
+				<span id="svsearchph">[saves.search]</span>
+				<div class="btn" id="svsort"></div>
+			</div>
+			<div id="svlist"></div>
+		</div>
+		<div id="svdetail"></div>
+		<div id="svnote"></div>
+	</div>
+	</div>
+	<div id="bottom">
+		<!-- no "Controller · prompts switch to match" line here any more (snatcherLeo, 2026-11-13: "On the main hub, we don't need
+		     this"); the button hints still follow the controller in hand -->
+		<span id="hints2"><span class="bb">B</span> [common.back] <span class="key">L</span><span class="key">R</span> [hub.hint.category]</span>
+		<!-- mockup 62's hint bar: Y is Change save (Report a problem stays on F8 and its link) -->
+		<span id="hints"><span class="key">L</span><span class="key">R</span> [hub.hint.disc] <span class="ab">A</span> <span id="hintplay">[hub.hint.play]</span><span id="hintbrowse">[hub.hint.browse]</span> <span class="yb hintchange">Y</span><span class="hintchange"> [hub.hint.change] </span><span class="xb hintlabel">X</span><span class="hintlabel"> [hub.hint.label] </span><span class="key wide">START</span> [common.settings]</span>
+		<!-- the disc art page's own hints, shorter (snatcherLeo, 2026-11-13, asking what Main thinks): moving and zooming only
+		     while a picture is worn (body.lpic); B goes back to Settings, as the page's arrow -->
+		<!-- the Saves page's hints -->
+		<span id="hints4"><span class="key wide">[hub.key.dpad]</span> [hub.hint.choose] <span class="ab">A</span> [saves.hint.play] <span class="xb">X</span> [saves.rename] <span class="yb">Y</span> <span id="hintsvy">[saves.hint.versions]</span> <span class="bb">B</span> [common.back]</span>
+		<span id="hints3"><span class="key wide">[hub.key.dpad]</span> [hub.hint.choose] <span class="hintpic"><span class="key wide">[hub.key.lstick]</span> [hub.hint.move] <span class="key">LT</span><span class="key">RT</span> [hub.hint.zoom] <span class="key">LB</span><span class="key">RB</span> [hub.hint.turn] </span><span class="hintsave"><span class="ab">A</span> [common.save] </span><span class="xb">X</span> [hub.hint.add] <span class="hintall"><span class="key">Y</span> [hub.hint.all] </span><span class="bb">B</span> [label.done]</span>
+	</div>
+	<!-- Report a problem, as in the game's menu (mockup 08; snatcherLeo, 2026-11-10: "it should just launch the usual
+	     problem log thing"); before Play there is no recording or game picture yet, so those two are left out -->
+	<!-- the disc art page's name box (after Save on a new picture, or Rename) and leave question (unsaved work), over
+	     the whole window, dimmed as Report a problem -->
+	<div id="ldim"></div>
+	<div id="lname" class="lpanel">
+		<div id="lnamet" class="lpt">[label.name_box]</div>
+		<input type="text" id="lnamein" maxlength="60" size="40"/>
+		<div class="lpfoot"><div class="btn lbtn" id="ln-cancel">[common.cancel] <span class="bb">B</span></div><div class="btn lbtn lgo" id="ln-ok">[common.save] <span class="ab">A</span></div></div>
+	</div>
+	<div id="lleave" class="lpanel">
+		<div id="lleavet" class="lpt">[label.leave.changed.title]</div>
+		<div id="lleaves" class="lps"></div>
+		<div class="lpfoot"><div class="btn lbtn" id="lv-cancel">[common.cancel] <span class="bb">B</span></div><div class="btn lbtn" id="lv-discard">[common.dont_save] <span class="xb">X</span></div><div class="btn lbtn lgo" id="lv-save">[common.save] <span class="ab">A</span></div></div>
+	</div>
+	<!-- the Language discs' "What changes" window (UI id hub.lang.jp_look.window; 3.5 step 5, the plan's "Showing
+	     players what changes"): the Japanese release look's line again, then one line per row of ui/regions/jp_look.txt
+	     (pc_hub_langdiscs.cpp look_window fills #lookline and #looklist), scrolling; Back or B closes it -->
+	<div id="lookdim"></div>
+	<div id="lookbox" class="lpanel">
+		<div class="lpt">[hub.lang.jp_look.window]</div>
+		<div class="lps" id="lookline"></div>
+		<div id="looklist"></div>
+		<div class="lpfoot"><div class="btn lbtn lgo" id="look-close">[common.back] <span class="bb">B</span></div></div>
+	</div>
+	<!-- a bubble saying how an action went (snatcherLeo, 2026-11-15: "a notification thing bubble that gives feedback to
+	     confirm if it exported properly or not"); pc_hub_saves.cpp toast() -->
+	<div id="svtoast"></div>
+	<!-- the Saves page's windows: rename, the previous versions, delete, "already here" (pc_hub_saves.cpp) -->
+	<div id="svdim"></div>
+	<div id="svname" class="lpanel svpanel">
+		<div class="lpt">[saves.rename_title]</div>
+		<input type="text" id="svnamein" maxlength="80" size="40"/>
+		<div class="lps">[saves.rename_note]</div>
+		<div class="lpfoot"><div class="btn lbtn" id="svn-cancel">[common.cancel] <span class="bb">B</span></div><div class="btn lbtn lgo" id="svn-ok">[common.save] <span class="ab">A</span></div></div>
+	</div>
+	<div id="svrestorebox" class="lpanel svpanel svwide">
+		<!-- mockup 74 (snatcherLeo, 2026-11-13: "SIMPLE and EFFORTLESS and EASY TO READ"): the title, the save's name, the save
+		     as it is now (greyed), then the versions to go back to; one click goes back (Undo follows in the notice) -->
+		<div class="lpt">[saves.restore_title]</div>
+		<div class="lps" id="svrestoren"></div>
+		<div id="svvnow"></div>
+		<div id="svvlist"></div>
+		<!-- no "Are you sure?": Undo follows in the notice, and this line says so before the click (snatcherLeo, 2026-11-13:
+		     "Whatever would not confuse the player I guess, decide") -->
+		<div class="lpfoot"><span class="svvsafe">[saves.restore_safe]</span><div class="btn lbtn" id="svv-cancel">[common.cancel] <span class="bb">B</span></div></div>
+	</div>
+	<div id="svdeletebox" class="lpanel svpanel">
+		<div class="lpt" id="svdeletet"></div>
+		<div class="lps">[saves.delete_note]</div>
+		<div class="lpfoot"><div class="btn lbtn" id="svd-cancel">[common.cancel] <span class="bb">B</span></div><div class="btn lbtn svdangerbtn" id="svd-ok">[saves.delete_yes] <span class="ab">A</span></div></div>
+	</div>
+	<!-- "Make a GameCube copy…" (mockup 104b; snatcherLeo, 2026-11-14: "this architecture is great, we'll have this going
+	     forward and add to it"): built from the GameCube copy's checklist (pc_gcopy.c): a summary line, then one
+	     section per kind of note (changes / stays in OrrePort / turned off / can't be copied), empty ones hidden -->
+	<div id="svgcopybox" class="lpanel svpanel svwide">
+		<div class="lpt" id="svgct"></div>
+		<div class="lps" id="svgcsum"></div>
+		<!-- which version the copy is for (3.5 step 9): the region words, and PAL's languages (pc_hub_saves.cpp gcopy_picker) -->
+		<div id="svgcregion"></div>
+		<div id="svgclist"></div>
+		<div class="svsmall">[gcopy.foot]</div>
+		<div class="lpfoot"><div class="btn lbtn" id="svg-cancel">[common.cancel] <span class="bb">B</span></div><div class="btn lbtn lgo" id="svg-ok">[gcopy.choose] <span class="ab">A</span></div></div>
+	</div>
+	<!-- accurate mode on and Play pressed on a save with long names (mockup 104 D): a GameCube copy is offered -->
+	<!-- *2.12 (2026-11-16):* also the answer to turning a save's accurate switch on for an .orresave (its title and words
+	     set by pc_hub_saves.cpp: one for PLAY, one for the switch) -->
+	<div id="svgcaccbox" class="lpanel svpanel">
+		<div class="lpt" id="svgcacct">[gcopy.accurate_title]</div>
+		<div class="lps" id="svgcaccs"></div>
+		<div class="lpfoot"><div class="btn lbtn" id="svga-cancel">[common.cancel] <span class="bb">B</span></div><div class="btn lbtn lgo" id="svga-ok">[saves.gcopy] <span class="ab">A</span></div></div>
+	</div>
+	<!-- "What it turns off" (UI id accurate.what_off; 2.12, snatcherLeo 2026-11-16): what GameCube-accurate mode switches off,
+	     keeps at the GameCube's way, and leaves on; the rows come from pc_options.c, their words from ui/lang -->
+	<div id="svwhatbox" class="lpanel svpanel svwide">
+		<div class="lpt">[accurate.what_off.title]</div>
+		<div id="svwhatlist"></div>
+		<div class="lpfoot"><div class="btn lbtn lgo" id="svw-close">[common.back] <span class="bb">B</span></div></div>
+	</div>
+	<div id="svalreadybox" class="lpanel svpanel">
+		<div class="lpt" id="svalreadyt"></div>
+		<!-- snatcherLeo, 2026-11-13: "We can have a "Don't show this to me again" checkbox for it" (pc_hub_saves.cpp) -->
+		<div id="sva-noask"><span id="sva-box" class="svbox"></span> [saves.dont_ask]</div>
+		<!-- the same window asks "Import just the save?" for an .orresave whose long names don't belong to its save
+		     (2.4 part 5): pc_hub_saves.cpp sets the button's words and hides the checkbox then -->
+		<div class="lpfoot"><div class="btn lbtn" id="sva-cancel">[common.cancel] <span class="bb">B</span></div><div class="btn lbtn lgo" id="sva-ok"><span id="sva-okt">[saves.import_again]</span> <span class="ab">A</span></div></div>
+	</div>
+	<!-- the import question (UI id saves.import_ask; 3.5, snatcherLeo 2026-11-19: "ask the user - or, they can assign a quick
+	     checkmark instead of always being asked"): after an import, how to play the save(s). Each answer is a button
+	     (saves.import_ask.enhanced / .accurate: a click or A answers); the tick (saves.import_ask.always) makes the answer
+	     the default for new saves and stops the question (Settings › General brings it back). pc_hub_saves.cpp
+	     import_ask_open sets the title (one save or several) and the controller's place (.f) -->
+	<div id="svimportbox" class="lpanel svpanel">
+		<div class="lpt" id="svimpt">[saves.import_ask.title.one]</div>
+		<div class="lps">[saves.import_ask.note]</div>
+		<div class="svimpopt" id="svimp-enh"><span class="svimpn">[saves.import_ask.enhanced] <span class="svimprec">[saves.import_ask.recommended]</span></span><span class="svimps">[saves.import_ask.enhanced.sub]</span></div>
+		<div class="svimpopt" id="svimp-acc"><span class="svimpn">[saves.import_ask.accurate]</span><span class="svimps">[saves.import_ask.accurate.sub]</span></div>
+		<div id="svimp-noask"><span id="svimp-box" class="svbox"></span> [saves.import_ask.always]</div>
+		<!-- B, Escape, this line or a click outside: nothing changes (the saves keep the new-saves default) -->
+		<div id="svimp-later"><span class="bb">B</span> [saves.import_ask.later]</div>
+	</div>
+	<div id="reportdim"></div>
+	<div id="report">
+		<div id="rh"><span class="flag">⚑</span> [report.heading]</div>
+		<div id="rl"><span class="strong">[report.what]</span> [report.optional]</div>
+		<div id="notebox">
+			<textarea id="rnote" rows="4" cols="56"></textarea>
+			<div id="rph">[report.example]</div>
+		</div>
+		<div id="auto">
+			<div id="autot">[report.included]</div>
+			<div id="rchips"><span class="rchip">▤ [report.chip.save]</span><span class="rchip">≡ [report.chip.log]</span><span class="rchip">◆ [report.chip.pc]</span></div>
+			<div id="autos">[report.where]</div>
+		</div>
+		<!-- after Save, as Studio's panel does (snatcherLeo, 2026-11-23: "Studio's report thing is actually far more elegant,
+		     saves it to clipboard and lets user know, and then tells them they can open file epxlorer afterwards"):
+		     what happened, the zip's name and size, a warning past about 10 MB; Explorer only from Open folder.
+		     UI ids: rsaved, rsavedmsg, rfile, rfilename, rfilesize, rbig, ropen, rdone -->
+		<div id="rsaved">
+			<div id="rsavedmsg"></div>
+			<div id="rfile"><span id="rfilesize"></span><span id="rfilename"></span></div>
+			<div id="rbig"></div>
+		</div>
+		<div id="rfoot">
+			<div id="rcancel" class="rbtn">[common.cancel] <span class="bb">B</span></div>
+			<div id="rsave" class="rbtn">[report.save] <span class="ab">A</span></div>
+			<div id="ropen" class="rbtn">[report.open_folder] <span class="yb">Y</span></div>
+			<div id="rdone" class="rbtn">[report.done] <span class="ab">A</span></div>
+		</div>
+	</div>
+	<!-- the update panel (the same box as Report a problem): what's new, the size, that both apps update together and
+	     nothing of the player's is touched; Download (A) / Not now (B); when ready: Restart now (A) / Later (B) -->
+	<div id="upddim"></div>
+	<div id="updpanel">
+		<div id="uh"></div>
+		<div id="unotes"></div>
+		<div id="uinfo"></div>
+		<div id="uwarn"></div>
+		<div id="ufoot">
+			<div id="ulater" class="rbtn"></div>
+			<div id="ugo" class="rbtn"></div>
+		</div>
+	</div>
+	<div id="black"></div>
+</body>
+</rml>

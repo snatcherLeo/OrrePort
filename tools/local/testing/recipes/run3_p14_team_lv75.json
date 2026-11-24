@@ -1,0 +1,11 @@
+{
+  "_note": "the reference playthrough, before P14, on top of run3_p14_l3_faint.json (snatcherLeo, 2026-11-09): 'can you also make every pokemon on my current team level 75?' Each of the six party members to Lv 75: EXP set to the level's start, stats from the formula with its own IVs, EVs and nature, full HP; moves, PP, PP Ups, nickname, purified state and everything else unchanged (no moves given). ev_lag_ok: a stored stat may trail the formula by 0-3 points (EVs gained since the last level-up; the game applies them at the next level-up too). The Swinub / Magnemite box edit stays.",
+  "modify_pokemon": [
+    {"species": 142, "level": 75, "ev_lag_ok": true, "_note": "AERODACTYL"},
+    {"species": 196, "level": 75, "ev_lag_ok": true, "_note": "ESPEON"},
+    {"species": 162, "level": 75, "ev_lag_ok": true, "_note": "FURRET"},
+    {"species": 106, "level": 75, "ev_lag_ok": true, "_note": "HITMONLEE"},
+    {"species": 94, "level": 75, "ev_lag_ok": true, "_note": "GENGAR"},
+    {"species": 160, "level": 75, "ev_lag_ok": true, "_note": "FERALIGATR (Rex)"}
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "_what": "the reference playthrough, after P15 (snatcherLeo, 2026-11-09): 'editing my save file to ensure that all the shadow pokemon in my boxes (which are located in the first 2 boxes) have their purify gauge at the lowest, so I can, in another sitting, purify all the remaining shadow pokemon at agate village Like I did in Run 2'. The heart gauge of every Shadow Pokemon in PC boxes 'box1' and 'box2' (their names on this save) emptied, as Run 2's E3; nothing else changes. Installed only when snatcherLeo asks (after the hub work).",
+  "_template": "template_slot 2 (Aerodactyl): the editor's stat-formula check runs on one party member before any edit; P15's party 0 (Hitmonlee) trails the formula by EVs gained since its last level-up, Aerodactyl matches exactly. The gauge edit itself uses no template.",
+  "template_slot": 2,
+  "zero_shadow_gauge": {"boxes": ["box1", "box2"]}
+}

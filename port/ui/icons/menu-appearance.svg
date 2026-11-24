@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- OrrePort menu icon: Appearance (a ring, half filled: light and dark). Filled shapes only (port/src/pc_svg.cpp). -->
+<path fill="#FFFFFF" fill-rule="evenodd" d="M3 12 Q3 3 12 3 Q21 3 21 12 Q21 21 12 21 Q3 21 3 12 Z M4.9 12 Q4.9 19.1 12 19.1 Q19.1 19.1 19.1 12 Q19.1 4.9 12 4.9 Q4.9 4.9 4.9 12 Z"/>
+<path fill="#FFFFFF" d="M12 6.2 Q6.2 6.2 6.2 12 Q6.2 17.8 12 17.8 Z"/>
+</svg>

@@ -1,0 +1,13 @@
+{
+ "_what": "Battle-mode team B (snatcherLeo, 2026-10-24): team A's six (ebm_team_a2.json) raised to Lv 100 in place, same moves and held items; and Battle Mode course 5 (Orre Colosseum Lv 100, likely) unlocked, which normal play unlocks only after Tower Colosseum (course 4) is cleared in both Single and Double. Battle-mode card only.",
+ "template_slot": 0,
+ "modify_pokemon": [
+  {"species": 404, "level": 100, "moves": [57, 58, 87, 347]},
+  {"species": 405, "level": 100, "moves": [89, 76, 126, 91]},
+  {"species": 130, "level": 100, "moves": [37, 349, 89, 63]},
+  {"species": 227, "level": 100, "moves": [191, 19, 92, 182]},
+  {"species": 150, "level": 100, "moves": [94, 87, 58, 247]},
+  {"species": 297, "level": 100, "moves": [240, 331, 58, 182]}
+ ],
+ "unlock_battle_courses": [5]
+}

@@ -1,0 +1,5 @@
+# P20 (sitting 031_20261023_0143): logged resyncs for the second pass (2026-10-30; match ledger, P20 rows).
+# No hand edits, no Wes placements: settings only, to the end on the fourth run (p2_P20d), after two port fixes found
+# by its battle 345 (port-gaps 38, the AI value files' signed getter; port-gaps 39, the AI hit checks' real arguments):
+#   P14's settings (resyncs/P14_024.txt) + ORRE_ROLL_SEEDS for all 8 battles (one PLAYREC_RNGCALL capture, replay_2,
+#   windows from each battle to the room entry after its last message; checked: 1,332 flag changes identical).

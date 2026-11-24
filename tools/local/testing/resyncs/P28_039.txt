@@ -1,0 +1,98 @@
+# P28 (sitting 039_20261023_2211): logged resyncs for the second pass (2026-10-30; match ledger, P28 rows).
+# *Superseded 2026-10-31:* both items below were made on pads built without the input probe (replay_2 has no
+# input.csv, so replay_check.py left the latched input, window anchors and cursor sync off; lessons.md). From the probe
+# replay replay_5 (with input) the PC needs neither: battles 1-7 as on the console with no edits (p2_P28e / p2_P28f).
+# Kept for the record.
+# *Added 2026-10-31:* on replay_5 (--replay 5, same seeds) p2_P28f stopped at room entry 42 (the P★DA), waiting for
+# room 0x35; these items, applied in order with --log of the run before (comments, so an old pad doesn't pick them up):
+#   A. @157038 npc 0 -11.1900 0 -36.9200  # room 0x2F after the P★DA and the lift down: the console's Wes walks
+#      north to (-11.2, -36.9) and turns west up the side ramp to room 0x35; the PC's comes down on the same frames
+#      (+543) but takes another line north, misses the ramp and sticks at (-86.0, -3.9) (P26 item 2's class, same
+#      spot). --log <p2_P28f>/run.log. With it (p2_P28g): entries 1-46, battles 1-7, flags all the same.
+#   B. @159208 npc 0 -45.5300 0 -99.9800  # room 0x2F entry 46, the walk to the south exit (the world map): the
+#      PC's Wes runs ~2.6 units west of the console's line and stops at (-43.75, -87.47); the console's stops at
+#      (-45.53, -99.98) and its A opens a yes / no window (0x40), then the world map. A mid-walk placement (@159200 on
+#      the console's +586 point, p2_P28h) still ended 4 units short, so Wes is placed on the console's stop one frame
+#      before the A. --log <p2_P28g>/run.log. With A and B (p2_P28i): entries 1-50, battles 1-7, flags the same; then
+#      story flag 3520 (class 3 word 197 bit 13, set at the console's world-map visit +1247) is missing.
+#   C. (open) room 0x2F after a cancelled world-map visit (entry 50): both Wes stand at (-49.71, -88.88) on the same
+#      frame, then the console's walks north to z -76 and east to the lift ramp, the PC's is blocked at z ~-82.5. A
+#      placement on the console's line (@165798 npc 0 -46.0 0 -77.04, p2_P28j) was pushed back 5 units west against
+#      an eastward stick; the people log (p2_P28k, ORRE_NPC_LOG=*,165700-165900) shows a wanderer (slot 9, index 7)
+#      at (-36.5, -63.0) with home (-29, -76), radius 15: likely the one in the way. A placement on the lift ramp
+#      (@165874 npc 0 -15.38 8.64 -107.28, p2_P28k) boards the lift a cycle late (~350 frames behind at the top), so
+#      the stick inputs no longer fit; flag 3520 then comes 303 frames late and the replay still waits for 0x38F.
+#      Next: a Dolphin people capture of this visit (PLAYREC_NPC) and a people resync for the wanderer
+#      (npc_resync_spec.py), instead of placements.
+#      *Done the same evening (final):* Dolphin npc capture replay_6 (PLAYREC_NPC=0x2F,-1,3800,3; the replay checked:
+#      2,363 flag changes, all 29 battles' switch-ins the same). On the console the wanderer walks east from (-36.5,
+#      -63.0) to (-18.6, -65.2) at visit frame ~1213 and is out of the way when Wes passes. Its walks replayed on the PC
+#      (eight `npc 9` lines: npc_resync_spec.py replay_6/npc.csv 0x2F:3 --shift -37 --absolute 164554 --slots 9 --from
+#      1100 --to 2600; the shift from Wes's shared stop, capture visit frame 1263 = PC 1226; applied with --log
+#      <p2_P28i>/run.log on p2_P28i's pad): p2_P28m. Wes's walk then matches the console's to ~0.5 units all the way up
+#      to the lift (verified).
+#   D. @166721 npc 0 -105.0500 25.0100 -314.1400  # the upper level after the lift: the console's Wes stops at x -105
+#      with an A that opens a talk; the PC's walks on to (-151.3, -319.6) (its stick pushes come late against the
+#      lift's scripted walk-off; not traced). Placed on the console's stop one frame before the PC's A. Same spot as
+#      P26's item 2. --log <p2_P28m>/run.log. With it (p2_P28n) the talk happens (its flag 137 frames late).
+#   E. @168338 npc 0 -49.3200 0 -102.9100  # back down after the talk: the console's Wes stops at the south exit, the
+#      PC's overshoots to (-57.5, -112.7). Placed on the console's stop one frame before the A (as item B).
+#      --log <p2_P28n>/run.log. With it (p2_P28o): room entry 51.
+#   F. @168980 npc 0 -13.9900 6.4800 -102.4300  # after the second (cancelled) world-map visit: the console's Wes
+#      climbs the UFO lift ramp at x -14, the PC's is pushed east at its foot, climbs at x -4 and sticks at the top
+#      (P27 item 2's class). Placed on the console's ramp line (console +610 after that world-map entry; PC = console
+#      - 18). --log <p2_P28o>/run.log. With it (p2_P28p) the PC boards and rides west as the console does.
+#   G. @170155 npc 0 -319.5400 25.0000 -281.1100  # the lift's far end: the console's Wes steps off south and stops
+#      with an A; the PC's overshoots ~22 units. Placed on the console's stop before the A. --log <p2_P28p>/run.log.
+#      With it (p2_P28q): room entries 1-65, battles 1-11 as on the console.
+#   H. @212809 npc 0 -13.0300 0 -21.9900  # field room 0x7D after a world-map visit: the console's Wes stops at
+#      (-13.03, -21.99) for a talk (then room 0x40); the PC's reappears 3.8 units off and walks on 10 units. Placed on
+#      the console's stop before the A. --log <p2_P28q>/run.log. With it (p2_P28r): entries 1-91, battles 1-27.
+#   I. @349766 npc 0 -73.3000 0 -23.7900  # room 0x79 (The Under's PC room) on the way out: the console's Wes
+#      reaches the elevator's entry zone (console +300) and the elevator script walks him in and rises to room 0x7A;
+#      the PC's walks a line 5.5 units further north and never enters the zone. Placed on the zone's spot at the
+#      console's arrival time (a placement inside the elevator skipped its trigger: p2_P28s). --log <p2_P28r>/run.log.
+#      With it (p2_P28t): entries 1-107.
+#   J. @360310 npc 0 -16.9380 7.7864 -14.2627  # field room 0x1 after a P★DA visit: the console's Wes walks up the
+#      slope at x -16 to room 0x2, the PC's runs ~13 units further west and sticks beside the exit. Placed on the
+#      console's line partway up (PC = console + 1,294). --log <p2_P28t>/run.log. With A-J (p2_P28u): TO THE END,
+#      all 132 room entries and all 29 battles as on the console, story flags identical in the end save.
+#   (The item C lines are in the command above; the people resync's eight `npc 9` lines are regenerated by it.)
+#   *Added 2026-11-01 night, after the Lightning Rod fix (port-gaps 48) changed the timeline from battle ~302,000
+#   on; pad edits made with the project's scratch pad_shift.py on p2_P28u's pad (STEP:DELTA[:BACK], the frames given back at
+#   step BACK, default the next one):*
+#   K. 17579:-1  # room 0x3: a B press landed on the frame window 0x41 turned ready and closed it at once. With it
+#      (p2_P28u_lr2): room entries 1-108, story flags the same at every entry, battle messages as on the console
+#      through battle 27.
+#   L. 18968:1:18987  # room 0x2, entry 108: window 0x40 opens one frame later relative to the pad, so each press
+#      inside it came one frame early (+105 / +175 against p2_P28u_fin's +106 / +176). Moving the opening A (18967,
+#      +1 / +2) or the last A (18984:1:18986) alone changed nothing (_lr3 - _lr5). With K and L (_lr7) the presses sit
+#      where p2_P28u_fin's did and the window still needs one press more: the cause was M.
+#   M. (2026-11-02; the project's scratch pad_insert.py, after step 18816 of L's pad) +0:!npc 0 -52.7072 0 24.6833  # room
+#      0x2 entry 108: Wes appears at (-49.96, 23.75) instead of p2_P28u_fin's (-52.71, 24.68), though he leaves room
+#      0x392 from the same spot (-14.81, 14.85, -40.17), so every walk in the room runs 2.7 units east and he talks
+#      to something else (not traced). Placed on _fin's spawn spot while he stands (entry +105), before the first
+#      walk. With K, L and M (p2_P28u_lr8): TO THE END, all 132 room entries and 29 battles as on the console, all 650
+#      battle messages identical, story flags identical in the end save (212 bytes differ; 211 before the fix).
+# Settings: P14's (resyncs/P14_024.txt) with --replay 2 (a fresh full-probe replay: replay_1 predated the menu / fade
+# probes) + ORRE_ROLL_SEEDS for all 29 battles (two captures, replay_3 and replay_4, each checked: 2,363 flag changes).
+#
+# 1. (2026-10-30) A hand edit of the pad (p2_P28b's lines 2184-2185): after the long party-menu visit (room entry 15)
+#    an NPC's speech (message 0x5C04) opens at console 44,718 / PC 45,341; its first page turns on an A press the pad
+#    timed from a fade-in "in room 0x38F" (console 44,712). On the PC that fade is credited to room 0x85 (the field
+#    room, finished at 45,334), so the anchor never matched and the A came at +497 instead of +440: the speech ran 58
+#    frames long and the two treasure pickups after it (messages 0x3CB4 ... 0x3CBB, likely flags 204 / 205) never
+#    happened. The press anchored on the speech's window instead, at the console's +440:
+#    "@0x3038f+0~256:-", "+446:A" become "@0x20040+0~256:-", "+440:A".
+#    With it (p2_P28c): both pickups happen (flags 204 and 205 set at PC 46,408 / 46,832), flags the same through
+#    entry 27, battles 1-6 as on the console.
+#
+# 2. (the same night) A hand edit of p2_P28c's pad (lines 6339-6340): in battle 7 (463) the "gained EXP" message
+#    (30002) opens at PC 141,083 and the A that closes it on the console within 4 frames came at PC 141,079, before the
+#    window was ready (counted as held): the message stayed 66 frames, the "grew to LV." message after it waited for
+#    an A the pad gives only ~1,430 frames later, and from then on the presses landed in the wrong menus (11 Snag Ball
+#    refusals, message 30486). The A moved 6 frames later: "+622:A", "+41:-" become "+628:A", "+35:-".
+#    With it (p2_P28d): battle 7's menus match the console's again and its messages agree to 14; at 15 the console
+#    shows "It's super effective!" (30263) for Hitmonlee's Brick Break on Shiftry (HP 9 -> 0) and the PC doesn't
+#    (same target; the PC printed it for Brick Break on Sharpedo in P27). Open: possibly logic (Fighting against a
+#    Grass / Dark target, or the message on a knockout), not a roll.

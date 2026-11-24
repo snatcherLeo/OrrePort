@@ -1,0 +1,266 @@
+#ifndef GAME_GS_RANGE_801653CC_SHARED_H
+#define GAME_GS_RANGE_801653CC_SHARED_H
+
+#include "dolphin/types.h"
+#include "game/data/rodata_80270008.h"
+#include "pc/disc_types.h" /* DISC_STRUCT / DISC_PTR: the sound and song tables are common_rel data */
+
+typedef struct GSsndWork {
+    u8 flags;
+    u8 priority;
+    u8 unk2;
+    u8 unk3;
+    u8 stackDepth;
+    u8 volumeStack[3];
+    s32 handle;
+    u32 unkC;
+    u32 unk10;
+} GSsndWork;
+
+/* The flags byte as bits (isSe = bit 7). DISC_STRUCT also makes GCC lay the bit-fields out high bit first, as MWCC
+ * does (the project notes 10). GCC refuses the address of a field of a big-endian struct, so the PC form of
+ * SND_FLAG_BITS casts the entry pointer (flags is at offset 0). */
+typedef struct DISC_STRUCT GSsndFlagBits {
+    u8 isSe : 1;
+    u8 unk6 : 1;
+    u8 active : 1;
+    u8 paused : 1;
+    u8 unk0_3 : 4;
+} GSsndFlagBits;
+#ifdef TARGET_PC
+#define SND_FLAG_BITS(e) ((GSsndFlagBits*)(void*)(e))
+#else
+#define SND_FLAG_BITS(e) ((GSsndFlagBits*)&(e)->flags)
+#endif
+
+/* Sound table entry (common_rel data, 12 bytes; docs/engine/music.md): disc layout, so on the PC it stays big-endian
+ * with a 32-bit pointer slot (read with DP(), write with DP_SET()). */
+typedef struct DISC_STRUCT GSsndEntry {
+    u8 flags;
+    u8 unk1;
+    u8 reverb;
+    u8 waveIndex;
+    u16 waveId;
+    u16 unk6;
+    DISC_PTR(GSsndWork) work; /* set at run time while the sound plays */
+} GSsndEntry;
+
+/* Song table entry (common_rel data, 8 bytes): disc layout like GSsndEntry. */
+typedef struct DISC_STRUCT GSsndWaveSlot {
+    DISC_PTR(void) data;
+    DISC_PTR(void) archive;
+} GSsndWaveSlot;
+
+typedef struct GSvec {
+    f32 x;
+    f32 y;
+    f32 z;
+} GSvec;
+
+typedef struct GSsndEmitter {
+    u8 unk0;
+    u8 unk1;
+    u8 pad2[2];
+    f32 unk4;
+    f32 unk8;
+    f32 unkC;
+    GSvec position;
+    GSvec velocity;
+    GSvec unk28;
+    GSvec unk34;
+    u8 unk40[0x38];
+} GSsndEmitter;
+
+typedef struct GSsnd3dEmitter {
+    u8 unk0;
+    u8 unk1;
+    u8 unk2;
+    u8 pad3;
+    u32 soundId;
+    f32 minDistance;
+    f32 maxDistance;
+    GSvec position;
+    GSvec velocity;
+    u8 emitter[0x50];
+} GSsnd3dEmitter;
+
+extern u32* snd_data_number;
+extern u32* lbl_80478E30;
+extern GSsndEntry* snd_data;
+extern GSsndWaveSlot* lbl_80478E34;
+extern u32* lbl_80478FB0;
+extern void* lbl_80478FB4;
+extern u32 lbl_8047B0A8;
+extern u32 lbl_8047B0AC;
+extern u32 lbl_8047B0B0;
+extern void* lbl_8047B0B4;
+extern u32 _revH_now_parm_id;
+extern u32 lbl_8047B0E8;
+extern u8 _revH[];
+extern const f32 lbl_8047D540;
+extern const f32 lbl_8047D560;
+extern const f32 lbl_8047D564;
+extern const f32 lbl_8047D568;
+extern const f32 lbl_8047D56C;
+extern const f32 lbl_8047D570;
+extern const f32 lbl_8047D574;
+
+extern const char lbl_80273548[];
+extern const char lbl_80273568[];
+extern const char lbl_8027358C[];
+extern const char lbl_802736CC[];
+extern const char lbl_802736F0[];
+extern const char lbl_8027371C[];
+
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h (its 5th parameter is a pointer: P02's fanfare crash) */
+extern void* GSresAllocResourceAlign(u32, u32, u32, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* GSresGetResource(u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* GSresRegisterResource(void*, u32, u32, u32);
+#endif
+extern void GSlogWrite(const char*, ...);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void _threadSwitch(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memset(void*, int, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void set__5GSvecFfff(GSvec*, f32, f32, f32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSvecCopy(GSvec*, const GSvec*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSvecSub(GSvec*, const GSvec*, const GSvec*);
+#endif
+extern void fn_800F9210(u32, u32);
+extern u32 GSmemAlloc(u32, u32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* GSmemLock(u32);
+#endif
+extern s32 OSGetSoundMode(void);
+extern void OSSetSoundMode(u32);
+extern void sndOutputMode(void);
+extern void sndMasterVolume(u8, u16, u8, u8);
+extern void sndVolume(u8, u16, u8);
+extern void sndSeqVolume(u8, u16, u32, u8);
+extern u32 sndFXCheck(u32);
+extern void sndAddEmitter(void*, const GSvec*, const GSvec*, u32, u32, u32, u32, u32, f32, f32);
+extern u8 sndAuxCallbackUpdateSettingsReverbHI(void*);
+extern u8 sndIsInstalled(void);
+extern void sndQuit(void);
+extern u8 sndCheckEmitter(void*);
+#ifdef TARGET_PC
+/* PC: the 7th parameter is MusyX's room pointer (sndUpdateListener, src/musyx/runtime/snd3d.c); declared u32 it went on
+ * the stack as 4 bytes, the callee read 8 and got a garbage room: crash in AddListener2Room once heroMoveMain ran. */
+extern u8 s3dUpdateListener(void*, const GSvec*, const GSvec*, const GSvec*, const GSvec*, u32, void*);
+#else
+extern u8 s3dUpdateListener(void*, const GSvec*, const GSvec*, const GSvec*, const GSvec*, u32, u32);
+#endif
+#ifdef TARGET_PC
+/* PC: the 11th parameter is the room pointer too (2026-10-26, externcheck's stack-pointer rows): declared u32,
+ * the caller's 0 went on the stack as 4 bytes and the callee read 8, the s3dUpdateListener crash's twin */
+extern u8 s3dSetListener(void*, const GSvec*, const GSvec*, const GSvec*, const GSvec*, f32, f32, f32, u32, u32, void*);
+#else
+extern u8 s3dSetListener(void*, const GSvec*, const GSvec*, const GSvec*, const GSvec*, f32, f32, f32, u32, u32, u32); /* sndAddListener: the definition's order (listener, position, direction, heading, up, front, back, speed, flags, volume, room) */
+#endif
+extern u32 sndSeqGetValid(u32);
+extern void sndSeqStop(u32);
+extern void sndSeqContinue(u32);
+extern s32 fn_8017B2CC(u32);
+extern void* GSdvdOpen(const char*);
+extern u32 GSdvdGetLength(void*);
+extern void GSdvdClose(void*);
+extern s32 GSdvdRead(void*, void*, u32, u32);
+extern void soundMasterVolume(u32, u32, u32, u32);
+extern u32 _soundSlotSetVolume(GSsndEntry*, u32, u32);
+extern u32 soundStartFX(GSsndEntry*, u32, u32);
+extern u32 _soundSlotStartStream(GSsndEntry*, u32, u32);
+extern u32 _sndStopSE(GSsndEntry*, u32, u32);
+extern u32 _sndStopBGM(GSsndEntry*, u32, u32);
+extern u32 soundFindOwner(u32, u32);
+extern void _sndFreeEmitter(GSsnd3dEmitter*);
+extern void _sndFreeListener(GSsndEmitter*);
+extern GSsnd3dEmitter* _sndGetNewEmitter(void);
+extern GSsndEmitter* _sndGetNewListener(void);
+extern void fn_80165FDC(s32);
+extern void _sndSetReverbParm(u32);
+#ifdef TARGET_PC
+/* PC: the 5th parameter is the resource owner, a pointer passed on the stack (gs_dvd.c's definition) */
+extern u8 soundPushWave(u32, u32, u32, u32, void*, u32, u32, u32);
+#else
+extern u8 soundPushWave(u32, u32, u32, u32, u32, u32, u32, u32);
+#endif
+extern u8 _soundSlotRelease(u32, u32);
+extern GSsndWork* _sndGetNewSndWork(void);
+extern void _sndCheckSndWorkALL(void);
+extern void _sndInitParms(GSsndEntry*, GSsndWork*);
+extern void fn_8017AF6C(u32, void*);
+extern void fn_8017B370(u32);
+
+#define SND_FLAG_SE 0x80
+#define SND_FLAG_ACTIVE 0x20
+#define SND_FLAG_PAUSED 0x10
+
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+u32 soundStop(u32 id, u32 fade);
+#endif
+u32 soundPlayFanfare(u32 id, void* buffer, u32 size);
+u32 std108_soundIsAnyPlaying(void);
+u32 fn_80165788(u32 id, f32 x, f32 y, f32 z);
+u32 soundOpenPlayEnvFadeOutIn(u32 id, u32 fade, u32 volume, u32 priority);
+u32 std138_soundPlayEffectEx(u32 id, u32 fade, u32 volume, u32 priority);
+void fn_80165EE0(void* wave, void* buffer, u32 size);
+u32 soundPlay(u32 id, u32 volume, u32 priority, s32 kind);
+void soundFadeSlot(u32 volume, u32 isSe, s32 wait);
+void soundWaitMs(u32 frames);
+void soundReadStreamFile(const char* path, void* buffer, u32 capacity);
+u32 fn_80166084(u32 id);
+u32 fn_80166098(u32 id);
+void* fn_8016604C(u32 size);
+u32 fn_80166168(u32 id, u32 volume);
+u32 _soundDuckSlot(u32 id, u32 volume, u32 limit);
+u32 fn_801662E8(u32 arg0, u32 arg1);
+u32 fn_80166308(u32 id, const GSvec* position);
+u32 soundEmitterCreate(u32 id, const GSvec* position, const GSvec* velocity, f32 minDistance, f32 maxDistance, u32 arg5,
+                u32 arg6);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+u32 soundUpdateListener(GSsndEmitter* emitter, const GSvec* position);
+#endif
+u32 soundSetListener(const GSvec* position);
+u32 _soundSetListener3D(const GSvec* position, const GSvec* arg1, const GSvec* arg2, const GSvec* arg3, f32 arg4, f32 arg5,
+                f32 arg6, u32 arg7);
+u32 soundSetVolume(u32 id, u32 volume, u32 arg2);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+s32 GSsndGetStatus(u32 id);
+#endif
+u32 soundResumeSong(u32 id, u32 volume, u32 arg2);
+u32 soundPauseSong(u32 id, u32 volume, u32 arg2);
+void soundStopRaw(u32 id, u32 arg1, u32 arg2);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+u32 soundStart(u32 id, u32 arg1, u32 volume, u32 arg3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+u32 soundStartRaw(u32 id, u32 arg1, u32 arg2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+void soundKill(u32 id);
+#endif
+u32 soundAttachWork(u32 id, u32 arg1, u32 arg2);
+u8 GSsndOpenWaveDVD(u32 wave, u32 fileId, u32 heap, u32 unk0, u32 unk1, u32 unk2, u32 unk3);
+void soundApplyReverb(u32 reverb);
+
+typedef struct DISC_STRUCT GSsndDvdWave { /* common_rel's sample-archive table (lbl_80478FB4), big-endian */
+    u32 unk0;
+    u32 unk4;
+    u32 unk8;
+    u32 unkC;
+    u32 unk10;
+    u32 fileId;
+} GSsndDvdWave;
+
+#endif

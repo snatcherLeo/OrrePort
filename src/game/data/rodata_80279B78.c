@@ -1,0 +1,970 @@
+#include "dolphin/types.h"
+extern u8 WS_ABARERU[];
+extern u8 WS_AKUBI[];
+extern u8 WS_ALERTEND[];
+extern u8 WS_CHECK_TYPE[];
+extern u8 WS_CHIISAKUNARU[];
+extern u8 WS_CHOUHATSU[];
+extern u8 WS_CONDITION_CHECK[];
+extern u8 WS_CRITICAL_CHECK[];
+extern u8 WS_DAMAGE_LOSS[];
+extern u8 WS_DAMAGE_LOSS_ONLY[];
+extern u8 WS_GETEND[];
+extern u8 WS_HIMITUNOTIKARA[];
+extern u8 WS_HITCHECK[];
+extern u8 WS_ICHAMON[];
+extern u8 WS_ITEMEND[];
+extern u8 WS_JIKOANJI[];
+extern u8 WS_JUUDEN[];
+extern u8 WS_KIERUTAME[];
+extern u8 WS_KIERUTAME_AFTAR[];
+extern u8 WS_KORAERU_CHECK[];
+extern u8 WS_KUROIKIRI[];
+extern u8 WS_MARUKUNARU[];
+extern u8 WS_MICHIDURE[];
+extern u8 WS_MIYABURU[];
+extern u8 WS_NARIKIRI[];
+extern u8 WS_NEKODAMASHI[];
+extern u8 WS_NEWOHARU[];
+extern u8 WS_ONNEN[];
+extern u8 WS_SCA_END_SET[];
+extern u8 WS_SEQEND[];
+extern u8 WS_SEQRET[];
+extern u8 WS_SIDECONDITION_CHECK[];
+extern u8 WS_SPEABIEND[];
+extern u8 WS_STATUS_GET16[];
+extern u8 WS_STATUS_GET32[];
+extern u8 WS_STATUS_GET8[];
+extern u8 WS_STATUS_SET16[];
+extern u8 WS_STATUS_SET32[];
+extern u8 WS_STATUS_SET8[];
+extern u8 WS_SWITCH_A_D[];
+extern u8 WS_TSUIKA_DIRECT_ACT[];
+extern u8 WS_TSUIKA_INDIRECT_ACT[];
+extern u8 WS_TYPE_CHECK[];
+extern u8 WS_WAZAEND[];
+extern u8 WS_WAZAKOUKA_CHECK[];
+extern u8 WS_WAZAOBOE_CHECK[];
+extern u8 WS_WEATHER_CHANGE[];
+extern u8 wsCmdF5[];
+extern u8 wsCmdF4[];
+extern u8 wsCmdF3[];
+extern u8 wsCmdF2[];
+extern u8 wsCmdF1[];
+extern u8 wsCmdF0[];
+extern u8 wsCmdEF[];
+extern u8 wsCmdEE[];
+extern u8 wsCmdED[];
+extern u8 wsCmdEC[];
+extern u8 wsCmdEB[];
+extern u8 wsCmdEA[];
+extern u8 wsCmdE9[];
+extern u8 wsCmdE8[];
+extern u8 wsCmdE7[];
+extern u8 wsCmdE6[];
+extern u8 wsCmdE5[];
+extern u8 wsCmdE3[];
+extern u8 wsCmdE2[];
+extern u8 wsCmdE1[];
+extern u8 wsCmdE0[];
+extern u8 wsCmdDF[];
+extern u8 wsCmdDE[];
+extern u8 wsCmdDD[];
+extern u8 wsCmdDB[];
+extern u8 wsCmdDA[];
+extern u8 wsCmdD9[];
+extern u8 wsCmdD8[];
+extern u8 wsCmdD6[];
+extern u8 wsCmdD4[];
+extern u8 wsCmdD2[];
+extern u8 wsCmdD1[];
+extern u8 wsCmdCF[];
+extern u8 wsCmdCD[];
+extern u8 wsCmdCC[];
+extern u8 wsCmdCA[];
+extern u8 wsCmdC9[];
+extern u8 wsCmdC8[];
+extern u8 wsCmdC4[];
+extern u8 wsCmdC3[];
+extern u8 wsCmdC2[];
+extern u8 wsCmdC1[];
+extern u8 wsCmdC0[];
+extern u8 wsCmdBE[];
+extern u8 wsCmdBC[];
+extern u8 wsCmdBB[];
+extern u8 wsCmdBA[];
+extern u8 wsCmdB9[];
+extern u8 wsCmdB8[];
+extern u8 wsCmdB7[];
+extern u8 wsCmdB6[];
+extern u8 wsCmdB5[];
+extern u8 wsCmdB4[];
+extern u8 wsCmdB3[];
+extern u8 wsCmdB2[];
+extern u8 wsCmdB0[];
+extern u8 wsCmdAF[];
+extern u8 wsCmdAE[];
+extern u8 wsCmdAD[];
+extern u8 wsCmdAC[];
+extern u8 wsCmdAB[];
+extern u8 wsCmdA9[];
+extern u8 wsCmdA8[];
+extern u8 wsCmdA7[];
+extern u8 wsCmdA6[];
+extern u8 wsCmdA5[];
+extern u8 wsCmdA4[];
+extern u8 wsCmdA3[];
+extern u8 wsCmdA2[];
+extern u8 wsCmdA1[];
+extern u8 wsCmdA0[];
+extern u8 wsCmd9F[];
+extern u8 wsCmd9E[];
+extern u8 wsCmd9D[];
+extern u8 wsCmd9C[];
+extern u8 wsCmd9B[];
+extern u8 wsCmd9A[];
+extern u8 wsCmd99[];
+extern u8 wsCmd98[];
+extern u8 wsCmd97[];
+extern u8 wsCmd96[];
+extern u8 wsCmd94[];
+extern u8 fightCheckOneHitKO[];
+extern u8 wsCmd92[];
+extern u8 wsCmd91[];
+extern u8 wsCmd90[];
+extern u8 wsCmd8F[];
+extern u8 wsCmd8E[];
+extern u8 wsCmd8D[];
+extern u8 wsCmd8B[];
+extern u8 wsCmd89[];
+extern u8 wsCmd88[];
+extern u8 wsCmd87[];
+extern u8 wsCmd86[];
+extern u8 wsCmd85[];
+extern u8 wsCmd84[];
+extern u8 wsCmd83[];
+extern u8 wsCmd81[];
+extern u8 wsCmd80[];
+extern u8 wsCmd7F[];
+extern u8 wsCmd7E[];
+extern u8 wsCmd7D[];
+extern u8 wsCmd7C[];
+extern u8 wsCmd7B[];
+extern u8 wsCmd7A[];
+extern u8 wsCmd79[];
+extern u8 wsCmd78[];
+extern u8 wsCmd77[];
+extern u8 wsCmd76[];
+extern u8 wsCmd75[];
+extern u8 wsCmd74[];
+extern u8 wsCmd73[];
+extern u8 wsCmd72[];
+extern u8 wsCmd70[];
+extern u8 wsCmd6F[];
+extern u8 wsCmd6E[];
+extern u8 wsCmd6D[];
+extern u8 wsCmd6C[];
+extern u8 wsCmd6B[];
+extern u8 wsCmd6A[];
+extern u8 wsCmd67[];
+extern u8 wsCmd66[];
+extern u8 wsCmd65[];
+extern u8 wsCmd64[];
+extern u8 wsCmd63[];
+extern u8 wsCmd62[];
+extern u8 wsCmd61[];
+extern u8 wsCmd60[];
+extern u8 wsCmd5E[];
+extern u8 wsCmd5D[];
+extern u8 wsCmd5C[];
+extern u8 wsCmd5B[];
+extern u8 wsCmd5A[];
+extern u8 wsCmd71[];
+extern u8 wsCmd58[];
+extern u8 wsCmd57[];
+extern u8 wsCmd56[];
+extern u8 wsCmd55[];
+extern u8 wsCmd54[];
+extern u8 wsCmd53[];
+extern u8 wsCmd52[];
+extern u8 wsCmd51[];
+extern u8 wsCmd50[];
+extern u8 wsCmd4F[];
+extern u8 wsCmd4E[];
+extern u8 wsCmd4D[];
+extern u8 wsCmd4C[];
+extern u8 wsCmd4B[];
+extern u8 wsCmd49[];
+extern u8 wsCmd48[];
+extern u8 wsCmd47[];
+extern u8 wsCmd46[];
+extern u8 wsCmd45[];
+extern u8 wsCmd43[];
+extern u8 wsCmd42[];
+extern u8 wsCmd41[];
+extern u8 wsCmd3B[];
+extern u8 wsCmd3A[];
+extern u8 wsCmd39[];
+extern u8 wsCmd38[];
+extern u8 wsCmd37[];
+extern u8 wsCmd36[];
+extern u8 wsCmd35[];
+extern u8 wsCmd34[];
+extern u8 wsCmd33[];
+extern u8 wsCmd32[];
+extern u8 wsCmd31[];
+extern u8 wsCmd30[];
+extern u8 wsCmd2F[];
+extern u8 wsCmd2E[];
+extern u8 wsCmd2D[];
+extern u8 wsCmd2C[];
+extern u8 wsCmd2B[];
+extern u8 wsCmd2A[];
+extern u8 wsCmd29[];
+extern u8 wsCmd28[];
+extern u8 wsCmd27[];
+extern u8 wsCmd26[];
+extern u8 wsCmd25[];
+extern u8 wsCmd24[];
+extern u8 wsCmd23[];
+extern u8 wsCmd20[];
+extern u8 wsCmd1E[];
+extern u8 wsCmd1D[];
+extern u8 wsCmd1B[];
+extern u8 wsCmd1A[];
+extern u8 wsCmd19[];
+extern u8 wsCmd18[];
+extern u8 wsCmd15[];
+extern u8 wsCmd14[];
+extern u8 wsCmd13[];
+extern u8 wsCmd12[];
+extern u8 wsCmd11[];
+extern u8 wsCmd10[];
+extern u8 wsCmd0F[];
+extern u8 wsCmd0E[];
+extern u8 wsCmd0D[];
+extern u8 wsCmd0C[];
+extern u8 wsCmd0B[];
+extern u8 wsCmd0A[];
+extern u8 wsCmd09[];
+extern u8 wsCmd4A[];
+extern u8 wsCmd05[];
+extern u8 wsCmd03[];
+extern u8 wsCmd02[];
+extern u8 fightCheckAccuracy[];
+extern u8 wsCmd40[];
+extern u8 fightGSfloorGetPushDataSize[];
+extern u8 fightGSfloorPushData[];
+extern u8 fightGSfloorPopData[];
+
+/*
+ * Continues after the THP decoder tables at 0x80279AE8 - 0x80279B78, which
+ * dolphin/thp/THPDec_range_801E5A28.c owns.
+ */
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const void* lbl_80279B78[3] = {
+    (void*)fightGSfloorPopData,
+    (void*)fightGSfloorPushData,
+    (void*)fightGSfloorGetPushDataSize,
+};
+#else
+extern void* lbl_80279B78[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279B84[84] = {
+    0x00, 0x00, 0x00, 0x45, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x47, 0x00, 0x00, 0x00, 0x48,
+    0x00, 0x00, 0x00, 0x49, 0x00, 0x00, 0x00, 0x4A, 0x00, 0x00, 0x00, 0x4C, 0x00, 0x00, 0x00, 0x4D,
+    0x00, 0x00, 0x00, 0x4E, 0x00, 0x00, 0x00, 0x4F, 0x00, 0x00, 0x00, 0x4B, 0x00, 0x00, 0x00, 0xF1,
+    0x00, 0x00, 0x00, 0xF2, 0x00, 0x00, 0x00, 0xF3, 0x00, 0x00, 0x00, 0xF4, 0x00, 0x00, 0x01, 0x00,
+    0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x02, 0x00, 0x00, 0x01, 0x03, 0x00, 0x00, 0x01, 0x0B,
+    0x00, 0x00, 0x01, 0x0A,
+};
+#else
+extern u8 lbl_80279B84[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279BD8[37] = {
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x20, 0x66, 0x69, 0x67, 0x68, 0x74,
+    0x20, 0x65, 0x6E, 0x64, 0x20, 0x21, 0x21, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,
+    0x2D, 0x2D, 0x20, 0x0A, 0x00,
+};
+#else
+extern u8 lbl_80279BD8[]; /* generated by pcdata.py */
+#endif
+
+const u8 gap_04_80279BFD_rodata[3] = {
+    0x00, 0x00, 0x00,
+};
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279C00[39] = {
+    0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x20, 0x66, 0x69, 0x67, 0x68, 0x74,
+    0x20, 0x73, 0x74, 0x61, 0x72, 0x74, 0x20, 0x21, 0x21, 0x20, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,
+    0x2D, 0x2D, 0x2D, 0x2D, 0x20, 0x0A, 0x00,
+};
+#else
+extern u8 lbl_80279C00[]; /* generated by pcdata.py */
+#endif
+
+const u8 gap_04_80279C27_rodata[1] = {
+    0x00,
+};
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279C28[32] = {
+    0x00, 0x36, 0x00, 0x42, 0x00, 0x44, 0x00, 0x45, 0x00, 0x46, 0x00, 0x47, 0x00, 0x48, 0x00, 0x49,
+    0x00, 0x4B, 0x00, 0x4C, 0x00, 0x4D, 0x00, 0x4E, 0x00, 0x4F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279C28[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279C48[12] = {
+    0x00, 0x93, 0x00, 0x94, 0x00, 0x95, 0x00, 0x96, 0x00, 0x97, 0x00, 0x98,
+};
+#else
+extern u8 lbl_80279C48[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279C54[12] = {
+    0x00, 0x8D, 0x00, 0x8E, 0x00, 0x8F, 0x00, 0x90, 0x00, 0x91, 0x00, 0x92,
+};
+#else
+extern u8 lbl_80279C54[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279C60[16] = {
+    0x00, 0xE6, 0x00, 0xE7, 0x00, 0xE8, 0x00, 0xE9, 0x00, 0xEA, 0x00, 0xEB, 0x00, 0xEC, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279C60[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279C70[16] = {
+    0x00, 0xE6, 0x00, 0xE7, 0x00, 0xE8, 0x00, 0xE9, 0x00, 0xEA, 0x00, 0xEB, 0x00, 0xEC, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279C70[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279C80[16] = {
+    0x00, 0xE6, 0x00, 0xE7, 0x00, 0xE8, 0x00, 0xE9, 0x00, 0xEA, 0x00, 0xEB, 0x00, 0xEC, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279C80[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279C90[20] = {
+    0x00, 0x22, 0x00, 0x0D, 0x00, 0x0B, 0x00, 0x0C, 0x00, 0x1F, 0x00, 0x20, 0x00, 0x21, 0x00, 0x2E,
+    0x00, 0x2F, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279C90[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279CA4[20] = {
+    0x01, 0x06, 0x01, 0x08, 0x01, 0x0B, 0x01, 0x0C, 0x01, 0x0D, 0x01, 0x0E, 0x01, 0x0F, 0x01, 0x10,
+    0x01, 0x07, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279CA4[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279CB8[28] = {
+    0x00, 0x6E, 0x00, 0x88, 0x00, 0x89, 0x00, 0x8A, 0x00, 0x8B, 0x00, 0x8C, 0x00, 0x93, 0x00, 0x94,
+    0x00, 0x95, 0x00, 0x96, 0x00, 0x97, 0x00, 0x98, 0x00, 0xB6, 0x00, 0xB7,
+};
+#else
+extern u8 lbl_80279CB8[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279CD4[16] = {
+    0x00, 0xE6, 0x00, 0xE7, 0x00, 0xE8, 0x00, 0xE9, 0x00, 0xEA, 0x00, 0xEB, 0x00, 0xEC, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279CD4[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279CE4[36] = {
+    0x00, 0x7A, 0x00, 0x83, 0x00, 0x87, 0x00, 0x88, 0x00, 0x89, 0x00, 0x8A, 0x00, 0x8B, 0x00, 0x8C,
+    0x00, 0x8D, 0x00, 0x8E, 0x00, 0x8F, 0x00, 0x90, 0x00, 0x91, 0x00, 0x92, 0x00, 0x99, 0x00, 0xC7,
+    0x00, 0x79, 0x00, 0xC6,
+};
+#else
+extern u8 lbl_80279CE4[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279D08[16] = {
+    0x00, 0x41, 0x00, 0x42, 0x00, 0x43, 0x00, 0x44, 0x00, 0x45, 0x00, 0x46, 0x00, 0x47, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279D08[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279D18[20] = {
+    0x00, 0x00, 0x75, 0x3E, 0x00, 0x00, 0x75, 0x3F, 0x00, 0x00, 0x75, 0x42, 0x00, 0x00, 0x75, 0x40,
+    0x00, 0x00, 0x75, 0x41,
+};
+#else
+extern u8 lbl_80279D18[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279D2C[92] = {
+    0x00, 0x00, 0x76, 0x45, 0x00, 0x00, 0x76, 0x45, 0x00, 0x00, 0x75, 0x49, 0x00, 0x00, 0x75, 0x4A,
+    0x00, 0x00, 0x75, 0x4B, 0x00, 0x00, 0x76, 0x4A, 0x00, 0x00, 0x76, 0x4B, 0x00, 0x00, 0x76, 0x47,
+    0x00, 0x00, 0x76, 0x4F, 0x00, 0x00, 0x76, 0x52, 0x00, 0x00, 0x76, 0x55, 0x00, 0x00, 0x76, 0x4C,
+    0x00, 0x00, 0x76, 0x4D, 0x00, 0x00, 0x76, 0x4E, 0x00, 0x00, 0x75, 0x95, 0x00, 0x00, 0x75, 0xC8,
+    0x00, 0x00, 0x76, 0x47, 0x00, 0x00, 0x76, 0x47, 0x00, 0x00, 0x75, 0x7A, 0x00, 0x00, 0x75, 0x7B,
+    0x00, 0x00, 0x75, 0x78, 0x00, 0x00, 0x75, 0x79, 0x00, 0x00, 0x75, 0x7C,
+};
+#else
+extern u8 lbl_80279D2C[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279D88[20] = {
+    0x00, 0x00, 0x75, 0x99, 0x00, 0x00, 0x75, 0x9A, 0x00, 0x00, 0x75, 0x43, 0x00, 0x00, 0x75, 0x9B,
+    0x00, 0x00, 0x76, 0x1C,
+};
+#else
+extern u8 lbl_80279D88[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279D9C[12] = {
+    0x00, 0x00, 0x75, 0xA6, 0x00, 0x00, 0x75, 0xA7, 0x00, 0x00, 0x75, 0xA8,
+};
+#else
+extern u8 lbl_80279D9C[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279DA8[24] = {
+    0x00, 0x00, 0x76, 0x2A, 0x00, 0x00, 0x76, 0x2B, 0x00, 0x00, 0x75, 0x68, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x76, 0x2C, 0x00, 0x00, 0x75, 0xF7,
+};
+#else
+extern u8 lbl_80279DA8[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279DC0[16] = {
+    0x00, 0x00, 0x76, 0x2D, 0x00, 0x00, 0x76, 0x2E, 0x00, 0x00, 0x75, 0x69, 0x00, 0x00, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279DC0[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279DD0[76] = {
+    0x00, 0x00, 0x75, 0x81, 0x00, 0x00, 0x75, 0x82, 0x00, 0x00, 0x75, 0x83, 0x00, 0x00, 0x75, 0x84,
+    0x00, 0x00, 0x75, 0x85, 0x00, 0x00, 0x75, 0x86, 0x00, 0x00, 0x75, 0x87, 0x00, 0x00, 0x75, 0x88,
+    0x00, 0x00, 0x75, 0x89, 0x00, 0x00, 0x75, 0x8C, 0x00, 0x00, 0x75, 0x8A, 0x00, 0x00, 0x75, 0x8D,
+    0x00, 0x00, 0x75, 0x8A, 0x00, 0x00, 0x75, 0x8B, 0x00, 0x00, 0x76, 0x5F, 0x00, 0x00, 0x76, 0x5F,
+    0x00, 0x00, 0x76, 0x5F, 0x00, 0x00, 0x76, 0x5F, 0x00, 0x00, 0x75, 0xF4,
+};
+#else
+extern u8 lbl_80279DD0[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279E1C[20] = {
+    0x00, 0x00, 0x77, 0x20, 0x00, 0x00, 0x77, 0x18, 0x00, 0x00, 0x77, 0x19, 0x00, 0x00, 0x77, 0x1A,
+    0x00, 0x00, 0x77, 0x1A,
+};
+#else
+extern u8 lbl_80279E1C[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279E30[36] = {
+    0x00, 0x00, 0x76, 0xB4, 0x00, 0x00, 0x76, 0xAF, 0x00, 0x00, 0x76, 0xB2, 0x00, 0x00, 0x76, 0xB1,
+    0x00, 0x00, 0x76, 0xB0, 0x00, 0x00, 0x76, 0xB3, 0x00, 0x00, 0x76, 0x12, 0x00, 0x00, 0x75, 0x30,
+    0x00, 0x00, 0x76, 0x25,
+};
+#else
+extern u8 lbl_80279E30[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279E54[24] = {
+    0x00, 0x00, 0x76, 0x08, 0x00, 0x00, 0x75, 0x30, 0x00, 0x00, 0x76, 0x25, 0x00, 0x00, 0x76, 0x0A,
+    0x00, 0x00, 0x75, 0x30, 0x00, 0x00, 0x76, 0x25,
+};
+#else
+extern u8 lbl_80279E54[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279E6C[16] = {
+    0x00, 0x00, 0x76, 0x66, 0x00, 0x00, 0x76, 0x67, 0x00, 0x00, 0x76, 0x68, 0x00, 0x00, 0x76, 0x69,
+};
+#else
+extern u8 lbl_80279E6C[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279E7C[36] = {
+    0x00, 0x00, 0x76, 0x93, 0x00, 0x00, 0x76, 0x94, 0x00, 0x00, 0x76, 0x95, 0x00, 0x00, 0x76, 0x96,
+    0x00, 0x00, 0x76, 0x97, 0x00, 0x00, 0x76, 0x98, 0x00, 0x00, 0x76, 0x99, 0x00, 0x00, 0x76, 0x9A,
+    0x00, 0x00, 0x76, 0x93,
+};
+#else
+extern u8 lbl_80279E7C[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279EA0[24] = {
+    0x00, 0x00, 0x76, 0x7A, 0x00, 0x00, 0x76, 0x7B, 0x00, 0x00, 0x76, 0x7C, 0x00, 0x00, 0x76, 0x7D,
+    0x00, 0x00, 0x76, 0x70, 0x00, 0x00, 0x76, 0x73,
+};
+#else
+extern u8 lbl_80279EA0[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279EB8[24] = {
+    0x00, 0x00, 0x76, 0x7F, 0x00, 0x00, 0x76, 0x80, 0x00, 0x00, 0x76, 0x81, 0x00, 0x00, 0x76, 0x82,
+    0x00, 0x00, 0x77, 0x23, 0x00, 0x00, 0x76, 0x84,
+};
+#else
+extern u8 lbl_80279EB8[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279ED0[36] = {
+    0x1F, 0x06, 0x2A, 0x08, 0x2E, 0x04, 0x2F, 0x05, 0x30, 0x0C, 0x31, 0x11, 0x32, 0x01, 0x33, 0x0D,
+    0x34, 0x0B, 0x35, 0x02, 0x36, 0x03, 0x37, 0x0F, 0x38, 0x07, 0x39, 0x0E, 0x3A, 0x0A, 0x3B, 0x10,
+    0x3C, 0x00, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279ED0[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279EF4[120] = {
+    0x00, 0x00, 0x00, 0x08, 0x00, 0x03, 0x00, 0x06, 0x00, 0x07, 0x00, 0x05, 0x00, 0x04, 0x00, 0x09,
+    0x00, 0x11, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x22, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x12, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x16, 0x00, 0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279EF4[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279F6C[16] = {
+    0x00, 0x14, 0x00, 0x23, 0x00, 0x53, 0x00, 0x80, 0x00, 0xFA, 0x01, 0x48, 0xFF, 0xFF, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279F6C[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 JitabataTbl[12] = {
+    0x01, 0xC8, 0x04, 0x96, 0x09, 0x64, 0x10, 0x50, 0x20, 0x28, 0x30, 0x14,
+};
+#else
+extern u8 JitabataTbl[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 KetaguriTbl[24] = {
+    0x00, 0x64, 0x00, 0x14, 0x00, 0xFA, 0x00, 0x28, 0x01, 0xF4, 0x00, 0x3C, 0x03, 0xE8, 0x00, 0x50,
+    0x07, 0xD0, 0x00, 0x64, 0xFF, 0xFF, 0xFF, 0xFF,
+};
+#else
+extern u8 KetaguriTbl[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 YubihuriNGTbl[48] = {
+    0x01, 0x63, 0x01, 0x64, 0x01, 0x65, 0x00, 0x76, 0x00, 0xA5, 0x00, 0xA6, 0x00, 0x66, 0xFF, 0xFE,
+    0x00, 0x44, 0x00, 0xF3, 0x00, 0xB6, 0x00, 0xC5, 0x00, 0xCB, 0x00, 0xC2, 0x00, 0xD6, 0x00, 0xA8,
+    0x01, 0x0A, 0x01, 0x21, 0x01, 0x0E, 0x01, 0x57, 0x01, 0x0F, 0x01, 0x08, 0xFF, 0xFF, 0x00, 0x00,
+};
+#else
+extern u8 YubihuriNGTbl[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279FD0[16] = {
+    0x00, 0xE6, 0x00, 0xE7, 0x00, 0xE8, 0x00, 0xE9, 0x00, 0xEA, 0x00, 0xEB, 0x00, 0xEC, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279FD0[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279FE0[24] = {
+    0x00, 0x0F, 0x00, 0x16, 0x00, 0x09, 0x00, 0x18, 0x00, 0x14, 0x00, 0x1C, 0x00, 0x1D, 0x00, 0x1E,
+    0x00, 0x25, 0x00, 0x38, 0x00, 0x39, 0x00, 0x00,
+};
+#else
+extern u8 lbl_80279FE0[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_80279FF8[20] = {
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF,
+};
+#else
+extern u8 lbl_80279FF8[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const void* lbl_8027A00C[255] = {
+    (void*)WS_HITCHECK,
+    (void*)fightCheckAccuracy,
+    (void*)wsCmd02,
+    (void*)wsCmd03,
+    (void*)WS_CRITICAL_CHECK,
+    (void*)wsCmd05,
+    (void*)WS_TYPE_CHECK,
+    (void*)WS_DAMAGE_LOSS,
+    (void*)WS_DAMAGE_LOSS_ONLY,
+    (void*)wsCmd09,
+    (void*)wsCmd0A,
+    (void*)wsCmd0B,
+    (void*)wsCmd0C,
+    (void*)wsCmd0D,
+    (void*)wsCmd0E,
+    (void*)wsCmd0F,
+    (void*)wsCmd10,
+    (void*)wsCmd11,
+    (void*)wsCmd12,
+    (void*)wsCmd13,
+    (void*)wsCmd14,
+    (void*)wsCmd15,
+    (void*)WS_TSUIKA_DIRECT_ACT,
+    (void*)WS_TSUIKA_INDIRECT_ACT,
+    (void*)wsCmd18,
+    (void*)wsCmd19,
+    (void*)wsCmd1A,
+    (void*)wsCmd1B,
+    (void*)WS_CONDITION_CHECK,
+    (void*)wsCmd1D,
+    (void*)wsCmd1E,
+    (void*)WS_SIDECONDITION_CHECK,
+    (void*)wsCmd20,
+    (void*)WS_WAZAKOUKA_CHECK,
+    (void*)WS_CHECK_TYPE,
+    (void*)wsCmd23,
+    (void*)wsCmd24,
+    (void*)wsCmd25,
+    (void*)wsCmd26,
+    (void*)wsCmd27,
+    (void*)wsCmd28,
+    (void*)wsCmd29,
+    (void*)wsCmd2A,
+    (void*)wsCmd2B,
+    (void*)wsCmd2C,
+    (void*)wsCmd2D,
+    (void*)wsCmd2E,
+    (void*)wsCmd2F,
+    (void*)wsCmd30,
+    (void*)wsCmd31,
+    (void*)wsCmd32,
+    (void*)wsCmd33,
+    (void*)wsCmd34,
+    (void*)wsCmd35,
+    (void*)wsCmd36,
+    (void*)wsCmd37,
+    (void*)wsCmd38,
+    (void*)wsCmd39,
+    (void*)wsCmd3A,
+    (void*)wsCmd3B,
+    (void*)WS_SEQRET,
+    (void*)WS_WAZAEND,
+    (void*)WS_SEQEND,
+    (void*)WS_SPEABIEND,
+    (void*)wsCmd40,
+    (void*)wsCmd41,
+    (void*)wsCmd42,
+    (void*)wsCmd43,
+    (void*)WS_ALERTEND,
+    (void*)wsCmd45,
+    (void*)wsCmd46,
+    (void*)wsCmd47,
+    (void*)wsCmd48,
+    (void*)wsCmd49,
+    (void*)wsCmd4A,
+    (void*)wsCmd4B,
+    (void*)wsCmd4C,
+    (void*)wsCmd4D,
+    (void*)wsCmd4E,
+    (void*)wsCmd4F,
+    (void*)wsCmd50,
+    (void*)wsCmd51,
+    (void*)wsCmd52,
+    (void*)wsCmd53,
+    (void*)wsCmd54,
+    (void*)wsCmd55,
+    (void*)wsCmd56,
+    (void*)wsCmd57,
+    (void*)wsCmd58,
+    (void*)WS_WAZAOBOE_CHECK,
+    (void*)wsCmd5A,
+    (void*)wsCmd5B,
+    (void*)wsCmd5C,
+    (void*)wsCmd5D,
+    (void*)wsCmd5E,
+    (void*)WS_SWITCH_A_D,
+    (void*)wsCmd60,
+    (void*)wsCmd61,
+    (void*)wsCmd62,
+    (void*)wsCmd63,
+    (void*)wsCmd64,
+    (void*)wsCmd65,
+    (void*)wsCmd66,
+    (void*)wsCmd67,
+    (void*)WS_SCA_END_SET,
+    (void*)WS_KORAERU_CHECK,
+    (void*)wsCmd6A,
+    (void*)wsCmd6B,
+    (void*)wsCmd6C,
+    (void*)wsCmd6D,
+    (void*)wsCmd6E,
+    (void*)wsCmd6F,
+    (void*)wsCmd70,
+    (void*)wsCmd71,
+    (void*)wsCmd72,
+    (void*)wsCmd73,
+    (void*)wsCmd74,
+    (void*)wsCmd75,
+    (void*)wsCmd76,
+    (void*)wsCmd77,
+    (void*)wsCmd78,
+    (void*)wsCmd79,
+    (void*)wsCmd7A,
+    (void*)wsCmd7B,
+    (void*)wsCmd7C,
+    (void*)wsCmd7D,
+    (void*)wsCmd7E,
+    (void*)wsCmd7F,
+    (void*)wsCmd80,
+    (void*)wsCmd81,
+    (void*)WS_NEKODAMASHI,
+    (void*)wsCmd83,
+    (void*)wsCmd84,
+    (void*)wsCmd85,
+    (void*)wsCmd86,
+    (void*)wsCmd87,
+    (void*)wsCmd88,
+    (void*)wsCmd89,
+    (void*)WS_KUROIKIRI,
+    (void*)wsCmd8B,
+    (void*)WS_ABARERU,
+    (void*)wsCmd8D,
+    (void*)wsCmd8E,
+    (void*)wsCmd8F,
+    (void*)wsCmd90,
+    (void*)wsCmd91,
+    (void*)wsCmd92,
+    (void*)fightCheckOneHitKO,
+    (void*)wsCmd94,
+    (void*)WS_WEATHER_CHANGE,
+    (void*)wsCmd96,
+    (void*)wsCmd97,
+    (void*)wsCmd98,
+    (void*)wsCmd99,
+    (void*)wsCmd9A,
+    (void*)wsCmd9B,
+    (void*)wsCmd9C,
+    (void*)wsCmd9D,
+    (void*)wsCmd9E,
+    (void*)wsCmd9F,
+    (void*)wsCmdA0,
+    (void*)wsCmdA1,
+    (void*)wsCmdA2,
+    (void*)wsCmdA3,
+    (void*)wsCmdA4,
+    (void*)wsCmdA5,
+    (void*)wsCmdA6,
+    (void*)wsCmdA7,
+    (void*)wsCmdA8,
+    (void*)wsCmdA9,
+    (void*)WS_MICHIDURE,
+    (void*)wsCmdAB,
+    (void*)wsCmdAC,
+    (void*)wsCmdAD,
+    (void*)wsCmdAE,
+    (void*)wsCmdAF,
+    (void*)wsCmdB0,
+    (void*)WS_MIYABURU,
+    (void*)wsCmdB2,
+    (void*)wsCmdB3,
+    (void*)wsCmdB4,
+    (void*)wsCmdB5,
+    (void*)wsCmdB6,
+    (void*)wsCmdB7,
+    (void*)wsCmdB8,
+    (void*)wsCmdB9,
+    (void*)wsCmdBA,
+    (void*)wsCmdBB,
+    (void*)wsCmdBC,
+    (void*)WS_JIKOANJI,
+    (void*)wsCmdBE,
+    (void*)WS_MARUKUNARU,
+    (void*)wsCmdC0,
+    (void*)wsCmdC1,
+    (void*)wsCmdC2,
+    (void*)wsCmdC3,
+    (void*)wsCmdC4,
+    (void*)WS_KIERUTAME,
+    (void*)WS_KIERUTAME_AFTAR,
+    (void*)WS_CHIISAKUNARU,
+    (void*)wsCmdC8,
+    (void*)wsCmdC9,
+    (void*)wsCmdCA,
+    (void*)WS_JUUDEN,
+    (void*)wsCmdCC,
+    (void*)wsCmdCD,
+    (void*)WS_ICHAMON,
+    (void*)wsCmdCF,
+    (void*)WS_CHOUHATSU,
+    (void*)wsCmdD1,
+    (void*)wsCmdD2,
+    (void*)WS_NARIKIRI,
+    (void*)wsCmdD4,
+    (void*)WS_NEWOHARU,
+    (void*)wsCmdD6,
+    (void*)WS_AKUBI,
+    (void*)wsCmdD8,
+    (void*)wsCmdD9,
+    (void*)wsCmdDA,
+    (void*)wsCmdDB,
+    (void*)WS_ONNEN,
+    (void*)wsCmdDD,
+    (void*)wsCmdDE,
+    (void*)wsCmdDF,
+    (void*)wsCmdE0,
+    (void*)wsCmdE1,
+    (void*)wsCmdE2,
+    (void*)wsCmdE3,
+    (void*)WS_HIMITUNOTIKARA,
+    (void*)wsCmdE5,
+    (void*)wsCmdE6,
+    (void*)wsCmdE7,
+    (void*)wsCmdE8,
+    (void*)wsCmdE9,
+    (void*)wsCmdEA,
+    (void*)wsCmdEB,
+    (void*)wsCmdEC,
+    (void*)wsCmdED,
+    (void*)wsCmdEE,
+    (void*)wsCmdEF,
+    (void*)wsCmdF0,
+    (void*)wsCmdF1,
+    (void*)wsCmdF2,
+    (void*)wsCmdF3,
+    (void*)wsCmdF4,
+    (void*)wsCmdF5,
+    (void*)WS_ITEMEND,
+    (void*)WS_GETEND,
+    (void*)WS_STATUS_GET8,
+    (void*)WS_STATUS_GET16,
+    (void*)WS_STATUS_GET32,
+    (void*)WS_STATUS_SET8,
+    (void*)WS_STATUS_SET16,
+    (void*)WS_STATUS_SET32,
+    (void*)0x00000000,
+};
+#else
+extern void* lbl_8027A00C[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_8027A408[24] = {
+    0x00, 0x34, 0x00, 0x53, 0x00, 0xAC, 0x00, 0x35, 0x00, 0x7E, 0x01, 0x2B, 0x00, 0x07, 0x01, 0x3B,
+    0x01, 0x33, 0x00, 0xDD, 0x00, 0xED, 0x00, 0x00,
+};
+#else
+extern u8 lbl_8027A408[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_8027A420[20] = {
+    0x00, 0x01, 0x00, 0x02, 0x00, 0x23, 0x00, 0x24, 0x00, 0x2D, 0x00, 0x32, 0x00, 0x35, 0x00, 0x36,
+    0x00, 0x3B, 0x00, 0x46,
+};
+#else
+extern u8 lbl_8027A420[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_8027A434[28] = {
+    0x00, 0x03, 0x00, 0x02, 0x00, 0x03, 0xFF, 0xFF, 0x00, 0x01, 0x00, 0x02, 0x00, 0x01, 0xFF, 0xFF,
+    0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+};
+#else
+extern u8 lbl_8027A434[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_8027A450[40] = {
+    0x5B, 0x25, 0x73, 0x5D, 0x3A, 0x20, 0x83, 0x65, 0x81, 0x5B, 0x83, 0x75, 0x83, 0x8B, 0x83, 0x43,
+    0x83, 0x93, 0x83, 0x66, 0x83, 0x62, 0x83, 0x4E, 0x83, 0x58, 0x82, 0xAA, 0x94, 0xCD, 0x88, 0xCD,
+    0x8A, 0x4F, 0x82, 0xC5, 0x82, 0xB7, 0x0A, 0x00,
+};
+#else
+extern u8 lbl_8027A450[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_8027A478[16] = {
+    0x00, 0x00, 0x00, 0x00, 0x40, 0xE0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+#else
+extern u8 lbl_8027A478[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_8027A488[40] = {
+    0x00, 0x4A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+    0x00, 0x5B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x5D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+#else
+extern u8 lbl_8027A488[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_8027A4B0[24] = {
+    0x00, 0x00, 0x01, 0xE0, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x02, 0x1C, 0x00, 0x00, 0x00, 0x03,
+    0x00, 0x00, 0x17, 0x70, 0x00, 0x00, 0x00, 0x04,
+};
+#else
+extern u8 lbl_8027A4B0[]; /* generated by pcdata.py */
+#endif
+
+#ifndef TARGET_PC /* PC: raw table, generated by tools/local/port/pcdata.py (pcrawdata.py) */
+const u8 lbl_8027A4C8[40] = {
+    0x5B, 0x25, 0x73, 0x5D, 0x3A, 0x20, 0x83, 0x65, 0x81, 0x5B, 0x83, 0x75, 0x83, 0x8B, 0x83, 0x43,
+    0x83, 0x93, 0x83, 0x66, 0x83, 0x62, 0x83, 0x4E, 0x83, 0x58, 0x82, 0xAA, 0x94, 0xCD, 0x88, 0xCD,
+    0x8A, 0x4F, 0x82, 0xC5, 0x82, 0xB7, 0x0A, 0x00,
+};
+#else
+extern u8 lbl_8027A4C8[]; /* generated by pcdata.py */
+#endif

@@ -1,0 +1,467 @@
+/**
+ * @file menuColosseumBattle_tail.c
+ * @brief menuColosseumBattle.cpp suffix candidate, 0x8005D184 - 0x8005D26C.
+ */
+#include "dolphin/types.h"
+#include "pc/disc_types.h" /* the menu sound table is common_rel data */
+#include "game/data/rodata_80267398.h"
+#include "game/menu/menu.h"
+#include "game/menu/menu_name_entry.h"
+
+typedef struct MenuKeyInfo {
+    u8 pad_00[4];
+    u16 buttons;
+    u16 repeatButtons;
+} MenuKeyInfo;
+
+typedef struct MenuWindow {
+    u8 pad_00[0x4C];
+    s32 nextMenu;
+    u8 pad_50[0x10];
+    PTR32_FIELD(void) partyState; /* window +0x60: 32-bit slot on the PC too (pc/ptr32.h) */
+    u8 pad_64[0x31];
+    s8 cursor;
+    u8 pad_96;
+    s8 previousCursor;
+    u8 accepted;
+    u8 canceled;
+} MenuWindow;
+
+typedef struct MenuSprite {
+    u8 pad_00[6];
+    s16 tag;
+} MenuSprite;
+
+typedef struct MenuCursorItem {
+    u8 pad_00[2];
+    s16 field_02;
+    s16 field_04;
+} MenuCursorItem;
+
+typedef struct DISC_STRUCT MenuSeTable { /* common_rel menu sound table: big-endian view on the PC */
+    u16 field_00;
+    u16 field_02;
+    u16 field_04;
+    u16 field_06;
+    u16 field_08;
+} MenuSeTable;
+
+typedef struct ColosseumBattleConnectState {
+    s32 active;
+    s32 connected;
+    s32 busyRequest;
+    s32 reserved;
+} ColosseumBattleConnectState;
+
+typedef struct ColosseumSaveWork {
+    s32 battleKind;
+    u8 pad_04[0x18];
+    u8 exitPending;
+} ColosseumSaveWork;
+
+typedef struct ColosseumMenuHeap {
+    u8 pad_0000[0x4314];
+    void* resourceHandle;
+} ColosseumMenuHeap;
+
+typedef struct ColosseumMessageBuffer {
+    u16 text[0x24];
+} ColosseumMessageBuffer;
+
+typedef struct ColosseumRosterRow {
+    s32 mode;
+    s32 menuId;
+    s32 partyIndex;
+    s32 action;
+} ColosseumRosterRow;
+
+typedef union ColosseumBitMasks {
+    u32 word;
+    u8 bytes[4];
+} ColosseumBitMasks;
+
+typedef struct ColosseumUnownMenuIds {
+    u32 normal;
+    u32 shiny;
+} ColosseumUnownMenuIds;
+
+typedef struct ColosseumPokemonBlob {
+    u8 bytes[0x138];
+} ColosseumPokemonBlob;
+
+/* ===== External function declarations (menuColosseumBattleMain only) ===== */
+extern void fn_800347B8(void);
+extern void fn_800347C4(void);
+extern void fn_800347E8(s32);
+extern void fn_8003480C(s32);
+s32 fn_800566E8(void);
+extern s32 fn_800573C0(void);
+s32 fn_80057694(void);
+void fn_800576A4(s32);
+void fn_80057830(s32, s32, s32);
+extern u8 menuColosseumBattleGetFlag(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 GSmemGetHandleByPtr(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSmemFree(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_800E24B0(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* GSmemLock(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSmsgGetText(void*, s32, void*);
+#endif
+extern void fn_8002D91C();
+extern void menuTaisenRun(void);
+extern void menuCBBattleSetupFight();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_8006A76C();
+#endif
+extern void savedataBattleClearFlagC98B();
+extern void savedataBattleSetFlagC98B();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void savedataBattleGetFlagC98B();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_8006A7C8();
+#endif
+extern void menuCBTrainerBios_SetHomePlace();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuCBTrainerBios_GetHomePlace();
+#endif
+extern void fn_8006A7F0();
+extern void menuCBTrainerBios_SetControlerID();
+extern void menuCBBiosInitHero();
+extern void fn_8006AC28();
+extern void savedataBattleSetCouponRun();
+extern void savedataBattleSetSavedHero();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void savedataBattleGetSavedHero();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void savedataBattleGetEntryById();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void savedataBattleGetEntryPtr();
+#endif
+extern void menuSetRuleType();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void savedataBattleGetRuleSlotPtr();
+#endif
+extern void menuColosseumBattleClearFlag();
+extern void menuColosseumBattleSetFlag();
+extern void menuWaitFaceSprites();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void floorRequestChange(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_80071160();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_80071344();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_80071398();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_800714C8();
+#endif
+extern void fn_800715BC();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuCB_CurrentMenuID();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuRuleCheckPartyAndRule();
+#endif
+extern void menuCBRule_Copy();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuCBRule_IsEquals();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_800849B4();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_80088964();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuSaveLoadCommitA();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_800889A4();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_80088D84();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_80089028();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void gbaCommStartSendPokemon();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_80093574();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuGetCursorItemID();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuSubOpenYesNo();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuClose();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuCloseCustom();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 menuCloseSync(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuIsCheck();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 menuOpen(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32  fn_8010264C();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuSetPosition();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8*  fn_80104704(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+MenuCursorItem* windowGetCursorToItem(MenuWindow*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8*  windowGetKeyInfo(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void winMsgOpen();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void winMsgClose();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_80108518();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void floorLink();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* savedataGetStatus();
+#endif
+extern void fn_80129384();
+extern void fn_801293FC();
+extern void heroInit();
+extern void heroBiosSetHomePlace();
+extern u32  heroBiosGetRnd(void*);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8*  heroBiosGetNamePtr(void*);
+#endif
+extern void heroBiosCopy();
+extern void heroMoveSyncWithHero();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void msgctrlSetValue();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void gamedatasaveGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void soundStartSE();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void soundStart(s32, s32, s32, s32);
+#endif
+extern void fn_8019075C();
+extern void std113_mapObjectUnk_8018db68(void*);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 pokemonCheckValid(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 pokemonIsDarkPokemon(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void __assert();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void _threadSwitch();
+#endif
+extern void _flagSet(s32, s32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void floorChangePos();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32  GScharCmp(void*, void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memset(void* dst, int val, u32 size);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memcpy(void* dst, const void* src, u32 size);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuButtonNormal(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void winSpriteSetDisp(void*, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fadeCheck(s32);
+#endif
+extern void toolentryTaisenFreePokemonData(void);
+extern void scriptStoreTemochiPokemon(s32);
+extern u8 scriptCheckTemochiPokemon(s32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* getPokemon__5PCBOXFScSc(void*, s8, s8);
+#endif
+extern s8 pcboxGetNbPokemonBox(void);
+extern s8 fn_801347D8(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* heroGetStatus(void*, s32, u16);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16 pokemonBiosGetPokemonDataId(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 pokemonGetStatus(void*, u32, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 pokemonGetAnnonKatati(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 _toolentryAlloc__FUl(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 floorGetCurrentContext(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 GSthreadCreate(u32, u32, u32, u32, u32, void*);
+#endif
+extern void fn_80057E70(void);
+extern void fn_8017B3E4(s32);
+extern s32 fn_8017B2CC(s32);
+extern void GSresReleaseById(s32);
+extern void fn_800F915C(s32);
+extern void fn_80055B98(s32);
+extern void std078_flagSetFalse(s32);
+extern s32 fn_800576B4(void);
+extern void* fn_800574E0(void);
+extern void fn_800576C4(s32);
+extern void fn_80057458(void*);
+extern s32 fn_80054B1C(s32, s32);
+extern void fn_80055DE0(void);
+extern s32 fn_80055E10(void);
+extern s8 pcboxGetPokemonBoxNbEmptySlot(s32, s8);
+extern void pcboxAddPokemon(s32, void*, s8);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void pokemonInit(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fadeSet(s32, f32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 fn_80056A78(void);
+#endif
+extern void fn_80056A80(void);
+extern void fn_80057C9C(void*, void*, s32*);
+extern void fn_80056B74(s32, s32);
+extern void fn_80054760(s32, s32);
+extern void fn_80057A38(void);
+extern void fn_80057A64(void*, s32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* menuItemBiosGetPtr(s32);
+#endif
+extern u8 pokemonBiosGetPcboxMark(void*);
+extern void pokemonBiosSetPcboxMark(void*, u8);
+extern s32 fn_8005D3D0(s32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GScharCpy(void*, void*);
+#endif
+extern void fn_80054670(s32);
+extern s32 fn_8005464C(void);
+extern void fn_8005744C(void);
+extern s32 fn_80057428(void);
+extern void fn_800574A8(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* windowSearchID(s32);
+#endif
+extern u32 fn_8005D738(u8);
+extern void menuColosseumBattleOpenMessage(void*, s32);
+extern void menuColosseumBattleCloseMessage(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_8005471C(void);
+#endif
+
+/* ===== SDA globals ===== */
+extern s32 lbl_8047A598;
+extern s32 lbl_8047A59C;
+extern void* lbl_8047A590;
+extern u8* lbl_8047A5A0;
+extern u8  lbl_8047A5A8;
+extern f32 lbl_8047BF18;
+extern u8  lbl_8047BF1C;
+extern u8  lbl_8047BF20;
+extern u8  lbl_8047BF24;
+extern const u32 lbl_8047BF30;
+extern const u32 lbl_8047BF34;
+extern const u32 lbl_8047BF38;
+extern const u32 lbl_8047BF3C;
+extern const ColosseumBitMasks lbl_8047BF40;
+extern const char lbl_8047BF28;
+extern const f32 lbl_8047BF10;
+
+/* ===== Rodata / data labels ===== */
+extern u8 lbl_80267840[];
+extern char lbl_802678D8[];
+extern const ColosseumUnownMenuIds lbl_802676F0[28];
+extern const ColosseumRosterRow lbl_802677D0[7];
+extern const s32 lbl_80267A80[6];
+extern const s32 lbl_80267A98[6];
+extern const s32 lbl_80267AB0[18];
+extern u8 lbl_803A9A08[];
+extern u8 lbl_803A9A18[];
+
+/* ===== Function implementations ===== */
+
+/* Address: 0x8005D184 | Size: 0xE8 */
+s32 fn_8005D184(MenuWindow* menu, MenuSprite* sprite) {
+    s32 tags[6];
+    s32* p;
+    s32 i;
+    s32 j;
+    s32 visible;
+
+    tags[0] = lbl_80267A80[0];
+    tags[1] = lbl_80267A80[1];
+    tags[2] = lbl_80267A80[2];
+    tags[3] = lbl_80267A80[3];
+    tags[4] = lbl_80267A80[4];
+    tags[5] = lbl_80267A80[5];
+
+    p = tags;
+    for (i = 0; i < 2; i++) {
+        for (j = 0; j < 3; j++) {
+            if (sprite->tag == p[j]) {
+                break;
+            }
+        }
+        if (j < 3) break;
+        p += 3;
+    }
+    if (i >= 2) {
+        return 0;
+    }
+    if (menu->cursor == i) {
+        visible = 1;
+    } else {
+        visible = 0;
+    }
+    winSpriteSetDisp(sprite, visible);
+    return 0;
+}

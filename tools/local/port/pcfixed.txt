@@ -1,0 +1,60 @@
+# Data the PC build places at its GameCube address (option 1, port-gaps 22; approved by snatcherLeo 2026-10-17).
+# Read by tools/local/port/pcdata.py. Addresses and names only (from symbols.txt): no game data in this file.
+#
+# Why: the battle move scripts (the byte code fn_80211B94 runs) carry GameCube addresses inside their bytes: jumps to
+# other script bytes, the variables they read and write, and constant tables. Rewriting every embedded address is not
+# possible (they sit at odd offsets inside commands, and dtk does not see all of them), so the PC puts these bytes, and
+# what they point at, at the same addresses as on the GameCube. MEM1 is mapped at 0x80000000 on the PC, and the heap
+# arena starts after main.dol's data (0x80496740, B's arena change), so these addresses are free.
+# The list is measured by tools/local/port/battlescript_addrs.py (walks every script from the 214-entry effect table
+# and the named starts; 2026-10-17: 3,194 commands, embedded targets only in the ranges and variables below).
+#
+#   raw LO HI      main.dol's bytes [LO, HI) are copied to their address at startup, unchanged (big-endian, as on the
+#                  disc). Symbols inside that pcdata would generate become absolute (the linker places them at their
+#                  GameCube address), except two kinds that keep their own PC copy for the C code: symbols the PC code
+#                  defines itself, and symbols the C declares with a typed (non-byte) declaration, which it reads
+#                  natively (pointer tables like lbl_80375E24, message-id tables like lbl_80279E7C). The scripts see
+#                  the big-endian copy at the GameCube address; these are constant tables, so both copies hold the
+#                  same values (likely: no code writes them). Pointer slots in the copied bytes that point outside
+#                  the fixed data get the target's PC address (big-endian) at startup.
+#   var NAME T     a variable the scripts read or write that may also be shared with the C code: absolute at its
+#                  GameCube address, its initial value converted to PC byte order as elements of type T (u8 / u16 /
+#                  u32: how the script commands read it). .sbss variables start as zero.
+
+# the battle move scripts and their tables (effect table lbl_80379BFF inside), 0x80375E24 - end of lbl_8038FFFC
+raw 0x80375E24 0x80399F58
+# message-id tables read by script commands 0x12 / 0x13 (fn_802261B0), .rodata
+raw 0x80279D2C 0x80279ED0
+# the same kind of tables in .sdata2. *Corrected 2026-10-27 (verified):* the range started at 0x8047E550 and left
+# out the first table, lbl_8047E538 (the weather's end-of-turn messages), which scripts reach both at its start (a
+# relocated word, then read big-endian from the PC's native copy: "the sandstorm rages" came out as 0x50760000) and at
+# entries inside it (0x8047E540 "is buffeted by the sandstorm!", 0x8047E548: unrelocated raw addresses that read an
+# empty spot, so the damage line never showed); P12's battle 208
+raw 0x8047E538 0x8047E5F8
+
+# .sdata variables (initial values; script-only except lbl_80478D78, which the C reads as bytes)
+var lbl_80478D78 u8
+var lbl_80478D80 u16
+var lbl_80478D86 u16
+var lbl_80478D88 u16
+var lbl_80478D8C u32
+# .sbss variables (zero at start). Not here: lbl_8047B610 (script position), lbl_8047B62C (context) and lbl_8047B64C,
+# pointers the C code keeps as PC pointers; no script command addresses them.
+var lbl_8047B600 u8
+var lbl_8047B608 u32
+var ServerStatusFlag u32
+var lbl_8047B620 u8
+var lbl_8047B625 u8
+var lbl_8047B626 u8
+var lbl_8047B627 u8
+var lbl_8047B629 u8
+var lbl_8047B630 u32
+var lbl_8047B634 u32
+var lbl_8047B638 u32
+var lbl_8047B63C u16
+var lbl_8047B63E u8
+var lbl_8047B63F u8
+var lbl_8047B640 u16
+var lbl_8047B648 u8
+var lbl_8047B649 u8
+var lbl_8047B64A u8

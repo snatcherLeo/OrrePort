@@ -1,0 +1,46 @@
+# P22 (sitting 033_20261023_1852): logged resyncs for the second pass (2026-10-30; match ledger, P22 rows).
+# Settings: P14's (resyncs/P14_024.txt) but --windows-rooms 0x38F,0x45 (window anchors also in field room 0x45, where
+# menu 65 opens: P11 did the same with 0x386), + ORRE_ROLL_SEEDS for all 13 battles (one PLAYREC_RNGCALL capture,
+# replay_2, checked: 1,545 flag changes).
+#
+# *Updated 2026-10-31 afternoon:* item 1 is replaced by a setting: --window-lag-rooms 0x38F:1,0x45:1 (presses timed from
+# those rooms' window openings one frame later; the console's window probe marks "ready" on the window's first typing
+# frame, the PC's anchor one frame before it). With it and no hand edits (p2_P22j): all 13 battles as on the console,
+# to room entry 108, exactly where item 1 alone reached (p2_P22c); item 2 (the lift ramp) is a separate class.
+#
+# 1. (2026-10-30) A hand edit of the pad (pads made with the settings above; p2_P22b's lines 14371-14374): in room
+#    0x45's fifth visit, after the pocket menu, menu 65 (window 0x41) opens and the console closes it on the next frame
+#    with B; the PC's B went down one frame before the window was ready (counted as held), the menu stayed open 20
+#    frames, the walk's stick moves went into it and Wes stopped 25 units short of the talk before battle 405. As P09's
+#    item 7: the B released before and on the anchor, pressed one frame after it.
+#    "+1:B+SX=131+SY=86", "@0x20041+0~31:B+SX=131+SY=86", "+0:!frameat 110", "+0:B+SX=132+SY=82" become
+#    "+1:SX=131+SY=86", "@0x20041+0~31:SX=131+SY=86", "+0:!frameat 110", "+1:B+SX=132+SY=82".
+#    With it (p2_P22c): all 13 battles as on the console, to room entry 108 of 118.
+#
+# 2. (the same evening) After the menu at room 0x2F's walk-through trigger (near (-47, -102)), the console's Wes walks
+#    north-east, then south to the square's exit at (-15, -274) and room 0x79; the PC's went off in another direction
+#    ((-16.8, -48.3) 96 frames after the window closed, against the console's (-40.8, -79.0) at 76), hit walls at
+#    (0.4, -90.1) and (-6, -188) and never left (cause open: the field camera's angle after the menu, or timing).
+#    Wes placed on the console's straight walk to the exit, 760 frames after the window closed (events tick, rounded);
+#    PC frame = the console's events frame - 770 in that visit. Apply with --log <p2_P22c>/run.log.
+@245710 npc 0 -15.0 25.0 -214.0  # console 0x2F, 760 frames after the menu's window closed
+#    With it (p2_P22d): Wes reaches the exit and the PC enters room 0x79, then crashes in the elevator's "is Wes inside"
+#    check (port-gaps 40, fixed). The menu at the trigger is a six-entry list (menu 89, the same choice on both
+#    sides; **guess**: the elevator's floor list); the console sets 2 story-flag bits there and the PC none, so the
+#    broken elevator check likely explains the divergent walk too: rerun on the fixed build with and without item 2.
+#    *Superseded the same night by the version below.* On the fixed build the walk still parts (p2_P22f): the UFO
+#    disk is the same on both sides (messages 0x3BA8, 0x5C63 = disk 503, then 0x5C68), but after the panel's window
+#    closes the console's Wes stays held ~36 frames and then walks slower, the PC's moves within 6 frames at full
+#    speed (same stick: the console's own reads show full tilt), so the PC reaches the lift ramp from another side,
+#    waits, and the lift script's ending (flag 3520, "the UFO is at floor 1") never runs; the item-2 placement above
+#    skipped the ride itself, so that flag stayed unset to the end (p2_P22e).
+#
+# 2 (second version). Wes placed on the console's line just before the lift ramp (Dolphin npc capture replay_4,
+#    PLAYREC_NPC=0x2F,-1,3000,2, slot 0 at visit frame 2404; PC frame = 245274 + (2404 - 2240) - 30: the window's
+#    close is visit frame 2240 on the console and PC frame 245274, and the PC uses the same stick 30 frames sooner).
+#    Apply with --log <p2_P22h>/run.log on p2_P22c's pad (item 1 only). With it (p2_P22i): all 118 room entries and
+#    all 13 battles as on the console, story flags the same at every entry and on the end save.
+@245408 npc 0 -16.9438 0 -83.9397  # console 0x2F visit 2 +2404, on the way onto the ramp
+#    *Corrected 2026-10-30 (late):* "the console's Wes stays held ~36 frames" and "the PC uses the same stick 30 frames
+#    sooner" misread a stop against the wanderer (port-gaps 41, closed: not a port bug; P21's position logs show both
+#    Wes start together, then only the console's bumps the wanderer). The placement itself is verified (p2_P22i).

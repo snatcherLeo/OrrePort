@@ -1,0 +1,6 @@
+# P19 (sitting 030_20261023_0133): logged resyncs for the second pass (2026-10-30; match ledger, P19 rows).
+# No hand edits, no Wes placements: settings only, to the end on the second run (p2_P19b):
+#   P14's settings (resyncs/P14_024.txt) + ORRE_ROLL_SEEDS for battle 328 (roll_resync_spec.py --all-battles on
+#   replay_3, PLAYREC_RNGCALL=14732-44801, checked: 221 events and 949 flag changes identical). The first run's window
+#   (14732-18202, replay_2) ended at a menu-room entry inside the battle and gave an empty seed file (p2_P19a: battle
+#   unseeded, stopped at entry 16); the battle runs to its last message at replay frame 42,289.

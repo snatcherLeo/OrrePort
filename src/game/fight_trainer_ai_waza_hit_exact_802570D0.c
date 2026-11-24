@@ -1,0 +1,2759 @@
+/**
+ * @file fight_trainer_ai_waza_hit_exact_802570D0.c
+ * @brief Byte-exact fightTrainerAiWazaHit.cpp range, 0x802570D0 - 0x8025C264.
+ */
+#include "game/fight_trainer_ai_waza_hit_shared.h"
+#include "game/constants/conditions.h"
+
+s32 fightTrainerAiWazaHit119(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit118(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTargetGetPtrAsNowFightType(u32 type, u32 elem);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightSideIsJoutaiDataId(u32 a, u32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiGetAbicntPhyAtk(void* ctx, u32 elem);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 elem, u32 type);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fn_80237F74(void* ctx, u32 elem, u32 type);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    u32 side = PC_PTR32_IMPLICIT(fightTargetGetPtrAsNowFightType(2, param3));
+    u8 abiVal = fightTrainerAiGetAbicntPhyAtk(PC_PTR32_IMPLICIT(ctx), param3);
+    s32 gate;
+    u8 flag;
+
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+        return 0;
+    }
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x9)) == 1 && abiVal >= 0xc) {
+        if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x20, 1, 1) == 0) {
+            return 0;
+        }
+    }
+    if (fn_80237F74(ctx, param3, 0x14) == 1) {
+        return 0;
+    }
+    if (fn_80237F74(ctx, param3, 0x11) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x14) == 1) {
+        flag = 0;
+        goto flagCheckDone;
+    }
+    if (fn_80237F74(ctx, param3, 0x7) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0xf) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x48) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x29) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x28) == 1) goto allowedLabel;
+    fn_80237F74(ctx, param3, 0xc);
+allowedLabel:
+    flag = 1;
+flagCheckDone:
+    if (flag == 0) {
+        return 0;
+    }
+    if (fightSideIsJoutaiDataId(side, 0x4b) == 1) {
+        return 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit117(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHit116(void) { return 1; }
+
+#ifdef TARGET_PC
+/* PC: r3 (the AI context) passed through on the GameCube (port-gaps 39): fails while the weather is already 3 */
+int fightTrainerAiWazaHit115(void* ctx, u32 param1, u32 param2, u32 param3)
+{
+  u32 uVar1;
+  (void)param1;
+  (void)param2;
+  (void)param3;
+  uVar1 = fightTrainerAiGetNowTenkou(ctx,0,0);
+  return (uVar1 & 0xff) != 3;
+}
+#else
+int fightTrainerAiWazaHit115(void)
+
+{
+    u32 r3;
+
+    extern u32 fightTrainerAiGetNowTenkou();
+  u32 uVar1;
+
+  uVar1 = fightTrainerAiGetNowTenkou(PC_PTR(r3),0,0);
+  return (uVar1 & 0xff) != 3;
+}
+#endif
+
+u32 fightTrainerAiWazaHit114(void* ctx, u32 slot, u32 param, u32 arg3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightCheckAccuracyRules();
+#endif
+    extern u32 fightTrainerAiCheckHorobinouta();
+
+    if ((u8)fightCheckAccuracyRules(param, slot, arg3) == 1) {
+        return 0;
+    }
+    return (u16)fightTrainerAiCheckHorobinouta(ctx) != 0;
+}
+
+u32 fightTrainerAiWazaHit113(u32 r3, u32 r4, u32 r5, u32 r6)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int _fightTrainerAiWazaHitCheck();
+#endif
+  int iVar1;
+  iVar1 = _fightTrainerAiWazaHitCheck(PC_PTR(r3), PC_PTR(r4), r5, PC_PTR(r6), 0);
+  if (iVar1 == 0) {
+    return 0;
+  }
+  if (iVar1 == -1) {
+    return 1;
+  }
+  return 1;
+}
+
+u32 fightTrainerAiWazaHit112(void* ctx, u32 slot, u32 param) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 joutaiDataBiosGetMaxCount(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTargetGetPtrAsNowFightType(u32, u32);
+#endif
+    extern u32 fightSideGetCountAsJoutaiDataId(u32, u32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightSideIsJoutaiDataId(u32, u32);
+#endif
+    u32 target;
+    u32 count;
+
+    target = PC_PTR32_IMPLICIT(fightTargetGetPtrAsNowFightType(3, slot));
+    count = 0;
+    if (fightSideIsJoutaiDataId(target, 0x4a) == 1) {
+        count = fightSideGetCountAsJoutaiDataId(target, 0x4a);
+    }
+    if ((s16)count >= (s32)joutaiDataBiosGetMaxCount(0x4a)) {
+        return 0;
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHit111(void) { return 1; }
+
+s32 fightTrainerAiWazaHit109(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiGetAbicntPhyAtk(void* ctx, u32 elem);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiGetAbicntPhyDef(void* ctx, u32 elem);
+#endif
+    extern u8 fightTrainerAiGetAbicntNimbleness(void* ctx, u32 elem);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiGetZokusei(void* ctx, u32 a, u32 type);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 a, u32 type);
+#endif
+    extern u8 fightTrainerAiIsJoutaiKie(void* ctx, u32 elem);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void*, u32, u32, u32, u32, u32, u32);
+#endif
+    u8 a = fightTrainerAiGetAbicntPhyAtk(PC_PTR32_IMPLICIT(ctx), param3);
+    u8 b = fightTrainerAiGetAbicntPhyDef(PC_PTR32_IMPLICIT(ctx), param3);
+    u8 c = fightTrainerAiGetAbicntNimbleness(ctx, param3);
+
+    if (fightTrainerAiGetZokusei(PC_PTR32_IMPLICIT(ctx), PC_PTR(param1), 7) == 1) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x18)) != 1) {
+            if (fightTrainerAiIsJoutaiKie(ctx, param3) != 1) {
+                goto ret1;
+            }
+        }
+        return 0;
+    }
+
+    if (((c == 0) && (a >= 0xc)) && (b >= 0xc)) {
+        return 0;
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x90, 3, 0x41) != 0) {
+        goto ret1;
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x10, 1, 0x41) != 0) {
+        goto ret1;
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x10, 2, 0x41) != 0) {
+        goto ret1;
+    }
+ret0:
+    return 0, 0;
+
+    return 0;
+ret1:
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit108(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x10) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x10, 7, 0x41) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x10) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHit107(void* ctx, u32 param1, u32 param2, u32 extra) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void*, u32, u32);
+#endif
+
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(extra), PC_PTR(0x14)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(extra), PC_PTR(0x17)) == 1) {
+        return 0;
+    }
+    return fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(extra), PC_PTR(8)) != 0;
+}
+
+u32 fightTrainerAiWazaHit106(void* ctx, u32 slot, u32 param, u32 extra) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void*, u32, u32, u32, u32);
+#endif
+    s32 gate;
+
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(slot), param, PC_PTR(extra), 0xFFFE);
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(extra), PC_PTR(0x16)) == 1) {
+        return 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit105(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit104(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit103(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit102(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightFloorGetFightTrainerFightPokemonPtrAry(u32 zero, void* ctx, void* buf, u32 one1, u32 one2);
+#endif
+    extern u8 fightTrainerAiIsPokemonTokusei(void* ctx, u32 elem, u32 type);
+    extern u8 fightAiIsJoutaiNormal(void* ctx, u32 elem);
+    u32 buf[0x17];
+    u32 count = fightFloorGetFightTrainerFightPokemonPtrAry(0, PC_PTR32_IMPLICIT(ctx), buf, 1, 1);
+    u32 *bufPtr;
+    u16 i;
+    u8 flag;
+
+    bufPtr = buf;
+    flag = 0;
+    for (i = 0; i < (u16)count; i++) {
+        if (bufPtr[i] == 0) {
+            continue;
+        }
+        if ((u16)param2 == 0xd7 && fightTrainerAiIsPokemonTokusei(ctx, bufPtr[i], 0x2b) == 1) {
+            continue;
+        }
+        if (fightAiIsJoutaiNormal(ctx, bufPtr[i]) != 0) {
+            continue;
+        }
+        flag = 1;
+        break;
+    }
+    if (flag == 0) {
+        return 0;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit101(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit100(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 one);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetFightPokemonWazaAry(void* ctx, u32 param3, void* arrayA, void* arrayB, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetLastSelectWaza(void* ctx, u32 param3);
+#endif
+    extern u8 fightTrainerAiIsJoutaiKie(void* ctx, u32 elem);
+    extern u8 fn_802381C4(void* ctx, u32 param3, u8 v);
+    u16 arrayA[0xe];
+    s16 arrayB[0xa];
+    s32 gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0xFFFF);
+    u16 count = fightTrainerAiGetFightPokemonWazaAry(ctx, param3, arrayA, PC_PTR32_IMPLICIT(arrayB), 0);
+    u32 a = fightAiGetLastSelectWaza(ctx, param3);
+    u8 flag;
+    u8 i;
+
+    if ((u16)a == 0 || (u16)a == 0x165 || (u16)a == 0xffff || fightTrainerAiIsJoutaiKie(ctx, param3) == 1) {
+        return 0;
+    }
+    flag = 0;
+    for (i = 0; i < count; i++) {
+        if (arrayB[i] < 0) {
+            continue;
+        }
+        if ((u16)a != arrayA[i]) {
+            continue;
+        }
+        flag = fn_802381C4(ctx, param3, (u8)arrayB[i]);
+        break;
+    }
+    if (flag == 0) {
+        return 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit099(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+int fightTrainerAiWazaHit098(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightCheckAccuracyRules();
+#endif
+
+    return (u8)fightCheckAccuracyRules(arg2, arg1, arg3) != 1;
+}
+
+s32 fightTrainerAiWazaHit097(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetFightPokemonWazaAry(void* ctx, u32 param1, void* buf, u32 zero, u32 one);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param1, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightSeqRendouWazaCheck(u32 elem);
+#endif
+    extern u8 fn_8021901C(int elem);
+    u16 buf[0xa];
+    u16 count = fightTrainerAiGetFightPokemonWazaAry(ctx, param1, buf, 0, 1);
+    u16 i;
+
+    if (!fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(8))) {
+        return 0;
+    }
+    for (i = 0; i < count; i++) {
+        u16 elem = buf[i];
+        if (elem == 0x165 || elem == 0x163) {
+            continue;
+        }
+        if (fightSeqRendouWazaCheck(elem) != 0) {
+            continue;
+        }
+        if (elem == 0x108 || elem == 0xfd) {
+            continue;
+        }
+        if (fn_8021901C(elem) == 0) {
+            break;
+        }
+    }
+    if (i >= count) {
+        return 0;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit095(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetFightPokemonWazaAry(void* ctx, u32 param1, void* buf, u32 zero1, u32 zero2);
+#endif
+    extern u32 fightAiGetSketchWaza(void* ctx, u32 param3);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 a, u32 type);
+#endif
+    extern u8 fn_80219270(u32 elem);
+    u16 buf[0xa];
+    u32 count = fightTrainerAiGetFightPokemonWazaAry(ctx, param1, buf, 0, 0);
+    u32 target = fightAiGetSketchWaza(ctx, param3);
+    u16 i;
+
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0x10)) == 1) {
+        goto ret0;
+    }
+    if (fn_80219270(target) != 1) {
+        goto scan;
+    }
+ret0:
+    return 0;
+scan:
+    for (i = 0; i < (u16)count; i++) {
+        if (buf[i] == (u16)target) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHit094(void* ctx, u32 slot, u32 param, u32 extra) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void*, u32, u32, u32, u32);
+#endif
+    s32 gate;
+
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(slot), param, PC_PTR(extra), 0xFFFF);
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(extra), PC_PTR(0x14)) == 1) {
+        return 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHit093(void) { return 1; }
+
+s32 fightTrainerAiWazaHit092(void* ctx, u32 param1, u32 param2, u32 param3) {
+    u32 *new_var;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param1, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+    s32 gate;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+
+    if (!fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0x8))) {
+        return 0;
+    }
+    new_var = &v1;
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, *new_var, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (((0, gate)) == (-1)) {
+        return 1;
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHit091(void* ctx, u32 slot, u32 param, u32 extra) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void*, u32, u32, u32, u32);
+#endif
+    s32 gate;
+
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(slot), param, PC_PTR(extra), 0xFFFF);
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(extra), PC_PTR(0x14)) == 1) {
+        return 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit090(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetFightPokemonWazaAry(void* ctx, u32 param3, void* arrayA, void* arrayB, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetLastSelectWaza(void* ctx, u32 param3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    extern u8 fightSeqIsEncoreNgWazaDataId(u32 elem);
+    extern u8 fn_802381C4(void* ctx, u32 param3, u8 v);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 a, u32 type);
+#endif
+    u16 arrayA[0xe];
+    s16 arrayB[0xa];
+    u16 count = fightTrainerAiGetFightPokemonWazaAry(ctx, param3, arrayA, PC_PTR32_IMPLICIT(arrayB), 0);
+    u32 targetVal = fightAiGetLastSelectWaza(ctx, param3);
+    s32 gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    u8 flag;
+    u16 i;
+
+    if (fightSeqIsEncoreNgWazaDataId(targetVal) == 1) {
+        return 0;
+    }
+    flag = 0;
+    for (i = 0; i < count; i++) {
+        if (arrayB[i] < 0) {
+            continue;
+        }
+        if ((u16)targetVal != arrayA[i]) {
+            continue;
+        }
+        flag = fn_802381C4(ctx, param3, (u8)arrayB[i]);
+        break;
+    }
+    if (flag == 0) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x2a)) == 1) {
+        return 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+
+    return;
+}
+
+s32 fightTrainerAiWazaHit089(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit088(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit087(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit086(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetFightPokemonWazaAry(void* ctx, u32 param3, void* arrayA, void* arrayB, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightAiGetLastSelectWaza(void* ctx, u32 param3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    extern u8 fn_802381C4(void* ctx, u32 param3, u8 v);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 a, u32 type);
+#endif
+    u16 arrayA[0xe];
+    s16 arrayB[0xa];
+    u16 count = fightTrainerAiGetFightPokemonWazaAry(ctx, param3, arrayA, PC_PTR32_IMPLICIT(arrayB), 0);
+    u16 target = fightAiGetLastSelectWaza(ctx, param3);
+    s32 gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    u8 flag = 0;
+    u16 i;
+
+    for (i = 0; i < count; i++) {
+        if (arrayB[i] < 0) {
+            continue;
+        }
+        if (target != arrayA[i]) {
+            continue;
+        }
+        flag = fn_802381C4(ctx, param3, (u8)arrayB[i]);
+        break;
+    }
+    if (flag == 0) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x29)) == 1) {
+        return 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+
+    return;
+}
+
+u32 fightTrainerAiWazaHit085(void) { return 1; }
+
+s32 fightTrainerAiWazaHit084(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 a, u32 type);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiGetZokusei(void* ctx, u32 a, u32 type);
+#endif
+    s32 gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x1c)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiGetZokusei(PC_PTR32_IMPLICIT(ctx), PC_PTR(param3), 0xc) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+        return 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHit083(void) { return 1; }
+
+s32 fightTrainerAiWazaHit082(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetFightPokemonWazaAry(void* ctx, u32 elem, void* arrA, void* arrB, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetLastSelectWaza(void* ctx, u32 param3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 a, u32 type);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 one);
+#endif
+    extern u8 fightSeqMonomaneNGCheck(u32 elem);
+    u16 buf[0x10];
+    u16 count = fightTrainerAiGetFightPokemonWazaAry(ctx, param1, buf, 0, 0);
+    u32 targetVal = fightAiGetLastSelectWaza(ctx, param3);
+    s32 gate;
+    u16 i;
+
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+        return 0;
+    }
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0xFFFF);
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0x10)) == 1 ||
+        fightSeqMonomaneNGCheck(targetVal) != 0 ||
+        (u16)targetVal == 0 || (u16)targetVal == 0xffff || (u16)targetVal == 0x165 || (u16)targetVal == 0x163) {
+        return 0;
+    }
+    for (i = 0; i < count; i++) {
+        if ((u16)targetVal == buf[i]) {
+            return 0;
+        }
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit081(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit080(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHit079(void* ctx, u32 slot, u32 param) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiIsPokemonJoutai(void*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetHpPercent(void*, u32, s32, f32);
+#endif
+    extern f32 lbl_8047E650;
+    u32 result;
+
+    if ((fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(slot), PC_PTR(0x14)) & 0xff) == 1) {
+        return 0;
+    }
+
+    result = fightTrainerAiGetHpPercent(PC_PTR32_IMPLICIT(ctx), slot, -1, lbl_8047E650) & 0xff;
+    return result != 1;
+}
+
+s32 fightTrainerAiWazaHit078(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit077(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit076(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit075(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit073(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit072(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit071(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit070(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit069(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit068(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit067(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTargetGetPtrAsNowFightType(u32 type, u32 elem);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightSideIsJoutaiDataId(u32 a, u32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 elem, u32 type);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fn_80237F74(void* ctx, u32 elem, u32 type);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsJoutaiNormal(void* ctx, u32 elem);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    u32 side = PC_PTR32_IMPLICIT(fightTargetGetPtrAsNowFightType(2, param3));
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    s32 gate;
+    u8 flag;
+
+    if (fn_80237F74(ctx, param3, 0x7) == 1) {
+        return 0;
+    }
+    if (fn_80237F74(ctx, param3, 0x11) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x14) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x7) == 1) {
+        flag = 0;
+        goto flagCheckDone;
+    }
+    if (fn_80237F74(ctx, param3, 0xf) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x48) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x29) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x28) == 1) goto allowedLabel;
+    fn_80237F74(ctx, param3, 0xc);
+allowedLabel:
+    flag = 1;
+flagCheckDone:
+    if (flag == 0) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x5)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsJoutaiNormal(ctx, param3) == 0) {
+        return 0;
+    }
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    if (fightSideIsJoutaiDataId(side, 0x4b) == 1) {
+        return 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+u8 fightTrainerAiWazaHit066(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fn_80237F74(void*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiGetZokusei(void*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsJoutaiNormal(void*, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void*, u32, u32, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTargetGetPtrAsNowFightType(u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightSideIsJoutaiDataId(u32, u32);
+#endif
+    s32 r;
+    u8 flag;
+
+    if (fn_80237F74(ctx, param3, 0x11) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x3)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x4)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiGetZokusei(PC_PTR32_IMPLICIT(ctx), PC_PTR(param3), 0x3) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiGetZokusei(PC_PTR32_IMPLICIT(ctx), PC_PTR(param3), 0x8) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsJoutaiNormal(ctx, param3) == 0) {
+        return 0;
+    }
+
+    if (fn_80237F74(ctx, param3, 0x11) == 1) {
+        flag = 0;
+    } else {
+        if (fn_80237F74(ctx, param3, 0x14) != 1) {
+            if (fn_80237F74(ctx, param3, 0x7) != 1) {
+                if (fn_80237F74(ctx, param3, 0xf) != 1) {
+                    if (fn_80237F74(ctx, param3, 0x48) != 1) {
+                        if (fn_80237F74(ctx, param3, 0x29) != 1) {
+                            if (fn_80237F74(ctx, param3, 0x28) != 1) {
+                                fn_80237F74(ctx, param3, 0xc);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        flag = 1;
+    }
+    if (flag == 0) {
+        return 0;
+    }
+
+    r = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    if (fightSideIsJoutaiDataId(PC_PTR32_IMPLICIT(fightTargetGetPtrAsNowFightType(2, param3)), 0x4b) == 1) {
+        return 0;
+    }
+    if (r == 0) {
+        return 0;
+    }
+    if (r == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHit065(void* ctx, u32 slot, u32 param) /* AI table signature (like fightTrainerAiWazaHit112): slot reaches the call below in r4 */
+
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTargetGetPtrAsNowFightType();
+#endif
+    extern u32 fightSideCheckWriteJoutaiDataId();
+  u32 uVar1;
+  u32 uVar2;
+
+  uVar1 = PC_PTR32_IMPLICIT(fightTargetGetPtrAsNowFightType(2, slot));
+  uVar2 = fightSideCheckWriteJoutaiDataId(uVar1,CONDITION_REFLECT);
+  uVar2 = __cntlzw(2 - (uVar2 & 0xff));
+  return uVar2 >> 5;
+}
+
+s32 fightTrainerAiWazaHit062(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0xa0) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0xa0, 0x5, 0x1) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0xa0) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit060(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0xa0) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0xa0, 0x3, 0x1) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0xa0) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit059(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0xa0) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0xa0, 0x2, 0x1) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0xa0) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit058(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0xa0) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0xa0, 0x1, 0x1) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0xa0) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+int fightTrainerAiWazaHit057(void* ctx, u32 slot, u32 param, u32 arg3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void*, u32, u32);
+#endif
+    extern u8 fightTrainerAiIsJoutaiKie(void*, u32);
+
+    if ((u8)fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(arg3), PC_PTR(0x10)) == 1) {
+        goto fail;
+    }
+    if ((u8)fightTrainerAiIsJoutaiKie(ctx, arg3) != 1) {
+        goto success;
+    }
+fail:
+    return 0;
+success:
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit054(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x20) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x20, 0x5, 0x41) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x20) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit053(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x20) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x20, 0x4, 0x41) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x20) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit052(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x20) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x20, 0x3, 0x41) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x20) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit051(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x20) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x20, 0x2, 0x41) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x20) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit050(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x20) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x20, 0x1, 0x41) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x20) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit049(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTargetGetPtrAsNowFightType(u32 type, u32 elem);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightSideIsJoutaiDataId(u32 a, u32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 elem, u32 type);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fn_80237F74(void* ctx, u32 elem, u32 type);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    u32 side = PC_PTR32_IMPLICIT(fightTargetGetPtrAsNowFightType(2, param3));
+    s32 gate;
+    u8 flag;
+
+    if (fn_80237F74(ctx, param3, 0x14) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x9)) == 1) {
+        return 0;
+    }
+    if (fn_80237F74(ctx, param3, 0x11) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x14) == 1) {
+        flag = 0;
+        goto flagCheckDone;
+    }
+    if (fn_80237F74(ctx, param3, 0x7) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0xf) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x48) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x29) == 1) goto allowedLabel;
+    if (fn_80237F74(ctx, param3, 0x28) == 1) goto allowedLabel;
+    fn_80237F74(ctx, param3, 0xc);
+allowedLabel:
+    flag = 1;
+flagCheckDone:
+    if (flag == 0) {
+        return 0;
+    }
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    if (fightSideIsJoutaiDataId(side, 0x4b) == 1) {
+        return 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit048(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+#ifdef TARGET_PC
+/* PC: r3 / r4 (the AI context and the Pokemon) passed through on the GameCube (verified from the assembly; port-gaps
+ * 39) */
+int fightTrainerAiWazaHit047(void* ctx, u32 param1, u32 param2, u32 param3)
+{
+  (void)param2;
+  (void)param3;
+  return (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0xf)) & 0xFF) != 1;
+}
+#else
+int fightTrainerAiWazaHit047(void)
+{
+    u32 r3;
+    u32 r4;
+    extern u32 fightTrainerAiIsPokemonJoutai();
+  return (fightTrainerAiIsPokemonJoutai(PC_PTR(r3), PC_PTR(r4), PC_PTR(0xf)) & 0xFF) != 1;
+}
+#endif
+
+u32 fightTrainerAiWazaHit046(void* ctx, u32 slot, u32 param) /* AI table signature (like fightTrainerAiWazaHit112): slot reaches the call below in r4 */
+
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTargetGetPtrAsNowFightType();
+#endif
+    extern u32 fightSideCheckWriteJoutaiDataId();
+  u32 uVar1;
+  u32 uVar2;
+
+  uVar1 = PC_PTR32_IMPLICIT(fightTargetGetPtrAsNowFightType(2, slot));
+  uVar2 = fightSideCheckWriteJoutaiDataId(uVar1,CONDITION_MIST);
+  uVar2 = __cntlzw(2 - (uVar2 & 0xff));
+  return uVar2 >> 5;
+}
+
+u32 fightTrainerAiWazaHit045(void* trainerCtx, u32 trainerSlot, u32 resultSlot, u32 resultType) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 _fightTrainerAiWazaHitCheck();
+#endif
+    s32 resultVal;
+    u32 statusVal;
+    statusVal = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(trainerCtx), resultSlot, trainerSlot);
+    resultVal = _fightTrainerAiWazaHitCheck(trainerCtx, PC_PTR(trainerSlot), resultSlot, PC_PTR(resultType), 0);
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(trainerCtx), resultType, statusVal, fightAiGetWazaIryoku(trainerCtx, resultSlot)) == 0x43) {
+        resultVal = 0;
+    }
+    if (resultVal == 0) {
+        return 0;
+    }
+    if (resultVal == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit044(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit043(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit042(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit041(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit040(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit039(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit038(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern u8 fightAiGetLevel(void* ctx, u32 elem);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 one);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fn_80237F74(void* ctx, u32 a, u32 type);
+#endif
+    s32 gate;
+    u8 a = fightAiGetLevel(ctx, param1);
+    u8 b = fightAiGetLevel(ctx, param3);
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0xFFFF);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (fn_80237F74(ctx, param3, 5) == 1) {
+        gate = 0;
+    }
+    if (a < b) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHit037(void* ctx, u32 param1, u32 param2) {
+#ifndef TARGET_PC /* PC: canonical declaration in pc/prototypes.h */
+    extern f32 lbl_8047E648;
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiGetHpPercent(void*, u32, s32, f32);
+#endif
+    extern u8 fightTrainerAiCheckSawagu(void*, u32);
+
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(8)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiCheckSawagu(ctx, param1) == 1) {
+        return 0;
+    }
+    return fightTrainerAiGetHpPercent(PC_PTR32_IMPLICIT(ctx), param1, 0, lbl_8047E648) != 1;
+}
+
+s32 fightTrainerAiWazaHit036(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+u32 fightTrainerAiWazaHit035(void* ctx, u32 slot, u32 param) /* AI table signature (like fightTrainerAiWazaHit112): slot reaches the call below in r4 */
+
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTargetGetPtrAsNowFightType();
+#endif
+    extern u32 fightSideCheckWriteJoutaiDataId();
+  u32 uVar1;
+  u32 uVar2;
+
+  uVar1 = PC_PTR32_IMPLICIT(fightTargetGetPtrAsNowFightType(2, slot));
+  uVar2 = fightSideCheckWriteJoutaiDataId(uVar1,CONDITION_LIGHT_SCREEN);
+  uVar2 = __cntlzw(2 - (uVar2 & 0xff));
+  return uVar2 >> 5;
+}
+
+s32 fightTrainerAiWazaHit034(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+u8 fightTrainerAiWazaHit033(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fn_80237F74(void*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiGetZokusei(void*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsJoutaiNormal(void*, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void*, u32, u32, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTargetGetPtrAsNowFightType(u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightSideIsJoutaiDataId(u32, u32);
+#endif
+    s32 r;
+    u8 flag;
+
+    if (fn_80237F74(ctx, param3, 0x11) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x3)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x4)) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsJoutaiNormal(ctx, param3) == 0) {
+        return 0;
+    }
+    if (fightTrainerAiGetZokusei(PC_PTR32_IMPLICIT(ctx), PC_PTR(param3), 0x3) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiGetZokusei(PC_PTR32_IMPLICIT(ctx), PC_PTR(param3), 0x8) == 1) {
+        return 0;
+    }
+
+    if (fn_80237F74(ctx, param3, 0x11) == 1) {
+        flag = 0;
+    } else {
+        if (fn_80237F74(ctx, param3, 0x14) != 1) {
+            if (fn_80237F74(ctx, param3, 0x7) != 1) {
+                if (fn_80237F74(ctx, param3, 0xf) != 1) {
+                    if (fn_80237F74(ctx, param3, 0x48) != 1) {
+                        if (fn_80237F74(ctx, param3, 0x29) != 1) {
+                            if (fn_80237F74(ctx, param3, 0x28) != 1) {
+                                fn_80237F74(ctx, param3, 0xc);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        flag = 1;
+    }
+    if (flag == 0) {
+        return 0;
+    }
+
+    r = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    if (fightSideIsJoutaiDataId(PC_PTR32_IMPLICIT(fightTargetGetPtrAsNowFightType(2, param3)), 0x4b) == 1) {
+        return 0;
+    }
+    if (r == 0) {
+        return 0;
+    }
+    if (r == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHit032(void* ctx, u32 slot, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical declaration in pc/prototypes.h */
+    extern const f32 lbl_8047E648;
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiGetHpPercent(void*, u32, s32, f32);
+#endif
+
+    return fightTrainerAiGetHpPercent(PC_PTR32_IMPLICIT(ctx), slot, 0, lbl_8047E648) != 1;
+}
+
+s32 fightTrainerAiWazaHit031(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+u32 fightTrainerAiWazaHit030(void* ctx, u32 slot, u32 param)
+
+{
+    extern int fightTrainerAiCheckTextureZokusei();
+  u8 cVar1;
+
+  cVar1 = fightTrainerAiCheckTextureZokusei(ctx, slot, param); /* the table's arguments, handed on untouched in r3-r5 (assembly: no register written before the call) */
+  return cVar1 != 0;
+}
+
+s32 fightTrainerAiWazaHit029(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit028(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightFloorGetFightOutPokemonPtrToFightTrainerPtr(u32 zero, u32 param3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fn_80237F74(void* ctx, u32 a, u32 type);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 a, u32 type);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    extern u16 fightTrainerGetIrekaeFightPokemonAry(u32 v, void* buf);
+#ifdef TARGET_PC
+    void* buf[6]; /* PC: the callee writes six native pointers (48 bytes); 0x14 overran the frame */
+#else
+    u8 buf[0x14];
+#endif
+    u32 prev = PC_PTR32_IMPLICIT(fightFloorGetFightOutPokemonPtrToFightTrainerPtr(0, param3));
+    s32 gate;
+
+    if (fn_80237F74(ctx, param3, 0x15) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x25)) == 1) {
+        return 0;
+    }
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    if (fightTrainerGetIrekaeFightPokemonAry(prev, buf) == 0) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit027(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit026(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+u32 fightTrainerAiWazaHit025(void) { return 1; }
+
+s32 fightTrainerAiWazaHit024(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x90) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x90, 0x7, 0x1) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x90) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit023(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x90) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x90, 0x6, 0x1) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x90) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit020(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x90) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x90, 0x3, 0x1) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x90) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit019(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x90) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x90, 0x2, 0x1) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x90) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit018(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x90) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x90, 0x1, 0x1) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x90) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit017(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit016(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x10) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x10, 0x7, 0x41) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x10) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit013(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x10) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x10, 0x4, 0x41) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x10) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit011(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x10) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x10, 0x2, 0x41) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x10) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit010(void* ctx, u32 param1, u32 param2, u32 param3) {
+    extern s8 fightSeqCondChgActParaIdToValue(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiCheckAbiCnt(void* ctx, u32 param1, u32 param3, u32 param2, u32 a, u32 b, u32 c);
+#endif
+    s32 gate;
+
+    if (fightSeqCondChgActParaIdToValue(0x10) < 0) {
+        if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+            return 0;
+        }
+        gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    }
+    if (fightTrainerAiCheckAbiCnt(ctx, param1, param3, param2, 0x10, 0x1, 0x41) == 0) {
+        return 0;
+    }
+    if (fightSeqCondChgActParaIdToValue(0x10) < 0) {
+        if (gate == 0) {
+            return 0;
+        }
+        if (gate == -1) {
+            return 1;
+        }
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHit009(void* ctx, u32 slot, u32 param)
+
+{
+    extern u16 fightTrainerAiCheckOumu();
+  u16 sVar1;
+
+  sVar1 = fightTrainerAiCheckOumu(ctx, slot, param); /* the table's arguments, handed on untouched in r3-r5 (assembly: no register written before the call) */
+  return sVar1 != 0;
+}
+
+s32 fightTrainerAiWazaHit008(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 param3, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    s32 gate;
+
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) {
+        return 0;
+    }
+    if (!fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x8))) {
+        return 0;
+    }
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        return 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit007(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightFloorGetFightTrainerFightPokemonPtrAry(u32 zero, void* ctx, void* buf, u32 one1, u32 one2);
+#endif
+    extern u8 fn_8022967C(u32 param2);
+    extern u8 fightTrainerAiCheckSimerike(void* ctx);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    u8 buf[0x60];
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    u32 flinchCount = fightFloorGetFightTrainerFightPokemonPtrAry(0, PC_PTR32_IMPLICIT(ctx), buf, 1, 1);
+    s32 gate;
+
+    if (fn_8022967C(param2) == 1 && (u16)flinchCount <= 1) {
+        return 0;
+    }
+    if (fightTrainerAiCheckSimerike(ctx) == 1) {
+        return 0;
+    }
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        return 0;
+    }
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit006(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit005(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit004(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit003(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+s32 fightTrainerAiWazaHit002(void* ctx, u32 param1, u32 param2, u32 param3) {
+    s32 gate = wazaHitGateCheck(ctx, param1, param2, param3);
+    s32 result;
+
+    if (gate == 0) {
+        result = 0;
+    } else if (gate == -1) {
+        result = 1;
+    } else {
+        result = 1;
+    }
+    return result;
+}
+
+u32 fightTrainerAiWazaHit001(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void* ctx, u32 a, u32 type);
+#endif
+    extern u8 fightTrainerAiCheckSawagu(void* ctx, u32 a);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsJoutaiNormal(void* ctx, u32 a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fn_80237F74(void* ctx, u32 a, u32 type);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 p1, u32 p2, u32 p3, u32 z);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTargetGetPtrAsNowFightType(s32 a, u32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightSideIsJoutaiDataId(u32 a, u32 b);
+#endif
+    s32 result;
+    u8 ok;
+
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x14)) == 1) return 0;
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x8)) == 1) return 0;
+    if (fightTrainerAiCheckSawagu(ctx, param3) == 1) return 0;
+    if (fightTrainerAiIsJoutaiNormal(ctx, param3) == 0) return 0;
+    if (fn_80237F74(ctx, param3, 0x11) == 1) goto ok1;
+    if (fn_80237F74(ctx, param3, 0x14) == 1) goto ok1;
+    if (fn_80237F74(ctx, param3, 0x7) == 1) goto ok1;
+    if (fn_80237F74(ctx, param3, 0xf) == 1 || fn_80237F74(ctx, param3, 0x48) == 1) {
+        ok = 0;
+        goto check;
+    }
+    if (fn_80237F74(ctx, param3, 0x29) == 1) goto ok1;
+    if (fn_80237F74(ctx, param3, 0x28) == 1) goto ok1;
+    fn_80237F74(ctx, param3, 0xc);
+ok1:
+    ok = 1;
+check:;
+    if (ok == 0) return 0;
+    result = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+    if (fightSideIsJoutaiDataId(PC_PTR32_IMPLICIT(fightTargetGetPtrAsNowFightType(2, param3)), 0x4b) == 1) return 0;
+    if (result == 0) return 0;
+    if (result == -1) return 1;
+    return 1;
+}
+
+s32 fightTrainerAiWazaHit000(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerAiGetWazaTenkouValue(void* ctx, u32 param2, u32 param1);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightAiGetWazaIryoku(void* ctx, u32 param2);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetAisyou(void* ctx, u32 param3, u32 v1, u32 v3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 _fightTrainerAiWazaHitCheck(void* ctx, u32 param1, u32 param2, u32 param3, u32 zero);
+#endif
+    s32 gate;
+    u32 v1 = fightTrainerAiGetWazaTenkouValue(PC_PTR32_IMPLICIT(ctx), param2, param1);
+    gate = _fightTrainerAiWazaHitCheck(ctx, PC_PTR(param1), param2, PC_PTR(param3), 0);
+
+    if (fightTrainerAiGetAisyou(PC_PTR32_IMPLICIT(ctx), param3, v1, fightAiGetWazaIryoku(ctx, param2)) == 0x43) {
+        gate = 0;
+    }
+    if (gate == 0) {
+        return 0;
+    }
+    if (gate == -1) {
+        return 1;
+    }
+    return 1;
+}
+
+u32 fightTrainerAiWazaHitNull(void) { return 1; }

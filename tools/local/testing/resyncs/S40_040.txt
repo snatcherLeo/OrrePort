@@ -1,0 +1,32 @@
+# Sitting 40 (040_20261024_0332, FREE: the purification runs): logged resyncs for the second pass (2026-10-31;
+# match ledger, sitting 40 rows).
+# Settings: P14's (resyncs/P14_024.txt) with --replay 3 (a probe replay with the input probe; replay_2 lacked it) and
+# no battles (no seeds), plus (2026-10-31 afternoon) --windows-rooms 0x38F,0x385 --window-lag-rooms 0x385:1: the
+# purification room's windows anchored, their presses one frame later. Why: the console's window probe marks a window
+# "ready" on its first typing frame, the PC's anchor fires one frame before its first typing frame, so presses timed
+# from those openings landed one frame early against the text (the first purification message's first press came on
+# the last frame of page 1's typing and was ignored; every later press was then a page behind). With it (p2_S40g, no
+# hand edits): room entries 1-115 as on the console (was 63 with item 1 below).
+#
+# 1. *Superseded by the settings above* (2026-10-31, 4 AM): a hand edit of p2_S40c's pad (line 3539, "+6:A" before
+#    "+0:!cursor 0x40:0:0" became "+11:A") for the first purification message; with it p2_S40f reached entry 63.
+#
+# 2. (2026-10-31 afternoon) Room 0x27 after the 113th entry's purification (back in the field from the chamber, not a
+#    fresh entry): the console's Wes appears at (-2.03, 11.71), walks a short loop to (-9.87, 6.47) and presses A at
+#    the PC terminal (room 0x38F); the PC's appears 0.45 units off at (-2.48, 11.52), takes a wider loop and stops at
+#    (-7.62, 11.15), so the A opens nothing. Wes placed on the console's stop after the last stick step (PC 121,143),
+#    two frames later, before the A at 121,151. Apply with --log <p2_S40g>/run.log.
+#   @121145 npc 0 -9.8700 0 6.4700  # console room 0x27 after the chamber, Wes at the PC terminal before the A
+#    *Superseded the same evening* (the line above is a comment now, so pad_resync.py skips it) by the settings below (with them no placement is needed there).
+#
+# Settings from 2026-10-31 evening (p2_S40l: room entries 1-144 of 145 with no placements and no hand edits):
+#   --windows-rooms 0x38F,0x385 --fadein-return-rooms 0x385 --window-lag-ids 0x40:1,0x41:1 (instead of
+#   --window-lag-rooms 0x385:1). --fadein-return-rooms anchors Wes's reappearance and the field's fade-in after each
+#   purification chamber visit (with !frameat, and the console's idle stick tilts before the reappearance dropped):
+#   the chamber's field reload runs ~11 frames shorter on the PC, so the walks to the PC terminal were timed late.
+#
+# 3. (the same evening) Room 0x2A, the very end: back from the world map, both Wes reappear at (27.31, -23.62) and
+#    walk to the PC box; the PC's A comes while its Wes is still sliding and he settles at (25.26, -26.41) against the
+#    console's (25.50, -26.28), so the box (room 0x391, the final save) never opens. Wes placed on the console's stop
+#    one frame before the A (PC 163,884 in p2_S40l). Apply with --log <p2_S40l>/run.log on p2_S40l's pad.
+@163883 npc 0 25.5000 0 -26.2800  # console room 0x2A at the end, Wes stopped at the PC box before the A

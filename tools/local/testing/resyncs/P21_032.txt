@@ -1,0 +1,30 @@
+# P21 (sitting 032_20261023_0218): logged resyncs for the second pass (2026-10-30; match ledger, P21 rows).
+# Settings: P14's (resyncs/P14_024.txt) + ORRE_ROLL_SEEDS for its one battle (capture replay_2, checked).
+#
+# 1. (2026-10-30) Room 0x2F (The Under's square, M4_out) third visit: a wanderer (people slot 9, room character 7)
+#    stands beside Wes when the console's Wes slows; its walks made to follow the console's (Dolphin's npc capture
+#    replay_3, PLAYREC_NPC=0x2F,-1,1500,3; npc_resync_spec.py replay_3/npc.csv 0x2F:3 --shift -36 --absolute 10790
+#    --slots 9 --to 700; shift from Wes's x = -73.4 at console visit frame 380 and PC visit frame ~344 in p2_P21a).
+#    Apply with --log <p2_P21a>/run.log. With it (p2_P21b) Wes slows where the console's does.
+@10861 npc 9 -28.75063 0 -76.14866 -16.11562 0 -83.68068 0 2.108361 4 2  # capture frame 107, walks
+@10910 npc 9 -16.11562 0 -83.68068 -16.11562 0 -83.68068 5.518372 2.108361 4 0  # capture frame 156, stops
+@11244 npc 9 -16.69582 0 -83.65778 -42.4497 0 -82.6412 0 -1.531344 4 2  # capture frame 490, walks
+@11338 npc 9 -42.45527 0 -82.69608 -42.4497 0 -82.6412 4.157349 -1.531344 4 0  # capture frame 584, stops
+#
+# 2. (the same evening) Wes placed on the console's walk just before the square's walk-through trigger near
+#    (-47, -102) (the console's window type 3 at visit +646 opens with no press when Wes crosses it, then the menu
+#    room; P22 meets the same trigger). The PC's Wes stopped 8 units short ((-48.0, -93.6) against (-47.4, -101.6))
+#    and never crossed it. Values from replay_3/npc.csv (slot 0, capture frame 672). Apply with --log <p2_P21b>/run.log.
+@11426 npc 0 -48.286 0 -98.665  # console 0x2F visit 3 +672
+#    With it (p2_P21d / p2_P21e): Wes crosses the trigger; the panel is The Under's UFO lift (P22 meets it too), and
+#    after its window the PC's Wes starts ~33 frames sooner (port-gaps 41) and misses the lift's line.
+#
+# 3. (the same night) Wes placed on the console's line just before the lift ramp (capture replay_3, slot 0 at visit
+#    frame 1352; PC frame = 12036 + (1352 - 1249) - 33: the panel's window closes at console visit +1249 and PC frame
+#    12036, and the PC's Wes starts 33 frames sooner). Apply with --log <p2_P21e>/run.log on p2_P21d's pad. With it
+#    (p2_P21f): all 45 room entries and the battle as on the console, story flags the same at every entry and on the
+#    end save.
+@12106 npc 0 -25.1246 0.1229 -90.2110  # console 0x2F visit 3 +1352, on the way onto the ramp
+#    *Corrected 2026-10-30 (late):* the "33 frames sooner" was a misreading (port-gaps 41, closed): both Wes start 8
+#    frames after the close on the same path; the console's then bumps the wanderer (slot 9) and the PC's (wanderer
+#    elsewhere) doesn't. The placement still holds (p2_P21f verified); its frame came from the console's line.

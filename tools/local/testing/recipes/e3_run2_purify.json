@@ -1,0 +1,4 @@
+{
+ "_what": "E3 (snatcherLeo, 2026-10-24): empty the heart gauge of every Shadow Pokemon in the PC boxes Shadow1 and Shadow2, so all of them can be purified at the Relic Stone. Run 2, on P28's save.",
+ "zero_shadow_gauge": {"boxes": ["Shadow1", "Shadow2"]}
+}

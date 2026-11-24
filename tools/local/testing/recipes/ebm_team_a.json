@@ -1,0 +1,13 @@
+{
+  "_what": "Battle-mode team A (E-BM, for the Lv 50 rule: BM1-BM3; playthrough-guide.md Appendix D 'Every Battle Mode menu option once'). Applied to a COPY of a story save on the separate battle-mode card, never snatcherLeo's story card. Six Pokemon at Lv 50, every held item different (the registration rules, verified by D), all moves from each species' level-up or TM/HM lists on the disc. Themes: weather on entry and the weather fight (Kyogre's Drizzle vs Groudon's Drought), Intimidate on entry, two-turn moves (Fly, Dig, Solar Beam), multi-turn Thrash, a recharge move (Hyper Beam), Spikes, status over turns (Toxic, Leech Seed, Sleep Powder), moves that hit both foes or everyone (Surf, Earthquake), multi-hit Bullet Seed, and held items with no story source (Sitrus, Lum, Starf, Persim berries, Choice Band, Shell Bell). Kyogre and Groudon at Lv 50: caught at Lv 45 in the GBA games, so legal (likely).",
+  "template_slot": 0,
+  "clear_party": true,
+  "add_pokemon": [
+    {"species": 404, "level": 50, "nature": 15, "ivs": 31, "moves": [57, 58, 87, 347], "item": 142, "_note": "Kyogre (Drizzle), Modest: Surf, Ice Beam, Thunder (sure-hit in rain), Calm Mind; Sitrus Berry"},
+    {"species": 405, "level": 50, "nature": 3, "ivs": 31, "moves": [89, 76, 126, 91], "item": 141, "_note": "Groudon (Drought), Adamant: Earthquake, Solar Beam (one turn in sun), Fire Blast, Dig (two-turn); Lum Berry"},
+    {"species": 130, "level": 50, "nature": 3, "ivs": 31, "moves": [37, 349, 89, 63], "item": 186, "_note": "Gyarados (Intimidate), Adamant: Thrash (multi-turn), Dragon Dance (Lv 50), Earthquake (hits the partner too), Hyper Beam (recharge); Choice Band"},
+    {"species": 227, "level": 50, "nature": 3, "ivs": 31, "moves": [191, 19, 92, 182], "item": 219, "_note": "Skarmory (Keen Eye), Adamant: Spikes (Lv 42), Fly (two-turn, HM02), Toxic, Protect; Shell Bell"},
+    {"species": 3, "level": 50, "nature": 15, "ivs": 31, "moves": [76, 73, 79, 202], "item": 174, "_note": "Venusaur (Overgrow), Modest: Solar Beam (two-turn without sun), Leech Seed, Sleep Powder, Giga Drain; Starf Berry"},
+    {"species": 297, "level": 50, "nature": 15, "ivs": 31, "moves": [240, 331, 58, 182], "item": 140, "_note": "Ludicolo (Swift Swim), Modest: Rain Dance, Bullet Seed (multi-hit), Ice Beam, Protect; Persim Berry"}
+  ]
+}

@@ -1,0 +1,32 @@
+# Save block byte ranges never swapped by savepc.py (hand-kept, each with its evidence; offsets and sizes only, no game
+# data). Text: the PC keeps names in GameCube byte order (u8 arrays; HeroSaveData.name is u8[0x2C], PokemonBios names
+# are byte arrays: likely, from the headers), while the save trace marks them 2-byte because a new game clears them two
+# bytes at a time. Swapping them showed the player name as boxes on the continue screen (verified 2026-10-18).
+#   OFFSET SIZE                                   one range
+#   records BASE STRIDE COUNT OFF:SIZE ...        the same ranges in COUNT records of STRIDE bytes from BASE
+
+# the save's attestation stamp (block +0x0): four bytes, version / generation / area / language id, written one byte
+# each (gamedataAttestBiosSet*, gamedata.c); its one 4-byte access is a whole-stamp copy, which keeps the byte order.
+# Swapped as a word it reached the card reversed (USA 0B 03 02 02 as 02 02 03 0B; verified on P01's end save,
+# 2026-10-27), so a GameCube would read version 2, area 3
+0x0 0x4
+# player name (HeroSaveData +0x00, save block +0x70)
+0x70 0x2C
+# HeroSaveData +0xAC4 / +0xAC6 (block +0xB34 / +0xB36, after the money): read as 2 bytes, but the PC's own save block
+# keeps them in GameCube order (likely read through the byte-order macros; verified against a PC checkpoint,
+# 2026-10-18: pc 00 2F where a PC-ordered field would read 2F 00)
+0xB34 2
+0xB36 2
+
+# Pokemon records (PokemonBios, 0x138-byte slots): OT name +0x18, nickname +0x2E, original nickname +0x44
+# (saveedit.py's record map). Party: 6 slots at +0xA0.
+records 0xA0 0x138 6 0x18:0x16 0x2E:0x16 0x44:0x18
+# PC boxes: 3 boxes of 0x24A4 bytes at +0xB88, each a 0x14-byte header (the box name, UTF-16) and 30 slots
+records 0xB88 0x24A4 3 0x0:0x14
+records 0xB9C 0x138 30 0x18:0x16 0x2E:0x16 0x44:0x18
+records 0x3040 0x138 30 0x18:0x16 0x2E:0x16 0x44:0x18
+records 0x54E4 0x138 30 0x18:0x16 0x2E:0x16 0x44:0x18
+# daycare: one record at +0x8170, after the section's 8-byte header (*corrected 2026-10-29:* first guessed at
+# +0x8168, the section's start; sodateyaGetPokemonPtr returns the section + 8 (field_exact_801ED218.c), and the
+# guessed range covered the record's u32 at +0x14, which then stayed in the PC's byte order on P11's end save)
+records 0x8170 0x138 1 0x18:0x16 0x2E:0x16 0x44:0x18

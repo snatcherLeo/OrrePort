@@ -1,0 +1,995 @@
+/* The hub, after the project's mockup 01 and the plan's "The hub": Graphite dark, Colosseum's own colours on its disc and the
+ * selected save (#E8955A, row #2B2119 / #7A5434). Laid out for 1600 x 960 dp; pc_hub.cpp scales it to the window.
+ * The disc's motion (plan, "The disc's motion"): sway C at rest (a ±1.2° tilt on 5 s cycles and a 3 px float on
+ * 6.5 s cycles, the float on the outer box, the tilt on the disc); Play: Lift and spin (lift 6 px, 2 turns from
+ * 0.15 s speeding up, the label fading from 0.25 s, black from 0.6 s, 1 s in all). The trail copies and the smear
+ * layer of style 04 come later; RmlUi's tweens stand in for the mockup's cubic-bezier curves. */
+
+/* *Changed 2026-11-16 (the Noto wiring):* the symbols (▶ › ▾ ▴ ↗ ⚑ ⧉ ...) are drawn in "Noto Sans Symbols 2", shipped in
+ * Fonts/ on every OS, where they were "Noto Sans Symbols 2", the player's own Windows font (so Linux and macOS drew none).
+ * A symbol it lacks comes from the rest of the shipped Noto chain (pc_settings_overlay.cpp pc_ui_load_fonts). */
+body { width: 100%; height: 100%; font-family: "Inter"; font-size: 16dp; background-color: #111413; color: #E9EDEA; }
+
+#top { position: absolute; left: 0; top: 0; width: 100%; height: 88dp; border-bottom-width: 1dp;
+       border-color: #1F2421; }
+/* the brand wordmark (docs/design/brand/orreport-wordmark-rust.svg, 860 x 173), snatcherLeo 2026-11-09: "OrrePort to be
+ * spelled that way. Not in all caps. Should we also use our brand logo" */
+#wordmark { position: absolute; left: 52dp; top: 16dp; width: 278dp; height: 56dp; } /* 40 -> 52 (snatcherLeo, 2026-11-11:
+                                       "could we move it just a little to the right"; it looked cut off at the corner) */
+/* *Changed 2026-11-16 (snatcherLeo's polish list, mockup item 4):* the gear symbol 37 dp (was 24 dp), so it fills about 60% of
+ * its 52 dp tile (measured: 31 dp tall). The line box is taller than the tile (61.5 dp): in "Noto Sans Symbols 2" the
+ * gear sits high in its line (the mockup's 44.5 dp was for the browser's other symbol font, and put it 8.5 dp high
+ * here), and each dp of line height moves the glyph down half a dp, so 61.5 dp centres it (measured in a picture of
+ * the build). The same values in settings.rcss #hubgear */
+#gear { position: absolute; right: 40dp; top: 18dp; width: 52dp; height: 52dp; line-height: 61.5dp; text-align: center;
+        border-radius: 12dp; background-color: #1B1F1D; font-family: "Noto Sans Symbols 2"; font-size: 37dp;
+        color: #B4BCB7; }
+
+/* the update note beside the gear (2026-11-23, step 4.4; Studio's mockup in the hub's look): a small pill left of the
+ * gear, only when there is something to say (body.upd) */
+#updnote { display: none; position: absolute; right: 108dp; top: 27dp; height: 34dp; line-height: 34dp;
+           padding: 0dp 14dp; border-radius: 17dp; border-width: 1dp; font-size: 15dp; cursor: pointer;
+           background-color: #1B1F1D; border-color: #3A423E; color: #C9DCC4; }
+body.upd #updnote { display: block; }
+#updnote:hover { border-color: #C9DCC4; }
+#updnote.ready { color: #13200F; background-color: #8FA98A; border-color: #8FA98A; }
+body.light #updnote { background-color: #FFFFFF; border-color: #B8C2B6; color: #3F5A3A; }
+body.light #updnote.ready { background-color: #5D7A57; border-color: #5D7A57; color: #FFFFFF; }
+/* the update panel: Report a problem's box */
+#upddim { display: none; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 150); }
+#updpanel { display: none; position: absolute; left: 50%; top: 50%; width: 616dp; margin-left: -308dp; margin-top: -230dp;
+            padding: 26dp 30dp 24dp 30dp; border-radius: 16dp; border-width: 1dp;
+            background-color: rgba(22, 26, 24, 245); border-color: #2C322F; color: #E9EDEA; }
+body.updating #updpanel, body.updating #upddim { display: block; }
+#uh { display: block; font-family: "Saira"; font-size: 24dp; font-weight: bold; }
+#unotes { display: block; margin-top: 14dp; padding: 14dp 16dp; border-radius: 10dp; border-width: 1dp; font-size: 15dp;
+          max-height: 220dp; overflow-y: auto; background-color: #1B1F1D; border-color: #2C322F; }
+#uinfo { display: block; margin-top: 12dp; font-size: 14dp; color: #8A938E; }
+#uwarn { display: block; margin-top: 8dp; font-size: 14dp; color: #E0B45C; }
+#ufoot { display: block; margin-top: 20dp; text-align: right; height: 52dp; }
+#ulater { background-color: #232826; border-color: #3A423E; color: #E9EDEA; }
+#ulater:hover { border-color: #C9DCC4; background-color: #2B312E; }
+#ugo { background-color: #8FA98A; border-color: #8FA98A; color: #13200F; }
+#ugo.off { background-color: #3A423E; border-color: #3A423E; color: #8A938E; }
+body.light #updpanel { background-color: rgba(242, 244, 241, 245); border-color: #D5DCD4; color: #18201B; }
+body.light #unotes { background-color: #FFFFFF; border-color: #D5DCD4; }
+body.light #uinfo { color: #66726B; }
+body.light #uwarn { color: #9A6E1E; }
+body.light #ulater { background-color: #F0F3EF; border-color: #B8C2B6; color: #18201B; }
+body.light #ugo { background-color: #5D7A57; border-color: #5D7A57; color: #FFFFFF; }
+
+/* the content block (snatcherLeo, 2026-11-11, option 2: "Let's go with 2"): the layout's own 1600 x 960 dp, centred; on a
+ * window wider or taller than that (pc_hub.cpp fit() stops the hub growing at 80% of the display scaling) the extra
+ * room goes round the block, while #top and #bottom keep reaching the window's edges. #left and #right are placed in
+ * it as before (the 88 / 80 dp bands at its top and bottom line up with the bars when the block fills the window). */
+#block { position: absolute; left: 50%; top: 50%; width: 1600dp; height: 960dp; margin-left: -800dp;
+         margin-top: -480dp; }
+/* *Updated 2026-11-13 (mockup 62, snatcherLeo: "Yes, let's build it"):* the two columns as the mockup's (its 1280 x 768 window
+ * content is this layout's 1600 x 960 at 1.25; positions measured from the mockup's render), with the whole block
+ * 30 mockup px (38 dp) above centre (snatcherLeo: "This spacing is excellent"). Being dp in the scaled block, the lift is a
+ * share of the window's height at every size, as planned. */
+#left { position: absolute; left: 0; top: 88dp; width: 742dp; bottom: 80dp; }
+#discslot { position: absolute; left: 50%; top: 50%; width: 560dp; height: 600dp; margin-left: -280dp;
+            margin-top: -348dp; }
+#discfloat { position: absolute; left: 10dp; top: 0dp; width: 540dp; height: 540dp;
+             animation: 3.25s sine-in-out infinite alternate float; }
+#disc { position: absolute; left: 0; top: 0; width: 540dp; height: 540dp;
+        animation: 2.5s sine-in-out infinite alternate tilt; }
+@keyframes float { from { transform: translateY(0dp); } to { transform: translateY(-3dp); } }
+@keyframes tilt { from { transform: rotate(-1.2deg); } to { transform: rotate(1.2deg); } }
+
+#disclift, #spin { position: absolute; left: 0; top: 0; width: 540dp; height: 540dp; }
+/* the disc pictures carry a transparent margin of 1/32 of their size each side (pc_hub.cpp add_margin: the rim no
+ * longer touches the picture's edge, which flickered at the top as the disc swayed), so their boxes are 17/16 of the
+ * 540 dp disc (573.75 dp) and start 16.875 dp up and left: the disc itself shows at the same size and place */
+#blank, #label, #smear, .ghost, #empty { position: absolute; left: -16.875dp; top: -16.875dp; width: 573.75dp;
+                                         height: 573.75dp; }
+/* *added 2026-11-21 (snatcherLeo: with no disc added, "the disc just have its top be gray. Or, some other shade, doesn't
+ * matter (so it looks fine in dark and light mode)", then one shade for both themes):* the empty disc (pc_hub.cpp: the
+ * blank disc with its top in one neutral grey, the centre ring and hole over it as on the ready disc) replaces the
+ * blank one until a disc is added; once the disc is recognised it fades out as the label fades in */
+#empty { opacity: 0; transition: opacity 0.6s cubic-out; }
+body.nodisc #empty { opacity: 1; }
+body.nodisc #blank { opacity: 0; }
+.ghost, #smear { opacity: 0; }
+/* recognised: the printing fades in over the blank disc (snatcherLeo: "a blank disc, until the ISO is recognized, and then,
+ * it'll show that design i liked") */
+#label { opacity: 1; transition: opacity 0.6s cubic-out; }
+body.nodisc #label { opacity: 0; }
+
+/* no disc yet: the add-your-disc panel instead of the saves and PLAY. *Updated 2026-11-13 (text keys):* both panels
+ * follow the title in the column's flow (#right), so a title that wraps in another language moves them down instead of
+ * running into them. The panel's own pieces keep their places inside it (tops from the panel's top). */
+#ready { display: block; position: relative; margin-top: 46dp; }
+#adddisc { position: relative; margin-top: 26dp; height: 360dp; }
+#adddisc, #hintbrowse { display: none; }
+body.nodisc #ready, body.nodisc #hintplay { display: none; }
+body.nodisc #adddisc { display: block; }
+body.nodisc #hintbrowse { display: inline; }
+#addhead { position: absolute; top: 0dp; font-size: 17dp; letter-spacing: 2dp; color: #B4BCB7; }
+#dropbox { position: absolute; top: 32dp; width: 100%; height: 94dp; padding: 12dp 26dp; box-sizing: border-box;
+           border-radius: 12dp; border-width: 2dp; border-color: #3A423E; background-color: #161A18; }
+/* RmlUi has no default styles: a div is a block only when the sheet says so */
+#droptitle, #dropsub, #dropsub2 { display: block; }
+#droptitle { font-size: 21dp; font-weight: bold; }
+#dropsub, #dropsub2 { font-size: 15dp; color: #8A938E; margin-top: 3dp; }
+#b-browse { position: absolute; top: 136dp; width: 100%; height: 120dp; line-height: 120dp; padding: 0dp 50dp;
+            box-sizing: border-box; border-radius: 16dp; border-width: 4dp; border-color: #E9EDEA;
+            background-color: #A9C3A3; color: #13200F; font-family: "Saira"; font-size: 36dp; font-weight: bold;
+            letter-spacing: 3dp; cursor: pointer; }
+#b-browse .ab { position: absolute; right: 44dp; top: 42dp; }
+body.copying #b-browse { background-color: #3A423E; color: #8A938E; border-color: #3A423E; }
+#addbuttons { position: absolute; top: 282dp; width: 100%; display: flex; }
+/* the disc checked out: Copy (the default) or Move into OrrePort, or Cancel (body.offer) */
+#b-copy, #offerbuttons { display: none; }
+body.offer #b-browse, body.offer #addbuttons { display: none; }
+body.offer #b-copy { display: block; }
+body.offer #offerbuttons { display: flex; }
+#b-copy { position: absolute; top: 136dp; width: 100%; height: 120dp; line-height: 120dp; padding: 0dp 50dp;
+          box-sizing: border-box; border-radius: 16dp; border-width: 4dp; border-color: #E9EDEA;
+          background-color: #A9C3A3; color: #13200F; font-family: "Saira"; font-size: 36dp; font-weight: bold;
+          letter-spacing: 3dp; }
+#b-copy .ab { position: absolute; right: 44dp; top: 42dp; }
+#offerbuttons { position: absolute; top: 282dp; width: 100%; }
+#b-cancel { margin-right: 0dp; }
+.xb { display: inline-block; width: 30dp; height: 30dp; line-height: 30dp; border-radius: 15dp; margin: 0dp 6dp;
+      text-align: center; color: #FFFFFF; font-size: 15dp; font-weight: bold; background-color: #3F6496; }
+/* the disc can be turned by hand for fun until Play: drag to turn it, flick it to spin it fast; it slows down and
+ * settles back upright (pc_hub.cpp turns this box; snatcherLeo, 2026-11-09: "dragging the disc just rotates it, and you can
+ * make it a fast spin, but it will always go back to its default position") */
+#discdrag { position: absolute; left: 0; top: 0; width: 560dp; height: 540dp; }
+#disc { cursor: pointer; }
+/* *added 2026-11-21 (snatcherLeo: with no disc added, "We just show a picture and that's it"; "no pencil icon when you hover
+ * mouse on disc (that's empty)"):* the placeholder disc is a still picture: the arrow cursor, no pencil (pc_hub.cpp also
+ * ignores a drag on it, and the label page never opens without a disc). A disc added: as above */
+body.nodisc #disc { cursor: default; }
+body.nodisc #b-label { display: none; }
+#b-report2 { margin-right: 0dp; }
+
+#discs { position: absolute; left: 0; top: 621dp; width: 100%; text-align: center; }
+.chip { display: inline-block; height: 44dp; line-height: 44dp; padding: 0dp 20dp; margin: 0dp 6dp;
+        border-radius: 22dp; border-width: 1dp; font-size: 18dp; font-weight: bold; }
+.chip.on { background-color: #2B2119; border-color: #7A5434; color: #E9EDEA; }
+.chip.add { border-color: #3A423E; color: #8A938E; }
+.soontag { margin-left: 8dp; font-size: 11dp; letter-spacing: 1dp; color: #6E7772; }
+#b-xd { cursor: pointer; }
+#b-xd:hover { border-color: #C9DCC4; }
+/* lifted a little: "middle" sets it at the lowercase letters' middle, which reads low beside capitals (the game chip's
+ * "Pokémon Colosseum", the status line's capitals; snatcherLeo, 2026-11-13: "can we make this circle more... centered?") */
+.dot { display: inline-block; width: 10dp; height: 10dp; border-radius: 5dp; background-color: #E8955A;
+       vertical-align: middle; margin-right: 6dp; position: relative; top: -2dp; }
+
+/* the right-hand column (mockup 62): DISC READY, the title, NTSC-U · GC6E01, PLAY, the current save's card, the links.
+ * *Updated 2026-11-13 (text keys; snatcherLeo: translators on Discord):* one flow from the top down instead of fixed tops, at
+ * the same places for English (status at 119 dp, title 146, sub 236, PLAY 304, card 423, links 560). A line that
+ * wraps in a longer language (German runs about 30% longer) pushes what follows down instead of running into it;
+ * the test language "pseudo" (pc_text.h) checks it. */
+#right { position: absolute; left: 728dp; top: 88dp; width: 802dp; bottom: 80dp; padding-top: 119dp;
+         box-sizing: border-box; }
+#status { display: block; line-height: 18dp; font-size: 15dp; font-weight: bold; letter-spacing: 4dp; color: #E8955A; }
+#status .dot { width: 9dp; height: 9dp; top: -1dp; }
+#title { display: block; margin-top: 9dp; line-height: 80dp; font-family: "Saira"; font-size: 71dp; font-weight: bold; }
+#sub { display: block; margin-top: 10dp; line-height: 22dp; font-size: 18dp; color: #8A938E; }
+
+/* PLAY: a 2.5 dp ring (#playring) round a 3.8 dp gap of the page's own colour (#play's border), as the mockup draws it.
+ * Both sit over the top of #ready (they take no room; the card below keeps its distance with its margin) */
+/* *Changed 2026-11-15 (snatcherLeo: "the highlight around "PLAY" should be smooth, not choppy"):* the ring was a rounded
+ * border, which RmlUi draws without smoothing; now a picture (pc_hub.cpp update_rings: the decorator image is set to the
+ * box's exact pixel size), shown while PLAY has the controller's place. #curring: the same round the save card,
+ * 3.8 dp + 2.5 dp outside it as PLAY's */
+#playring { position: absolute; top: 0dp; left: 0; width: 100%; height: 101dp; visibility: hidden; }
+#curring { position: absolute; top: -6.3dp; left: -6.3dp; right: -6.3dp; bottom: -6.3dp; visibility: hidden;
+           pointer-events: none; }
+#playring.on, #curring.on { visibility: visible; }
+/* *Changed 2026-11-15 (snatcherLeo: "is there any jaggedness here? Get rid of, in case"):* the save card, Change save..., the
+ * A / Y pills and the card's format tags are drawn as smooth pictures by pc_hub.cpp (update_boxes, in the colours that
+ * were here); their own backgrounds and borders are see-through (the borders' widths still set the layout). The
+ * rules are by id so the same classes elsewhere (the Saves page's tags, the hint bar) keep theirs */
+#cur, #b-change, #playa, #cury, #curtag-gci, #curtag-orre, #curtag-acc, #curtag-auto { background-color: transparent; border-color: transparent; }
+#play { position: absolute; top: 2.5dp; left: 2.5dp; right: 2.5dp; height: 96dp; line-height: 88dp; padding: 0dp 35dp;
+        box-sizing: border-box; border-width: 3.8dp; border-color: transparent;
+        color: #13200F; font-family: "Saira"; font-size: 39dp; font-weight: 800;
+        letter-spacing: 5dp; cursor: pointer; }
+/* the ▶ glyph sits on the text's baseline and so read low beside the capitals: lifted to their middle */
+.tri { margin-right: 2dp; font-family: "Noto Sans Symbols 2"; font-size: 23dp; position: relative; top: -6dp; }
+#playtarget { position: absolute; right: 35dp; font-family: "Inter"; font-size: 19dp; letter-spacing: 0dp;
+              font-weight: normal; }
+/* the A / Y pills on PLAY and the card (the mockup's: wider than the hint bar's round buttons) */
+.gp { display: inline-block; width: 50dp; height: 33dp; line-height: 33dp; border-radius: 16.5dp; margin-left: 14dp;
+      text-align: center; color: #FFFFFF; font-family: "Inter"; font-size: 15dp; font-weight: bold; letter-spacing: 0dp; }
+.ga { background-color: #2E7D3A; }
+.gy { background-color: #B8912C; }
+
+/* the current save's card: a row (flexbox) of the symbol, the text (taking the room that is left, cut at its end) and
+ * Change save… with its Y, which grow with their words in another language instead of a fixed width */
+#cur { display: flex; align-items: center; position: relative; margin-top: 119dp; width: 100%; height: 105dp;
+       padding: 0dp 25dp 0dp 24dp; box-sizing: border-box; border-radius: 15dp;
+       border-width: 1dp; border-color: #262B28; background-color: #161A18; }
+#cur .ic { flex: none; width: 38dp; height: 43dp; margin-right: 18dp; }
+#curtext { display: block; flex: 1; min-width: 0dp; overflow: hidden; }
+/* the format's own colour, the same in light and dark mode (snatcherLeo, 2026-11-13: "a specific COLOR on the main screen,
+ * regardless if it's light/dark mode"): GameCube indigo for .gci, kept clear of the X button's blue; OrrePort's rust
+ * (the logo's #C8452E) for .orresave. Both read on the dark and the light card (about 3.5:1 or better); white tag text
+ * reads on both (about 5:1). The icons are white and tinted here. */
+.ic.gci { image-color: #6A5FCB; }
+.ic.orre { image-color: #C8452E; }
+.ftag { display: inline-block; height: 18dp; line-height: 18dp; padding: 0dp 9dp; margin-left: 10dp; border-radius: 5dp;
+        font-size: 12dp; font-weight: bold; color: #FFFFFF; vertical-align: middle; position: relative; top: -2dp; }
+.ftag.gci { background-color: #6A5FCB; }
+.ftag.orre { background-color: #C8452E; }
+.orre { display: none; }
+body.orresave .orre { display: inline-block; }
+body.orresave .gci { display: none; }
+/* the Accurate badge (2.12, snatcherLeo 2026-11-16): the design's amber for accurate mode (orreport-design-overview.md 4.1,
+ * "one locked style"), dark letters on it (about 9:1), the same in light and dark mode like the format tags; on the
+ * card only while the current save plays accurate (body.accsave), on the Saves page per row (.ftag.acc, always shown
+ * there when written) */
+/* *Changed 2026-11-21 (snatcherLeo: the same badge everywhere, after the in-game one's colour was settled):* deep gold
+ * #AD8000 with white letters like the format tags (3.6:1), the in-game badge's colours (pc_title_loadsave.cpp kAccFill);
+ * it was #E0B45C with dark #20160A letters. Green was tried and dropped (snatcherLeo: "let's not use green": the hub's green
+ * means positive things) */
+.ftag.acc { background-color: #AD8000; color: #FFFFFF; }
+/* the region word leading a save's line (3.5 step 6; snatcherLeo, 2026-11-17, proposal B and its colours; mockup 22): US blue,
+ * PAL green, JPN raspberry red, a lighter shade on the dark look and a deeper one on the light look so each reads on its
+ * background; bold, the word always written (colour is never the only cue). Used on the Saves page's rows and details
+ * and on the hub's save card (pc_hub_saves.cpp hub_region_rml). Class names start with r so they can't clash with the
+ * format classes (.gci / .orre switch the card's tags on and off) */
+.rword { font-weight: bold; }
+.rword.rus { color: #5B9BE0; }
+.rword.rpal { color: #4FAE72; }
+.rword.rjpn { color: #E0607E; }
+body.light .rword.rus { color: #2F74C0; }
+body.light .rword.rpal { color: #2E8A52; }
+body.light .rword.rjpn { color: #C23E5E; }
+#curtag-acc { display: none; color: #FFFFFF; } /* white letters since 2026-11-21 (.ftag.acc above) */
+body.accsave #curtag-acc { display: inline-block; }
+/* the Autosave tag (2026-11-21): on the card while PLAY will start the current save's autosave (body.autosavecur,
+ * pc_hub.cpp show_save). A deep teal, kept apart from the format tags' indigo and rust and the Accurate amber, the same
+ * in light and dark mode like them; white letters on it (about 5:1). Drawn smooth by pc_hub.cpp update_boxes (decided
+ * here; a look snatcherLeo may change) */
+.ftag.auto { background-color: #23777A; }
+#curtag-auto { display: none; }
+body.autosavecur #curtag-auto { display: inline-block; }
+#curlab { display: block; line-height: 16dp; font-size: 13dp; font-weight: bold; letter-spacing: 2.5dp; color: #8A938E;
+          white-space: nowrap; }
+#curname { display: block; margin-top: 2dp; line-height: 26dp; font-size: 20dp; font-weight: bold; white-space: nowrap; }
+/* *added 2026-11-21 (as the Saves list's rows: the card's height is set, so no line of its own for the badges):* the
+ * name (#curslot) shrinks and is cut, the badges never do */
+#curname { display: flex; align-items: center; }
+#curslot { flex: 0 1 auto; min-width: 0dp; overflow: hidden; white-space: nowrap; }
+#curname .ftag { flex: none; top: 0dp; }
+#cursub { display: block; margin-top: 4dp; line-height: 22dp; height: 22dp; overflow: hidden; white-space: nowrap;
+          font-size: 16.5dp; color: #8A938E; }
+/* "All saves ›" (2026-11-15, snatcherLeo's mockup A): words, not a box, in the place and height the Change save... button had
+ * (so the row's alignment stays); the whole card is the button (#cur, pointer; pc_hub.cpp opens the Saves page) and
+ * lights up under the mouse (update_boxes), the words with it */
+#cur { cursor: pointer; }
+#b-change { flex: none; margin-left: 16dp; height: 46dp; line-height: 46dp; white-space: nowrap; font-size: 17dp;
+            color: #B4BCB7; }
+#b-change .chev { margin-left: 8dp; font-size: 22dp; font-family: "Noto Sans Symbols 2"; }
+#cur:hover #b-change, #cur.navon #b-change { color: #E9EDEA; }
+.fold { width: 20dp; height: 20dp; margin-right: 10dp; vertical-align: middle; position: relative; top: -2dp;
+        image-color: #E9EDEA; }
+#cury { flex: none; margin-left: 16dp; }
+
+/* the plain buttons (the add-your-disc panel, the disc art page) */
+.btn { flex: 1; height: 64dp; line-height: 64dp; margin-right: 16dp; text-align: center;
+       border-radius: 12dp; border-width: 1dp; border-color: #2C322F; background-color: #161A18; font-size: 19dp;
+       font-weight: bold; cursor: pointer; }
+
+/* quiet links (Report a problem the quietest) */
+/* the links wrap onto a second line when a language makes them longer (each link stays whole) */
+#links { display: block; margin-top: 32dp; width: 100%; font-size: 17.5dp; }
+.lk { display: inline-block; margin-right: 33dp; padding: 6dp 0dp; color: #B4BCB7; cursor: pointer; white-space: nowrap;
+      border-bottom-width: 1dp; border-color: transparent; }
+.lk.quiet { color: #8A938E; }
+.lk .sym { font-family: "Noto Sans Symbols 2"; }
+#note { display: block; margin-top: 20dp; font-size: 16dp; color: #B4BCB7; }
+/* ---- the Language discs (region work piece 2, 2026-11-15; docs/port/language-discs.md): one more link in the row
+ * ("Add a language disc…" / "Language discs") whose small triangle points down while folded and up while open, and
+ * the panel it unfolds under the row (body.langopen). Mockup C2's look: the save card's surface and line; the disc
+ * symbols are smooth pictures in their own colours (hubicon://langeu, langjp). .kfocus: the controller's place ---- */
+/* the globe a little larger than the text's capitals (snatcherLeo: the first was "REALLY tiny") */
+.lk .lkdisc { width: 20dp; height: 20dp; margin-right: 8dp; image-color: #B4BCB7; vertical-align: -4dp; }
+.lk .lkdown, .lk .lkup { margin-left: 6dp; font-family: "Noto Sans Symbols 2"; font-size: 15dp; }
+.lk .lkup, body.langopen .lk .lkdown { display: none; }
+body.langopen .lk .lkup { display: inline; }
+body.langopen #b-lang { color: #E9EDEA; }
+.lk.kfocus { color: #E9EDEA; border-color: #E8955A; }
+/* the Saves page's details buttons with the controller's place (pc_hub_saves.cpp panel_mark; 2026-11-15) */
+.btn.kfocus, body.light .btn.kfocus { border-color: #E8955A; }
+/* the "closed unexpectedly" bar (5.1, 2026-11-23): Studio's bar's colours (a soft red edge on a warm dark ground,
+ * #2A2220 / #E0705E; light: #FBEDEA), the hub's own buttons' shape; shown only with body.crashed */
+#crashbar { display: none; }
+body.crashed #crashbar { display: flex; align-items: center; margin-top: 14dp; width: 100%; padding: 8dp 10dp 8dp 16dp;
+                         box-sizing: border-box; border-radius: 10dp; border-width: 1dp; border-color: #E0705E;
+                         background-color: #2A2220; }
+#cbtext { display: block; flex: 1; font-size: 15dp; color: #E9EDEA; }
+.cbb { display: inline-block; flex: none; margin-left: 8dp; padding: 6dp 14dp; border-radius: 8dp; border-width: 1.5dp;
+       border-color: #3A423E; background-color: #181C1B; font-size: 14.5dp; font-weight: bold; color: #E9EDEA; cursor: pointer; }
+.cbb:hover { background-color: #232826; border-color: #C9DCC4; }
+.cbb.cbgo { background-color: #A9C3A3; border-color: #A9C3A3; color: #13200F; }
+.cbb.cbgo:hover { background-color: #B7CFB1; }
+body.light.crashed #crashbar { background-color: #FBEDEA; }
+body.light #cbtext { color: #18201B; }
+body.light .cbb { background-color: #FFFFFF; border-color: #B8C2B6; color: #18201B; }
+body.light .cbb.cbgo { background-color: #5D7A57; border-color: #5D7A57; color: #FFFFFF; }
+#langpanel { display: none; }
+body.langopen #langpanel { display: block; margin-top: 14dp; width: 100%; padding: 16dp 24dp 18dp 24dp;
+                           box-sizing: border-box; border-radius: 15dp; border-width: 1dp; border-color: #262B28;
+                           background-color: #161A18; }
+.lphead { display: block; font-size: 13dp; letter-spacing: 2.5dp; font-weight: bold; color: #8A938E; }
+.lpline { display: block; margin-top: 6dp; font-size: 16dp; color: #D4DAD6; }
+.lprow { display: flex; align-items: center; margin-top: 14dp; }
+.lpsym { flex: none; width: 34dp; height: 34dp; margin-right: 14dp; }
+.lptext { display: block; flex: 1; }
+.lpname { display: block; font-size: 18dp; font-weight: bold; color: #E9EDEA; }
+.lpid { font-size: 14dp; font-weight: normal; color: #6E7772; }
+.lpchips { display: block; margin-top: 5dp; }
+.lpchip { display: inline-block; margin-right: 8dp; padding: 3dp 11dp; border-radius: 13dp; border-width: 1dp;
+          border-color: #38403C; background-color: #1E2421; font-size: 15dp; color: #D4DAD6; }
+.lpwait { font-size: 15dp; color: #8A938E; }
+.lplink { flex: none; padding: 4dp 2dp; font-size: 16dp; color: #9AA39E; cursor: pointer; border-bottom-width: 1dp;
+          border-color: transparent; }
+.lplink:hover, .lplink.kfocus { color: #E9EDEA; border-color: #E8955A; }
+.lpask { display: block; margin-top: 12dp; padding: 12dp 14dp; border-radius: 10dp; background-color: #1E2421; }
+.lpasktext { display: block; font-size: 15.5dp; color: #E9EDEA; }
+.lpbtns { display: block; margin-top: 10dp; }
+.lpbtn { display: inline-block; margin-right: 10dp; padding: 7dp 16dp; border-radius: 8dp; border-width: 1.5dp;
+         border-color: #3A423E; background-color: #181C1B; font-size: 16dp; font-weight: bold; color: #E9EDEA;
+         cursor: pointer; }
+.lpbtn.lpgo { background-color: #A9C3A3; border-color: #A9C3A3; color: #13200F; }
+.lpbtn:hover { background-color: #232826; border-color: #C9DCC4; }
+.lpbtn.lpgo:hover { background-color: #B7CFB1; }
+.lpbtn.kfocus { border-color: #E8955A; }
+/* *Changed 2026-11-23 (the Discs panel, snatcherLeo's choice A):* the US disc's row on top, with its file under its name
+ * (.lpfile); the line about translations now opens the European and Japanese part under a rule; each row ends in its
+ * links (.lpacts: Replace… and Remove, or Add…); a row with no disc yet is dimmed (.lpnone, "Not added"), as in
+ * Studio's Settings › Discs. The old "missing" line and its button are gone (every row now has its own Add…) */
+.lpline { margin-top: 16dp; padding-top: 12dp; border-top-width: 1dp; border-color: #262B28; font-size: 15dp; color: #9AA39E; }
+.lpfile { display: block; margin-top: 4dp; font-size: 15dp; color: #9AA39E; white-space: nowrap; overflow: hidden;
+          text-overflow: ellipsis; }
+.lpacts { display: block; flex: none; margin-left: 12dp; white-space: nowrap; }
+.lpacts .lplink { display: inline-block; margin-left: 14dp; }
+.lpnone .lpsym { opacity: 0.4; }
+.lpnone .lpchip { opacity: 0.55; }
+.lpnote { display: block; margin-top: 12dp; font-size: 15dp; color: #A9C3A3; }
+.lpnote.err { color: #E8955A; }
+/* the Japanese release look (3.5 step 5; pc_hub_langdiscs.cpp look_rml / look_window): a line under its own thin rule,
+ * as the missing-disc row, with the "What changes ›" link at its end; the link opens a window over the hub (as "What it
+ * turns off" does on the Saves page): the line again, then one line per row of the region table, a check mark in green
+ * for a change that applies now, the rest dimmed; the list scrolls when a language's words need more room */
+.lplook { display: block; margin-top: 14dp; padding-top: 12dp; border-top-width: 1dp; border-color: #262B28;
+          font-size: 15dp; line-height: 22dp; color: #B4BCB7; }
+/* inline-block: the link moves to the next line whole when the line is full (inline, it ran past the panel's edge) */
+.lplook .lplink { display: inline-block; margin-left: 8dp; padding: 0dp 2dp; font-size: 15dp; font-weight: bold; color: #A9C3A3; white-space: nowrap; }
+/* *3.5 step 5 (2026-11-19):* while the panel is open the column scrolls when the panel runs past the hint bar (seen in
+ * the pseudo language's pictures: the disc rows, the missing-disc row and the look's line can need more than there is,
+ * and before, the panel ran on under the hint bar); the column reaches down to the hint bar on any window
+ * (pc_hub.cpp fit sets its bottom), the controller's place is scrolled into view (pc_hub_langdiscs.cpp set_focus) and
+ * the mouse wheel scrolls it. Folded, the column never scrolls, as before */
+body.langopen #right { overflow-y: auto; }
+#right scrollbarvertical { width: 8dp; }
+#right scrollbarvertical sliderbar { background-color: #3A423E; border-radius: 4dp; }
+#lookdim, #lookbox { display: none; }
+body.lookopen #lookdim { display: block; position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+                         background-color: rgba(0, 0, 0, 160); }
+body.lookopen #lookbox { display: block; width: 760dp; margin-left: -380dp; margin-top: -250dp; }
+#looklist { display: block; max-height: 330dp; margin-top: 14dp; overflow-y: auto; padding-right: 12dp; }
+#looklist scrollbarvertical { width: 8dp; }
+#looklist scrollbarvertical sliderbar { background-color: #3A423E; border-radius: 4dp; }
+.lpli { display: block; padding: 4dp 0dp; font-size: 16dp; line-height: 22dp; color: #6E7772; }
+.lpli.on { color: #E9EDEA; }
+.lpmark { display: inline-block; width: 24dp; }
+.lpli.on .lpmark { color: #A9C3A3; }
+.lplater { color: #8A938E; }
+body.light .lplook { border-color: #D5DCD4; color: #45514A; }
+body.light .lplook .lplink { color: #4E6B49; }
+body.light .lpli { color: #8A938E; }
+body.light .lpli.on { color: #18201B; }
+body.light .lpli.on .lpmark { color: #5D7A57; }
+body.light .lplater { color: #66726B; }
+body.light .lk .lkdisc { image-color: #45514A; }
+body.light.langopen #b-lang, body.light .lk.kfocus { color: #18201B; }
+body.light #langpanel { background-color: #FFFFFF; border-color: #D5DCD4; }
+body.light .lpline, body.light .lpchip, body.light .lpasktext { color: #18201B; }
+body.light .lpname { color: #18201B; }
+body.light .lpchip { background-color: #F2F4F1; border-color: #D5DCD4; }
+body.light .lpask { background-color: #F2F4F1; }
+body.light .lpbtn { background-color: #FFFFFF; border-color: #B8C2B6; color: #18201B; }
+body.light .lpbtn.lpgo { background-color: #5D7A57; border-color: #5D7A57; color: #FFFFFF; }
+body.light .lpline { border-color: #D5DCD4; color: #45514A; }
+body.light .lpfile { color: #45514A; }
+body.light .lpnote { color: #5D7A57; }
+body.light .lpnote.err { color: #C2662F; }
+
+#bottom { position: absolute; left: 0; bottom: 0; width: 100%; height: 80dp; line-height: 80dp; border-top-width: 1dp;
+          border-color: #1F2421; font-size: 17dp; color: #B4BCB7; }
+#pad { position: absolute; left: 40dp; }
+#hints { position: absolute; right: 40dp; }
+/* while the Settings page is open over the hub (body.settings, pc_hub.cpp): its own hints in the hub's bar */
+#hints2 { display: none; position: absolute; right: 40dp; }
+body.settings #hints { display: none; }
+body.settings #hints2 { display: inline; }
+.key { display: inline-block; min-width: 26dp; height: 26dp; line-height: 26dp; padding: 0dp 6dp; margin: 0dp 4dp;
+       border-radius: 6dp; background-color: #3A423E; color: #E9EDEA; font-size: 13dp; font-weight: bold;
+       text-align: center; }
+.key.wide { min-width: 60dp; }
+.ab, .bb { display: inline-block; width: 30dp; height: 30dp; line-height: 30dp; border-radius: 15dp; margin: 0dp 6dp;
+           text-align: center; color: #FFFFFF; font-size: 15dp; font-weight: bold; }
+.ab { background-color: #2F7D3A; }
+.bb { background-color: #B5443A; }
+/* Y: Change save in the hint bar (mockup 62) */
+.yb { display: inline-block; width: 30dp; height: 30dp; line-height: 30dp; border-radius: 15dp; margin: 0dp 6dp;
+      text-align: center; color: #FFFFFF; font-size: 15dp; font-weight: bold; background-color: #B8912C; }
+body.nodisc .hintchange { display: none; }
+
+/* Report a problem: the game menu's panel (settings.rcss, mockup 08, Graphite dark) over a dimmed hub */
+#reportdim { display: none; position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+             background-color: rgba(0, 0, 0, 150); }
+#report { display: none; position: absolute; left: 50%; top: 50%; width: 616dp; margin-left: -308dp;
+          margin-top: -250dp; padding: 26dp 30dp 24dp 30dp; border-radius: 16dp; border-width: 1dp;
+          background-color: rgba(22, 26, 24, 245); border-color: #2C322F; color: #E9EDEA; }
+body.reporting #report, body.reporting #reportdim { display: block; }
+#rh { display: block; font-family: "Saira"; font-size: 24dp; font-weight: bold; }
+.flag { margin-right: 8dp; font-family: "Noto Sans Symbols 2"; }
+#rl { display: block; margin-top: 16dp; font-size: 16dp; }
+.strong { font-weight: bold; }
+#notebox { display: block; position: relative; margin-top: 8dp; }
+#rnote { display: block; box-sizing: border-box; width: 100%; height: 120dp; padding: 14dp 16dp; border-radius: 10dp;
+         border-width: 2dp; font-size: 16dp; cursor: text; background-color: #1B1F1D; border-color: #6F8A6A;
+         color: #E9EDEA; }
+#rph { position: absolute; left: 18dp; top: 16dp; font-size: 16dp; pointer-events: none; color: #8A938E; }
+body.hasnote #rph { display: none; }
+#auto { display: block; margin-top: 18dp; padding: 16dp 18dp; border-radius: 12dp; border-width: 1dp;
+        background-color: #1B1F1D; border-color: #2C322F; }
+#autot { display: block; font-size: 15dp; color: #8A938E; }
+#rchips { display: block; margin-top: 12dp; }
+.rchip { display: inline-block; padding: 6dp 12dp; margin-right: 8dp; margin-bottom: 6dp; border-radius: 8dp;
+         border-width: 1dp; font-size: 15dp; font-weight: bold; background-color: #232826; border-color: #3A423E;
+         color: #E9EDEA; }
+#autos { display: block; margin-top: 10dp; font-size: 14dp; color: #8A938E; }
+#rfoot { display: block; margin-top: 20dp; text-align: right; height: 52dp; }
+.rbtn { display: inline-block; height: 48dp; line-height: 48dp; padding: 0dp 18dp; margin-left: 12dp; border-radius: 10dp;
+        border-width: 1dp; font-size: 16dp; font-weight: bold; cursor: pointer; }
+#rcancel { background-color: #232826; border-color: #3A423E; color: #E9EDEA; }
+#rsave { background-color: #8FA98A; border-color: #8FA98A; color: #13200F; }
+#rcancel:hover { border-color: #C9DCC4; background-color: #2B312E; }
+/* the saved screen (Studio's, 2026-11-23): the note and the "included" box give way to what was saved */
+#rsaved, #ropen, #rdone { display: none; }
+body.reportsaved #rsaved { display: block; }
+body.reportsaved #ropen, body.reportsaved #rdone { display: inline-block; }
+body.reportsaved #rl, body.reportsaved #notebox, body.reportsaved #auto, body.reportsaved #rcancel,
+body.reportsaved #rsave { display: none; }
+#rsavedmsg { display: block; margin-top: 14dp; font-size: 16dp; }
+#rfile { display: block; margin-top: 18dp; padding: 0dp 16dp; height: 46dp; line-height: 46dp; border-radius: 10dp;
+         border-width: 1dp; background-color: #1B1F1D; border-color: #2C322F; }
+#rfilename { font-size: 15dp; font-weight: bold; }
+#rfilesize { float: right; font-size: 14dp; color: #8A938E; }
+#rbig { display: block; margin-top: 8dp; font-size: 14dp; }
+#rfilesize.big, #rbig { color: #E0705E; }
+#ropen { background-color: #232826; border-color: #3A423E; color: #E9EDEA; }
+#ropen:hover { border-color: #C9DCC4; background-color: #2B312E; }
+#rdone { background-color: #8FA98A; border-color: #8FA98A; color: #13200F; }
+#rsave:hover { background-color: #A9C3A3; border-color: #C9DCC4; }
+
+/* pointer-events: none: this layer covers the whole page (invisible until Play), and without it every hover and click
+ * landed on it, so clicking PLAY did nothing and no hand cursor showed (snatcherLeo, 2026-11-09: "Press A works, but clicking
+ * Play does not") */
+#black { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background-color: #000000; opacity: 0;
+         pointer-events: none; }
+
+/* Everything clickable (snatcherLeo, 2026-11-09: "on any menu option in here that is clickable, if we hover our mouse, the
+ * cursor changes to an open cursor with the pointer finger"): Windows' hand cursor (cursor: pointer, which RmlUi's SDL
+ * backend maps to SDL's pointer cursor, Windows' "Link Select"), a lighter surface and the focus-ring border on hover,
+ * and a slightly darker surface while pressed. Graphite tokens: raised #232826, focus ring #C9DCC4. */
+#play, #b-browse, #b-copy, .btn, #gear, #b-change, .lk { cursor: pointer; }
+.btn:hover, #gear:hover { background-color: #232826; border-color: #C9DCC4; }
+#b-browse:hover, #b-copy:hover { background-color: #B7CFB1; border-color: #C9DCC4; }
+/* PLAY keeps its gap the page's colour on hover (the ring outside shows the focus); only the fill lightens: its face
+ * is a smooth picture in pc_hub.cpp (update_rings) in #A9C3A3, #B7CFB1 on hover and #9AB494 pressed (2026-11-15) */
+#playring { pointer-events: none; }
+.btn:active, #gear:active { background-color: #1B1F1D; }
+#b-browse:active, #b-copy:active { background-color: #9AB494; }
+/* the links: the text brightens and a thin line shows under it (the mockup's hover) */
+.lk:hover { color: #E9EDEA; border-color: #3A423E; }
+#gear { border-width: 1dp; border-color: #1B1F1D; }
+/* the controller's place on the gear (Up from PLAY; pc_hub.cpp set_nav), the same orange as the other places */
+#gear.kfocus, body.light #gear.kfocus { border-color: #E8955A; background-color: rgba(232, 149, 90, 34); }
+
+/* ---- Light (snatcherLeo, 2026-11-11: light mode should change the whole hub, not only the title bar). The rules above are
+ * the dark look (Graphite); these follow Appearance > Theme (pc_hub.cpp sets body.light / body.dark from the same
+ * setting the Settings panel uses), with the Settings panel's light palette: surface #F2F4F1, raised #FFFFFF, lines
+ * #D5DCD4, text #18201B, muted #45514A / #66726B, sage #5D7A57; the orange darkened to #C2662F to read on light. ---- */
+body.light { background-color: #F2F4F1; color: #18201B; }
+/* the wordmark: the rust one on dark, its light-mode version on light (snatcherLeo, 2026-11-11, "2c": the faces a shade
+ * darker than the bar, the notches black as dark mode shows them; tools/local/brand/wordmark_light.py) */
+#wordmark-light { display: none; position: absolute; left: 52dp; top: 16dp; width: 278dp; height: 56dp; }
+body.light #wordmark { display: none; }
+body.light #wordmark-light { display: block; }
+body.light #top, body.light #bottom { border-color: #D5DCD4; }
+body.light #bottom, body.light #addhead, body.light #note { color: #45514A; }
+body.light #sub { color: #66726B; }
+body.light #dropsub, body.light #dropsub2 { color: #66726B; }
+body.light #gear { background-color: #FFFFFF; border-color: #D5DCD4; color: #45514A; }
+body.light #status { color: #C2662F; }
+body.light .dot { background-color: #C2662F; }
+body.light #dropbox { background-color: #FFFFFF; border-color: #B8C2B6; }
+body.light #b-browse, body.light #b-copy { border-color: #FFFFFF; }
+/* PLAY's gap shows the page (its border is see-through), its ring a deeper sage so it shows on the light page
+ * (pc_hub.cpp update_rings) */
+body.light .chip.on { background-color: #F6E7DA; border-color: #C98A5A; color: #18201B; }
+body.light .chip.add { border-color: #B8C2B6; color: #66726B; }
+body.light .soontag { color: #8A938E; }
+body.light .btn { background-color: #FFFFFF; border-color: #D5DCD4; color: #18201B; }
+/* the card: white on the light page; the format colours stay as they are (above) */
+body.light #curlab, body.light #cursub { color: #66726B; }
+body.light #b-change { color: #45514A; }
+body.light #cur:hover #b-change, body.light #cur.navon #b-change { color: #18201B; }
+body.light .fold { image-color: #18201B; }
+body.light .lk { color: #45514A; }
+body.light .lk.quiet { color: #66726B; }
+body.light .lk:hover { color: #18201B; border-color: #B8C2B6; }
+body.light .key { background-color: #B8C2B6; color: #18201B; }
+body.light .btn:hover, body.light #gear:hover {
+    background-color: #E9EEE7; border-color: #5D7A57; }
+body.light .btn:active, body.light #gear:active { background-color: #DDE3DC; }
+body.light #report { background-color: rgba(242, 244, 241, 245); border-color: #D5DCD4; color: #18201B; }
+body.light #rnote { background-color: #FFFFFF; border-color: #7E9B78; color: #18201B; }
+body.light #rph, body.light #autot, body.light #autos { color: #66726B; }
+body.light #auto { background-color: #FFFFFF; border-color: #D5DCD4; }
+body.light .rchip, body.light #rcancel { background-color: #F0F3EF; border-color: #B8C2B6; color: #18201B; }
+body.light #rsave { background-color: #5D7A57; border-color: #5D7A57; color: #FFFFFF; }
+body.light #ropen { background-color: #F0F3EF; border-color: #B8C2B6; color: #18201B; }
+body.light #rdone { background-color: #5D7A57; border-color: #5D7A57; color: #FFFFFF; }
+body.light #rfile { background-color: #FFFFFF; border-color: #D5DCD4; }
+body.light #rfilesize { color: #66726B; }
+body.light #rfilesize.big, body.light #rbig { color: #B5443A; }
+
+/* Play: Lift and spin, in hub-play.rcss (keyframe animations: a transition from the sway's animated value to
+ * rotate(720deg) did not turn the disc at all; 2026-11-09, the sun and moon stayed put in frames taken through it) */
+
+/* ---- The disc label page (mockup 47's label shelf; snatcherLeo, 2026-11-13: "Yes, build it"; pc_hub.cpp "the disc label
+ * page"). It takes the content block's place between the hub's top and bottom bars; the hub under it is hidden, so
+ * nothing there shows through or takes a click. ---- */
+/* the pencil at the disc's corner, while the mouse is over the disc */
+/* *Updated 2026-11-13 (snatcherLeo: "can we confirm, the outline on this pencil icon ... isn't choppy"):* the circle and its
+ * outline are smooth pictures (icons/round-fill.svg under icons/shelf-ring.svg, 60 dp, 2 dp up and left), not a round
+ * border: RmlUi draws round borders and backgrounds with no edge smoothing (the disc art shelf's fix, .edge below) */
+#b-label { position: absolute; left: 474dp; top: 462dp; width: 56dp; height: 56dp; line-height: 54dp;
+           text-align: center; color: #B4BCB7; font-family: "Noto Sans Symbols 2"; font-size: 24dp;
+           cursor: pointer; opacity: 0; transition: opacity 0.15s cubic-out; }
+#b-label .bface, #b-label .bedge { position: absolute; left: -2dp; top: -2dp; width: 60dp; height: 60dp; }
+#b-label .bface { image-color: #1B1F1D; }
+#b-label .bedge { image-color: #3A423E; }
+#b-label .bpen { position: relative; }
+#discslot:hover #b-label { opacity: 1; }
+/* the controller on the pencil (snatcherLeo, 2026-11-15: Left from PLAY, the card, the gear or the first link): shown, with the
+ * controller's orange outline (its outline is a smooth picture, so the colour change stays smooth) */
+#b-label.kfocus { opacity: 1; color: #E9EDEA; }
+#b-label.kfocus .bface { image-color: #2B2119; }
+#b-label.kfocus .bedge { image-color: #E8955A; }
+#b-label:hover { color: #E9EDEA; }
+#b-label:hover .bface { image-color: #232826; }
+#b-label:hover .bedge { image-color: #C9DCC4; }
+body.nodisc #b-label, body.nodisc .hintlabel { display: none; }
+
+#labels, #lall, #hints3 { display: none; }
+body.labels #labels { display: block; }
+body.labels #left, body.labels #right { visibility: hidden; }
+body.labelsall #lall { display: block; }
+body.labels #hints, body.labels #hints2 { display: none; }
+body.labels #hints3 { display: inline; position: absolute; right: 40dp; }
+/* *Changed 2026-11-15 (snatcherLeo's mockup B, "title centred"):* the page starts 16 dp higher; "‹ Back to Hub" top left (the
+ * old "‹ Settings" place; that button went), the page's name and the game centred over the disc; the disc and the rows
+ * under it moved down to make room, the lower rows a little closer together so the error line still clears the hint
+ * bar */
+#labels { position: absolute; left: 0; top: 72dp; width: 100%; bottom: 80dp; }
+/* the button sizes to its words (another language's may be longer), at least as wide as the English one was */
+.larrow { font-size: 26dp; margin-right: 4dp; }
+#lhead { position: absolute; left: 0; top: 6dp; width: 100%; text-align: center; font-family: "Saira"; font-size: 34dp;
+         font-weight: bold; }
+#lsub { position: absolute; left: 0; top: 52dp; width: 100%; text-align: center; font-size: 16dp; line-height: 40dp;
+        color: #B4BCB7; white-space: nowrap; }
+/* *Fixed 2026-11-15 (snatcherLeo: hovering "Back to Hub" "doesn't let me unless I'm very specific. Once I click it, it doesn't
+ * work"):* the centred title and game lines span the page's width and lay over the button; they let the mouse through */
+#lhead, #lsub { pointer-events: none; }
+.lgame { height: 34dp; line-height: 34dp; font-size: 15dp; margin: 0dp; }
+/* (2026-11-15, snatcherLeo: "reposition the back to the hub so its a little more "up"") 20 dp higher than the title row */
+#ldone { position: absolute; left: 120dp; top: -16dp; width: auto; min-width: 180dp; padding: 0dp 20dp; box-sizing: border-box;
+         height: 52dp; line-height: 50dp; flex: none; white-space: nowrap; margin-right: 0dp; font-size: 17dp; }
+.hintpic, .hintsave, .hintall { display: none; }
+body.lpic .hintpic, body.lunsaved .hintsave { display: inline; }
+/* "Y All" only while the All tile shows (over 4 of the player's own pictures; pc_hub.cpp; snatcherLeo, 2026-11-15) */
+body.labelsmany .hintall { display: inline; }
+/* Save: quiet ("✓ Saved") until something is unsaved, then PLAY's green so it can't be missed */
+#l-save { color: #8FA98A; margin-right: 22dp; }
+body.lunsaved #l-save, .lgo { background-color: #A9C3A3; border-color: #E9EDEA; color: #13200F; }
+body.lunsaved #l-save:hover, .lgo:hover { background-color: #B7CFB1; }
+body.ldraft #l-rename { display: none; } /* a new picture is named by its Save */
+/* the name box and the leave question, over a dimmed page */
+#ldim, .lpanel { display: none; }
+body.lnaming #ldim, body.lleaving #ldim { display: block; position: absolute; left: 0; top: 0; width: 100%;
+                                          height: 100%; background-color: rgba(0, 0, 0, 160); }
+body.lnaming #lname, body.lleaving #lleave { display: block; }
+.lpanel { position: absolute; left: 50%; top: 50%; width: 600dp; margin-left: -300dp; margin-top: -110dp;
+          padding: 26dp 30dp 22dp 30dp;
+          border-radius: 16dp; border-width: 1dp; border-color: #2C322F; background-color: rgba(22, 26, 24, 250); }
+.lpt { display: block; font-family: "Saira"; font-size: 24dp; font-weight: bold; }
+.lps { display: block; margin-top: 10dp; font-size: 16dp; color: #B4BCB7; }
+#lnamein { display: block; box-sizing: border-box; width: 100%; height: 52dp; margin-top: 16dp; padding: 12dp 16dp;
+           border-radius: 10dp; border-width: 2dp; border-color: #6F8A6A; background-color: #1B1F1D; color: #E9EDEA;
+           font-size: 18dp; cursor: text; }
+.lpfoot { display: block; margin-top: 22dp; height: 48dp; text-align: right; }
+.lpfoot .lbtn { margin: 0dp 0dp 0dp 10dp; }
+/* the label as it will look: 400 dp (pc_hub.cpp draws it at that size) */
+#leditbox { position: absolute; left: 50%; top: 100dp; width: 400dp; height: 400dp; margin-left: -200dp; }
+#ledit { width: 400dp; height: 400dp; }
+body.lpic #leditbox { cursor: move; }
+/* the shelf: a tile is a round thumbnail and its name. The worn one's orange outline is drawn exactly on the disc's own
+ * edge, over its rim, the same circle every thumbnail has (snatcherLeo, 2026-11-13: "the outline of the disc you click, the
+ * outline has to be exactly the same"; it was a ring with a gap round the disc): .ring holds the 84 dp picture, and
+ * .edge, an 84 dp circle drawn on top, carries the outline */
+#lshelf { position: absolute; left: 0; top: 552dp; width: 100%; text-align: center; }
+/* the hub line under the big disc, and the ON HUB tag on the shelf disc the hub shows (pc_hub.cpp save_state) */
+#lstatus { position: absolute; left: 0; top: 512dp; width: 100%; text-align: center; font-size: 15dp; color: #B4BCB7; }
+.lsdot { display: inline-block; width: 9dp; height: 9dp; border-radius: 5dp; margin-right: 6dp; vertical-align: middle;
+         background-color: #8FA98A; }
+body.lunsaved #lstatus { color: #E8955A; }
+/* the tag sizes to its word (a full-width line under the disc, the pill inside it centred), so a longer word in
+ * another language still fits (*Updated 2026-11-13*, text keys; was a fixed 62 dp) */
+.onhub { position: absolute; left: -14dp; right: -14dp; bottom: -9dp; height: 18dp; text-align: center; }
+.onhub span { display: inline-block; height: 18dp; line-height: 18dp; padding: 0dp 8dp; border-radius: 9dp;
+              background-color: #E8955A; color: #24160C; font-size: 10dp; font-weight: bold; letter-spacing: 1dp;
+              white-space: nowrap; }
+/* 122 dp wide with 1 dp each side (was 112 and 6): the same 124 dp a tile, but room for "The game's banner" now that
+ * a name is cut at its tile's edge (.ln) instead of running under its neighbour */
+.lt { display: inline-block; width: 122dp; margin: 0dp 1dp; text-align: center; vertical-align: top; cursor: pointer;
+      font-size: 13dp; color: #8A938E; }
+.ring { display: block; position: relative; width: 84dp; height: 84dp; margin: 4dp auto 10dp auto; }
+.ring img { display: block; width: 84dp; height: 84dp; }
+/* *Updated 2026-11-13 (snatcherLeo: "the outlines look kinda... pixel-y"):* the outline is a picture now
+ * (icons/shelf-ring.svg, drawn smooth by pc_svg.cpp), not a round border: RmlUi draws round borders with no edge
+ * smoothing on every OS, so the thin circle showed steps. 88 dp with 2 dp clear round it (the ring's outer smoothing
+ * inside the picture), so it sits 2 dp up and left; hidden until hovered or worn, tinted with image-color */
+.ring .edge { position: absolute; left: -2dp; top: -2dp; width: 88dp; height: 88dp; opacity: 0; }
+.lt:hover .edge { opacity: 1; image-color: #6F7A74; }
+.lt.on .edge { opacity: 1; image-color: #E8955A; }
+.lt.on { color: #E9EDEA; }
+/* a name too long for its tile is cut at the tile's edge rather than running under its neighbour */
+.ln { display: block; height: 18dp; white-space: nowrap; overflow: hidden; }
+.lph, .ltile { display: block; width: 84dp; height: 84dp; border-radius: 42dp; background-color: #1B1F1D; }
+.ltile { box-sizing: border-box; border-width: 2dp; border-color: #3A423E; line-height: 80dp; font-size: 20dp;
+         font-weight: bold; color: #E9EDEA; }
+.ltile.plus { font-size: 36dp; color: #B4BCB7; }
+/* the zoom bar and the picture's buttons: only while a picture is worn (body.lpic) */
+#ladjust, #lhint { display: none; }
+body.lpic #ladjust, body.lpic #lhint { display: block; }
+#ladjust { position: absolute; left: 0; top: 684dp; width: 100%; height: 48dp; text-align: center; }
+.lzl { font-size: 15dp; color: #B4BCB7; margin-right: 12dp; vertical-align: middle; }
+#lzoom { display: inline-block; position: relative; width: 200dp; height: 28dp; margin: 0dp 8dp;
+         vertical-align: middle; cursor: pointer; }
+/* (2026-11-15, mockup A) the bar's middle mark: "just fills the disc"; the − + ↺ ↻ buttons, square */
+#lzoommark { position: absolute; left: 50%; top: 7dp; width: 2dp; height: 14dp; margin-left: -1dp; background-color: #8A938E; }
+.lico { display: inline-block; flex: none; width: 40dp; height: 40dp; line-height: 38dp; padding: 0dp; margin: 0dp 3dp;
+        text-align: center; font-size: 19dp; font-family: "Noto Sans Symbols 2"; vertical-align: middle; }
+.lturn { margin-left: 18dp; }
+#l-zoomin { margin-right: 18dp; }
+#l-turnr { margin-right: 18dp; }
+#lzoomtrack, #lzoomfill { position: absolute; left: 0; top: 12dp; height: 4dp; border-radius: 2dp; }
+#lzoomtrack { width: 100%; background-color: #3A423E; }
+#lzoomfill { width: 0%; background-color: #8FA98A; }
+#lzoomknob { position: absolute; left: 0%; top: 4dp; width: 20dp; height: 20dp; margin-left: -10dp; border-radius: 10dp;
+             background-color: #E9EDEA; }
+/* one cursor while the zoom bar or the picture is dragged, wherever the mouse goes, as the Settings sliders (snatcherLeo,
+ * 2026-11-12: "It should stay as 1 cursor ... This goes for all sliders") */
+#lzoom, #lzoom * { cursor: pointer; }
+body.ldragging, body.ldragging * { cursor: pointer; }
+.lbtn { display: inline-block; flex: none; height: 44dp; line-height: 44dp; padding: 0dp 18dp; margin: 0dp 6dp;
+        font-size: 15dp; vertical-align: middle; }
+#lhint { position: absolute; left: 0; top: 736dp; width: 100%; text-align: center; font-size: 14dp; color: #8A938E; }
+#lfoot { position: absolute; left: 0; top: 762dp; width: 100%; text-align: center; font-size: 14dp; color: #8A938E;
+         white-space: pre; }
+.llink { color: #E8955A; cursor: pointer; }
+.llink:hover { color: #F2B183; }
+#lnote { position: absolute; left: 0; top: 786dp; width: 100%; text-align: center; font-size: 15dp; color: #E8955A; }
+/* the All grid: every picture, the most recently worn first, scrolling */
+#lall { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background-color: #111413; }
+#lallhead { position: absolute; left: 120dp; right: 120dp; top: 30dp; height: 56dp; font-family: "Saira";
+            font-size: 30dp; font-weight: bold; }
+#lcount { font-family: "Inter"; font-size: 15dp; font-weight: normal; color: #8A938E; margin-left: 16dp; }
+#l-allback { position: absolute; right: 0; top: 4dp; }
+#lgrid { position: absolute; left: 120dp; right: 120dp; top: 104dp; bottom: 16dp; overflow-y: auto; }
+#lgrid .lt { margin: 0dp 6dp 18dp 6dp; }
+#lgrid scrollbarvertical { width: 10dp; }
+#lgrid scrollbarvertical slidertrack { background-color: #1B1F1D; border-radius: 5dp; }
+#lgrid scrollbarvertical sliderbar { background-color: #3A423E; border-radius: 5dp; }
+/* light */
+body.light #b-label { color: #45514A; }
+body.light #b-label .bface { image-color: #FFFFFF; }
+body.light #b-label .bedge { image-color: #D5DCD4; }
+body.light #b-label.kfocus { color: #18201B; }
+body.light #b-label.kfocus .bface { image-color: #FBEDE6; }
+body.light #b-label.kfocus .bedge { image-color: #C2522F; }
+body.light #lsub, body.light .lzl { color: #45514A; }
+body.light .lt, body.light #lhint, body.light #lfoot, body.light #lcount { color: #66726B; }
+body.light .lt.on { color: #18201B; }
+body.light .lph, body.light .ltile { background-color: #FFFFFF; border-color: #D5DCD4; color: #18201B; }
+body.light #lzoomtrack { background-color: #B8C2B6; }
+body.light #lzoomfill { background-color: #5D7A57; }
+body.light #lzoomknob { background-color: #5D7A57; }
+body.light .llink, body.light #lnote { color: #C2662F; }
+body.light .lt.on .edge { image-color: #C2662F; }
+body.light #lall { background-color: #F2F4F1; }
+body.light #l-save { color: #5D7A57; }
+body.light.lunsaved #l-save, body.light .lgo { background-color: #A9C3A3; border-color: #FFFFFF; color: #13200F; }
+body.light .lpanel { background-color: rgba(242, 244, 241, 250); border-color: #D5DCD4; color: #18201B; }
+body.light .lps { color: #45514A; }
+body.light #lnamein { background-color: #FFFFFF; border-color: #7E9B78; color: #18201B; }
+body.light #lgrid scrollbarvertical slidertrack { background-color: #E9EEE7; }
+body.light #lgrid scrollbarvertical sliderbar { background-color: #B8C2B6; }
+
+/* ---- the Saves page (step 2.1, mockup 72; pc_hub_saves.cpp). Over the hub as the disc art page is (body.saves);
+ * every save on the left, scrolling, the chosen one on the right. Sizes from the mockup at the hub's 1600 x 960 dp. */
+#saves, #hints4, #svdim, .svpanel { display: none; }
+/* *Updated 2026-11-15 (snatcherLeo: "can we shift all of this vertically up, to give more space for the scrollbar?"):* the
+ * page starts 16 dp higher, the head row 12 dp closer to the top bar, and the list and details run 24 dp further down:
+ * about 60 dp more list */
+body.saves #saves { display: block; position: absolute; left: 0; top: 72dp; width: 100%; bottom: 80dp; }
+body.saves #left, body.saves #right, body.saves #hints, body.saves #hints2 { display: none; }
+body.saves #hints4 { display: inline; position: absolute; right: 40dp; }
+#svhead { position: absolute; left: 100dp; right: 100dp; top: 8dp; height: 60dp; }
+#sv-back { position: absolute; left: 0dp; top: 4dp; width: 52dp; height: 52dp; line-height: 50dp; margin-right: 0dp; padding: 0dp;
+           flex: none; }
+#svtitle { position: absolute; left: 76dp; top: 0dp; line-height: 60dp; font-family: "Saira"; font-size: 38dp; font-weight: bold; }
+.svgame { position: absolute; left: 250dp; top: 13dp; height: 34dp; line-height: 34dp; font-size: 15dp; }
+#svdrop { position: absolute; right: 450dp; top: 0dp; line-height: 60dp; font-size: 15dp; color: #8A938E; white-space: nowrap;
+          opacity: 1; transition: opacity 0.3s cubic-out; }
+/* the import badge (2026-11-21, snatcherLeo: "a kind of green badge that fades away quickly"): a small green pill in the drop
+ * hint's place (the hint fades out while it shows: body.svbadging), in the hub's PLAY green with white letters (about
+ * 5:1), the same in light and dark mode like the format tags; it appears at once and fades out over half a second when
+ * pc_hub_saves.cpp takes its "on" away (about two seconds later) */
+#svbadge { position: absolute; right: 450dp; top: 13dp; height: 34dp; line-height: 34dp; padding: 0dp 16dp;
+           border-radius: 17dp; background-color: #2E7D3A; color: #FFFFFF; font-size: 15dp; font-weight: bold;
+           white-space: nowrap; opacity: 0; transition: opacity 0.5s cubic-out; }
+#svbadge.on { opacity: 1; transition: none; }
+body.svbadging #svdrop { opacity: 0; }
+/* "New save" (snatcherLeo, 2026-11-14: start with no save file), left of Import; the drop hint moved left to make room */
+#sv-new { position: absolute; right: 260dp; top: 4dp; width: auto; min-width: 170dp; padding: 0dp 20dp; box-sizing: border-box;
+          height: 52dp; line-height: 52dp; flex: none; margin-right: 0dp; font-size: 17dp; white-space: nowrap; }
+#sv-import { position: absolute; right: 0dp; top: 4dp; width: auto; min-width: 240dp; padding: 0dp 20dp; box-sizing: border-box;
+             height: 52dp; line-height: 52dp; flex: none; margin-right: 0dp; font-size: 17dp; white-space: nowrap; }
+.svgo { background-color: #A9C3A3; border-color: #E9EDEA; color: #13200F; }
+.svgo:hover { background-color: #B7CFB1; }
+#svleft { position: absolute; left: 100dp; top: 84dp; width: 760dp; bottom: 16dp; }
+#svtools { display: block; position: relative; height: 48dp; }
+#svsearch { position: absolute; left: 0dp; top: 0dp; width: 540dp; height: 48dp; box-sizing: border-box; padding: 12dp 16dp;
+            border-radius: 10dp; border-width: 1dp; border-color: #2C322F; background-color: #161A18; color: #E9EDEA;
+            font-size: 16dp; cursor: text; }
+#svsearchph { position: absolute; left: 18dp; top: 0dp; line-height: 48dp; font-size: 16dp; color: #6F7A73;
+              pointer-events: none; }
+body.svsearching #svsearchph { display: none; }
+#svsort { position: absolute; right: 0dp; top: 0dp; width: 200dp; height: 48dp; line-height: 46dp; margin-right: 0dp; flex: none;
+          font-size: 15dp; font-weight: normal; }
+#svlist { position: absolute; left: 0dp; right: 0dp; top: 64dp; bottom: 0dp; overflow-y: auto; padding-right: 12dp; }
+#svlist scrollbarvertical { width: 8dp; }
+#svlist scrollbarvertical slidertrack { background-color: #161A18; }
+#svlist scrollbarvertical sliderbar { background-color: #3A423E; border-radius: 4dp; }
+.svrow { display: flex; align-items: center; position: relative; height: 82dp; margin-bottom: 10dp; padding: 0dp 20dp;
+         box-sizing: border-box; border-radius: 14dp; border-width: 1dp; border-color: #262B28; background-color: #161A18;
+         cursor: pointer; }
+.svrow:hover { border-color: #3A423E; }
+.svrow.f { border-color: #B8754A; background-color: #1E1A16; }
+.svrow .ic { flex: none; width: 32dp; height: 37dp; margin-right: 18dp; }
+.svtxt { display: block; flex: 1; min-width: 0dp; overflow: hidden; }
+.svname { display: block; line-height: 26dp; font-size: 19dp; font-weight: bold; white-space: nowrap; }
+/* *added 2026-11-21 (snatcherLeo chose A for the details header; here the row's fixed height leaves no room for a badge line):*
+ * the name gives way to the badges: a flex line where the name (.svnm) shrinks and is cut, the badges never do, so a
+ * long name can't push them out of the row */
+.svname { display: flex; align-items: center; }
+.svnm { flex: 0 1 auto; min-width: 0dp; overflow: hidden; white-space: nowrap; }
+.svname .ftag, .svname .svnew { flex: none; top: 0dp; }
+.svsub { display: block; margin-top: 3dp; line-height: 22dp; font-size: 15.5dp; color: #8A938E; white-space: nowrap; }
+.svnew { display: inline-block; height: 18dp; line-height: 16dp; padding: 0dp 8dp; margin-left: 8dp; border-radius: 5dp;
+         border-width: 1dp; border-color: #6F8A6A; color: #A9C3A3; font-size: 12dp; font-weight: bold; vertical-align: middle;
+         position: relative; top: -2dp; }
+.svnext { flex: none; margin-left: 14dp; font-size: 13dp; font-weight: bold; letter-spacing: 1.5dp; color: #A9C3A3;
+          white-space: nowrap; }
+.svmore, .svempty { display: block; padding: 18dp 6dp; font-size: 16dp; color: #8A938E; }
+.ic.sgci { image-color: #6A5FCB; }
+.ic.sorre { image-color: #C8452E; }
+.ftag.sgci { background-color: #6A5FCB; }
+.ftag.sorre { background-color: #C8452E; }
+#svdetail { position: absolute; left: 900dp; right: 100dp; top: 84dp; bottom: 16dp; padding: 26dp 28dp; box-sizing: border-box;
+            border-radius: 16dp; border-width: 1dp; border-color: #262B28; background-color: #161A18; overflow-y: auto; }
+#svdetail scrollbarvertical { width: 8dp; }
+#svdetail scrollbarvertical sliderbar { background-color: #3A423E; border-radius: 4dp; }
+.svdh { display: flex; align-items: center; }
+.svdh .ic { flex: none; width: 46dp; height: 53dp; margin-right: 18dp; }
+.svdn { font-family: "Saira"; font-size: 30dp; font-weight: bold; white-space: nowrap; overflow: hidden; }
+/* *added 2026-11-21 (snatcherLeo chose A):* the name and, under it, the badges on a line of their own (pc_hub_saves.cpp
+ * draw_detail): the name keeps the header's full width, the badges can't be pushed out. The first badge has no left
+ * margin there (the .ftag margin spaces it from a name on the same line) */
+.svdhl { display: block; flex: 1; min-width: 0dp; }
+.svdhl .svdn { display: block; }
+.svdtags { display: block; margin-top: 2dp; white-space: nowrap; }
+.svdtags .ftag { top: 0dp; margin-left: 0dp; margin-right: 6dp; }
+.svfacts { display: block; margin: 16dp 0dp 14dp 0dp; font-size: 17dp; line-height: 29dp; }
+.svfacts div { display: block; white-space: nowrap; } /* RmlUi has no default styles: one fact per line */
+.fk { display: inline-block; width: 140dp; color: #8A938E; }
+.svacts { display: block; }
+.svacts .btn, #sv-restore { display: inline-block; width: auto; height: 48dp; line-height: 46dp; padding: 0dp 18dp; flex: none;
+                            margin: 0dp 10dp 10dp 0dp; font-size: 16dp; white-space: nowrap; }
+.svdanger { color: #E0705F; }
+.svhr { display: block; height: 1dp; margin: 8dp 0dp 14dp 0dp; background-color: #262B28; }
+.svsmall { display: block; margin-top: 4dp; font-size: 14.5dp; color: #8A938E; }
+#svnote { position: absolute; left: 100dp; bottom: 2dp; height: 36dp; line-height: 36dp; font-size: 15.5dp; color: #A9C3A3;
+          white-space: nowrap; }
+/* Undo in the notice after going back (mockup 74) */
+#sv-undo { display: inline-block; width: auto; height: 34dp; line-height: 32dp; padding: 0dp 14dp; margin: 0dp 0dp 0dp 16dp;
+           flex: none; font-size: 15dp; border-color: #A9C3A3; color: #A9C3A3; }
+/* the Saves page's windows (rename, previous versions, delete, already here) */
+body.svdlg #svdim { display: block; position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+                    background-color: rgba(0, 0, 0, 160); }
+body.svrename #svname, body.svrestore #svrestorebox, body.svdelete #svdeletebox, body.svalready #svalreadybox { display: block; }
+body.svgcopy #svgcopybox, body.svgcacc #svgcaccbox, body.svwhatoff #svwhatbox { display: block; }
+/* the import question (3.5; pc_hub_saves.cpp import_ask_open): the window's style as the other Saves windows; the two
+ * answers are buttons shaped as cards (a name, a line saying what it means), the controller's place (.f) in the hub's
+ * orange; then the tick (the "Don't ask me again" box's look) and a quiet line saying what B does. Its height follows
+ * its words (another language's may wrap), centred from an estimate of the English height */
+body.svimportask #svimportbox { display: block; }
+#svimportbox { width: 700dp; margin-left: -350dp; margin-top: -215dp; }
+.svimpopt { display: block; margin-top: 12dp; padding: 12dp 16dp; border-radius: 12dp; border-width: 2dp;
+            border-color: #2C322F; background-color: #181C1B; cursor: pointer; }
+.svimpopt:hover { border-color: #C9DCC4; }
+.svimpopt.f { border-color: #E8955A; background-color: #2A231D; }
+.svimpn { display: block; font-size: 18dp; font-weight: bold; color: #E9EDEA; }
+.svimprec { margin-left: 6dp; font-size: 14dp; font-weight: bold; color: #A9C3A3; }
+.svimps { display: block; margin-top: 3dp; font-size: 15dp; line-height: 20dp; color: #969C99; }
+#svimp-noask { display: block; margin-top: 14dp; padding: 5dp 8dp; margin-left: -10dp; border-radius: 8dp; border-width: 2dp;
+               border-color: transparent; font-size: 16dp; color: #B4BCB7; cursor: pointer; }
+#svimp-noask.f { border-color: #E8955A; }
+#svimp-later { display: block; margin-top: 12dp; font-size: 14.5dp; color: #8A938E; cursor: pointer; }
+body.light .svimpopt { background-color: #FFFFFF; border-color: #D5DCD4; }
+body.light .svimpopt:hover { border-color: #7E9B78; }
+body.light .svimpopt.f { background-color: #FBF1EA; border-color: #C2522F; }
+body.light .svimpn { color: #18201B; }
+body.light .svimps, body.light #svimp-later { color: #66726B; }
+body.light .svimprec { color: #4E6B49; }
+body.light #svimp-noask { color: #45514A; }
+body.light #svimp-noask.f { border-color: #C2522F; }
+/* GameCube-accurate mode in a save's details (2.12): the name, a line for this save and the link on the left, the
+ * switch on the right (the Settings switch's size and colours, settings.rcss .tog) */
+/* compact (seen in the first picture, 2026-11-16: with the switch added, Make a GameCube copy ran past the panel's
+ * bottom at 1600 x 960): tighter margins here and on the facts and rules below; the panel scrolls when a language's
+ * longer words still don't fit (#svdetail overflow) */
+.svacc { display: flex; align-items: center; margin: 0dp 0dp 12dp 0dp; padding: 9dp 14dp; border-radius: 12dp;
+         border-width: 1dp; border-color: #262B28; }
+.svaccl { display: block; flex: 1; min-width: 0dp; }
+.svaccn { display: block; font-size: 17dp; font-weight: bold; }
+.svaccs { display: block; margin-top: 2dp; font-size: 14dp; line-height: 18dp; color: #8A938E; }
+.svlink { display: inline-block; margin-top: 3dp; font-size: 14.5dp; font-weight: bold; color: #A9C3A3; cursor: pointer;
+          border-radius: 6dp; border-width: 2dp; border-color: transparent; padding: 0dp 4dp; margin-left: -6dp; }
+.svlink:hover { text-decoration: underline; }
+/* *Changed 2026-11-16 (snatcherLeo's polish list, mockup item 2, "the switch"):* the same switch as Settings (settings.rcss
+ * .tog.acc): 56 x 32 dp with a 1.5 dp edge, a dark track when off, the knob 4 dp from the outer edge, amber when on with
+ * a check mark (a ✓ letter) in the white knob; the controller on it shows the PLAY ring round it (.tring, 2.5 dp, 3.8 dp
+ * outside the edge) instead of the old orange edge. border-box keeps the edge inside the 56 x 32 */
+.svtog { display: block; position: relative; box-sizing: border-box; flex: none; width: 56dp; height: 32dp; margin-left: 18dp;
+         border-radius: 16dp; border-width: 1.5dp; border-color: #4A524E; background-color: #0E100F; cursor: pointer; }
+.svtog .knob { display: block; width: 24dp; height: 24dp; margin: 2.5dp 0dp 0dp 2.5dp; border-radius: 12dp; background-color: #D4DAD6; }
+.svtog .ck { display: none; height: 24dp; line-height: 24dp; text-align: center; font-size: 15dp; font-weight: bold;
+             color: #9A6E1E; }
+.svtog.on { background-color: #E0B45C; border-color: #E0B45C; }
+.svtog.on .knob { margin-left: 26.5dp; background-color: #FFFFFF; }
+.svtog.on .ck { display: block; }
+.svtog .tring { display: none; position: absolute; left: -7.8dp; top: -7.8dp; right: -7.8dp; bottom: -7.8dp; border-width: 2.5dp;
+                border-radius: 22.3dp; border-color: #E8955A; pointer-events: none; }
+.svtog.kfocus .tring { display: block; }
+.svlink.kfocus { border-color: #E8955A; }
+body.light .svacc { border-color: #D5DCD4; }
+body.light .svaccs { color: #66726B; }
+body.light .svlink { color: #4E6B49; }
+/* light: the same shape in the light palette (as settings.rcss's light .tog) */
+body.light .svtog { background-color: #DDE3DC; border-color: #9AA59E; }
+body.light .svtog .knob { background-color: #FFFFFF; }
+body.light .svtog .ck { color: #8A6420; }
+body.light .svtog.on { background-color: #C99A3E; border-color: #C99A3E; }
+body.light .svtog .tring, body.light .svlink.kfocus { border-color: #C2522F; }
+/* *added 2026-11-21:* the accurate box's note on a save made through PC MENU (it continues from the last PC in accurate
+ * mode), in the copy window's amber (.gcacc) so it reads as a note, not the switch's description */
+.svaccs.svspot { margin-top: 4dp; color: #E0B45C; }
+body.light .svaccs.svspot { color: #8A6420; }
+/* the copy window's line for a copy made for accurate play */
+.gcacc { display: block; margin-top: 8dp; color: #E0B45C; }
+body.light .gcacc { color: #8A6420; }
+/* "What it turns off": an intro, then each kind's heading and its rows, scrolling (pc_hub_saves.cpp hub_accurate_list_rml) */
+#svwhatlist { display: block; height: 420dp; margin-top: 10dp; overflow-y: auto; padding-right: 12dp; }
+#svwhatlist scrollbarvertical { width: 8dp; }
+#svwhatlist scrollbarvertical sliderbar { background-color: #3A423E; border-radius: 4dp; }
+.awi { display: block; font-size: 15.5dp; line-height: 22dp; color: #B4BCB7; margin-bottom: 6dp; }
+.awh { display: block; margin: 14dp 0dp 4dp 0dp; font-size: 14dp; font-weight: bold; letter-spacing: 1dp; }
+.awh.k0 { color: #E0B45C; } .awh.k1 { color: #D6AA5A; } .awh.k2 { color: #A9C3A3; }
+.awr { display: block; padding: 5dp 0dp 5dp 16dp; font-size: 16dp; line-height: 22dp; }
+body.light .awi { color: #45514A; }
+body.light .awh.k0, body.light .awh.k1 { color: #8A6420; } body.light .awh.k2 { color: #4E6B49; }
+body.svtampered #sva-noask { display: none; }
+/* the bubble: top centre, over everything on the page, for a few seconds */
+#svtoast { display: none; position: absolute; top: 28dp; left: 50%; width: 640dp; margin-left: -320dp; padding: 16dp 22dp;
+           border-radius: 14dp; border-width: 2dp; font-size: 18dp; text-align: center; z-index: 20; }
+body.saves.svtoasting #svtoast { display: block; }
+#svtoast.ok { background-color: #1E2A1F; border-color: #A9C3A3; color: #E9EDEA; }
+#svtoast.bad { background-color: #2E1C19; border-color: #DC6E5A; color: #F2DAD5; }
+/* the GameCube copy window's sections (mockup 104b): a coloured heading with its count, a small note, one row per note */
+#svgclist { display: block; max-height: 330dp; margin-top: 10dp; overflow-y: auto; }
+#svgclist scrollbarvertical { width: 8dp; }
+#svgclist scrollbarvertical sliderbar { background-color: #3A423E; border-radius: 4dp; }
+.gch { display: block; margin: 12dp 0dp 4dp 0dp; font-size: 14dp; font-weight: bold; letter-spacing: 1dp; }
+.gch.changes { color: #A9C3A3; } .gch.stays { color: #D6AA5A; } .gch.off { color: #969C99; } .gch.blocks { color: #DC6E5A; }
+.gch span { color: #6E7471; font-weight: normal; }
+.gcn { display: block; margin-bottom: 4dp; font-size: 14.5dp; color: #6E7471; }
+/* a row's two columns at fixed places, not inline: inline, RmlUi put the text on a second line under the label (snatcherLeo's
+ * check, 2026-11-15), as it did in the go-back window's rows */
+.gcr { display: block; position: relative; height: 40dp; line-height: 40dp; margin: 0dp 12dp 6dp 0dp; border-radius: 9dp;
+       background-color: #181C1B; font-size: 16dp; white-space: nowrap; }
+/* the same pattern as the go-back rows (.svvw / .svvp): only left and top on the columns, the line height on the row;
+ * sizes and clipping on the columns themselves threw them off the row (snatcherLeo's second check, 2026-11-15) */
+.gcr .gcw { position: absolute; left: 16dp; top: 0dp; color: #969C99; }
+.gcr .gct { position: absolute; left: 190dp; top: 0dp; color: #E9EDEA; }
+.gcmore { display: block; margin: 0dp 0dp 6dp 14dp; font-size: 15dp; color: #A9C3A3; }
+#svg-ok.off { background-color: #3C423E; color: #787E7A; }
+/* the copy window's version pickers (3.5 step 9): a label, then one word per choice; the chosen one outlined. The region
+ * words keep their colours (.rus / .rpal / .rjpn above) */
+#svgcregion { display: block; margin-top: 10dp; }
+.gcpick { display: block; margin-top: 6dp; white-space: nowrap; }
+.gcpl { display: inline-block; width: 120dp; font-size: 15dp; color: #969C99; }
+.gcreg { display: inline-block; padding: 4dp 12dp; margin-right: 6dp; border-radius: 9dp; border-width: 2dp;
+         border-color: #262B28; background-color: #181C1B; font-size: 15.5dp; font-weight: bold; color: #B4BCB7; }
+.gcreg.rus { color: #5B9BE0; } .gcreg.rpal { color: #4FAE72; } .gcreg.rjpn { color: #E0607E; }
+.gcreg.on { border-color: #A9C3A3; background-color: #22302A; }
+.gcreg:hover { border-color: #C9DCC4; cursor: pointer; }
+body.light .gcpl { color: #45514A; }
+body.light .gcreg { border-color: #D5DCD4; background-color: #F2F4F1; color: #18201B; }
+body.light .gcreg.rus { color: #2F74C0; } body.light .gcreg.rpal { color: #2E8A52; } body.light .gcreg.rjpn { color: #C23E5E; }
+body.light .gcreg.on { border-color: #4E6B49; background-color: #E3EDE0; }
+.svwide { width: 760dp; margin-left: -380dp; margin-top: -260dp; }
+#svnamein { display: block; box-sizing: border-box; width: 100%; height: 52dp; margin-top: 16dp; padding: 12dp 16dp;
+            border-radius: 10dp; border-width: 2dp; border-color: #6F8A6A; background-color: #1B1F1D; color: #E9EDEA;
+            font-size: 18dp; cursor: text; }
+/* the go-back window (mockup 74): the save now, greyed, then one row per version; "Go back" only on the chosen row */
+#svvnow { display: block; margin-top: 14dp; padding: 10dp 14dp; border-radius: 9dp; border-width: 1dp; border-color: #262B28;
+          font-size: 16dp; color: #8A938E; white-space: nowrap; overflow: hidden; }
+/* the scroll bar needs its own width: unstyled, RmlUi's bar took the whole list's width once 10 versions overflowed
+ * it, leaving the rows none (seen in the test window, 2026-11-13) */
+#svvlist { display: block; height: 320dp; margin-top: 10dp; overflow-y: auto; }
+#svvlist scrollbarvertical { width: 8dp; }
+#svvlist scrollbarvertical slidertrack { background-color: #161A18; }
+#svvlist scrollbarvertical sliderbar { background-color: #3A423E; border-radius: 4dp; }
+/* columns at fixed places, not flex: in this list RmlUi left the flex row's growing column with no width, so the
+ * columns ran into each other (seen in the test window, 2026-11-13) */
+.svv { display: block; position: relative; height: 50dp; margin-right: 12dp; line-height: 50dp; border-radius: 9dp; font-size: 17dp;
+       cursor: pointer; white-space: nowrap; }
+.svvsafe { float: left; line-height: 48dp; font-size: 15.5dp; color: #8A938E; }
+.svv:hover { background-color: #1E2321; }
+.svv.f { background-color: #2A231D; }
+.svvw { position: absolute; left: 14dp; top: 0dp; font-weight: bold; }
+.svvp { position: absolute; left: 250dp; top: 0dp; color: #B4BCB7; }
+.svvwhy { position: absolute; left: 410dp; top: 0dp; color: #8A938E; font-size: 14.5dp; }
+.svvr { position: absolute; right: 16dp; top: 0dp; color: #A9C3A3; font-weight: bold; visibility: hidden; }
+.svv.f .svvr, .svv:hover .svvr { visibility: visible; }
+.svdangerbtn { background-color: #B5463A; border-color: #E9EDEA; color: #FFFFFF; }
+#sva-noask { display: block; margin-top: 16dp; font-size: 16dp; color: #B4BCB7; cursor: pointer; }
+.svbox { display: inline-block; width: 20dp; height: 20dp; line-height: 18dp; margin-right: 8dp; text-align: center;
+         vertical-align: middle; border-radius: 5dp; border-width: 2dp; border-color: #6F8A6A; font-size: 14dp;
+         font-weight: bold; color: #13200F; }
+.svbox.on { background-color: #A9C3A3; border-color: #A9C3A3; }
+body.light #sva-noask { color: #45514A; }
+body.light #svsearch, body.light #svdetail, body.light .svrow { background-color: #FFFFFF; border-color: #D5DCD4; color: #18201B; }
+body.light .svrow.f { background-color: #FBF1EA; border-color: #C2522F; }
+body.light .svsub, body.light .fk, body.light .svsmall, body.light #svdrop, body.light .svvwhy, body.light .svvsafe { color: #66726B; }
+body.light #svnote, body.light .svnext, body.light .svvr, body.light #sv-undo { color: #4E6B49; }
+body.light #svvnow { border-color: #D5DCD4; color: #66726B; }
+body.light #sv-undo { border-color: #7E9B78; }
+body.light .svhr { background-color: #D5DCD4; }
+body.light #svnamein { background-color: #FFFFFF; border-color: #7E9B78; color: #18201B; }
+body.light .svv.f { background-color: #F6E9DF; }

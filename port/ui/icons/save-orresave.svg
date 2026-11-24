@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 46" width="40" height="46">
+<!-- The hub's save card symbol for an .orresave (OrrePort's own save file): the .gci card's box, size and outline, one
+     corner cut at 45 degrees like OrrePort's O, the O inside (snatcherLeo's pick "1c", 2026-11-13). White, filled paths only
+     (port/src/pc_svg.cpp reads no strokes): the outline is a stroke turned into a ring, 2.4 units wide (the mockup's
+     1.8 lost its colour at the hub's ~30 px). hub.rcss tints it (image-color) OrrePort's rust. Drawn by Main; no outside
+     art. -->
+<path fill="#FFFFFF" fill-opacity="0.2" d="M5.5 2 H27 L37 12 V41.5 Q37 44 34.5 44 H5.5 Q3 44 3 41.5 V4.5 Q3 2 5.5 2 Z"/>
+<path fill="#FFFFFF" fill-rule="evenodd" d="M5.5 0.8 H27.497 L38.2 11.502 V41.5 Q38.2 45.2 34.5 45.2 H5.5 Q1.8 45.2 1.8 41.5 V4.5 Q1.8 0.8 5.5 0.8 Z M5.5 3.2 H26.502 L35.8 12.498 V41.5 Q35.8 42.8 34.5 42.8 H5.5 Q4.2 42.8 4.2 41.5 V4.5 Q4.2 3.2 5.5 3.2 Z"/>
+<path fill="#FFFFFF" fill-rule="evenodd" d="M16.4 16 H23.6 L28 20.4 V32.6 L23.6 37 H16.4 L12 32.6 V20.4 Z M18.6 21.6 H21.4 L22.6 22.8 V30.2 L21.4 31.4 H18.6 L17.4 30.2 V22.8 Z"/>
+</svg>

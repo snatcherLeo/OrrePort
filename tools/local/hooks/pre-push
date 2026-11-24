@@ -1,0 +1,14 @@
+#!/bin/sh
+# Blocks pushing commits that contain game data from the disc (tools/local/hooks/check_game_data.py).
+# stdin: <local ref> <local sha> <remote ref> <remote sha> per ref being pushed.
+zero=0000000000000000000000000000000000000000
+while read local_ref local_sha remote_ref remote_sha; do
+    [ "$local_sha" = "$zero" ] && continue
+    if [ "$remote_sha" = "$zero" ]; then
+        base=$(git merge-base "$local_sha" origin/HEAD 2>/dev/null || git rev-list --max-parents=0 "$local_sha" | tail -1)
+    else
+        base=$remote_sha
+    fi
+    python -I "$(git rev-parse --show-toplevel)/tools/local/hooks/check_game_data.py" --range "$base..$local_sha" || exit 1
+done
+exit 0

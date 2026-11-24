@@ -1,0 +1,207 @@
+/**
+ * @file menu_exact_80077A5C.c
+ * @brief menuCBRule accessors, 0x80077A5C - 0x80077ED4.
+ *
+ * Function-boundary carve of the menu range bucket (menu_range_8007109C.c,
+ * chunk menu_candidate_80075390): the tail of the battle-rule module, from
+ * the blank-slot check to the rule copy/compare helpers. In Pokemon XD the
+ * same run is menuCBRule_IsBlankPokemon .. menuCBRule_IsEquals, the end of
+ * menuCBRule (TeamOrre/xd-decomp symbols.txt, 0x8004CCB0-0x8004D394);
+ * menuCBRule_GetBattleTimeLimit, menuCBRule_CheckValidItem and
+ * menuCBRule_ConstantRule keep their names here.
+ *
+ * No jump table (the switches are compare trees), no pooled constant. The
+ * data is kept extern: the rule presets lbl_80268940 (.rodata, a named
+ * 0x108-byte object in rodata_80268708.c, three 0x54-byte rules), the
+ * regulation item list lbl_802EE458 (.data) and its count lbl_80478928
+ * (.sdata). GC/1.3 -O4,p with the chunk's unit-wide -opt nopeephole, no
+ * pragmas.
+ */
+#include "dolphin/types.h"
+#include "pc/disc_types.h" /* DISC_S16: rule records keep the disc's big-endian bytes on the PC */
+#include "game/constants/pokemon_status.h"
+
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 pokemonGetStatus(void* pokemon, s32 index, s32 field, s32 subindex);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32* savedataGetStatus(s32 side, s32 slotType);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 fn_80142984(u16 item);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memcpy(void* dst, const void* src, u32 size);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 memcmp(const void* s1, const void* s2, u32 size);
+#endif
+
+/* menuCBRule_IsBlankPokemon (0x80077A5C): accept an empty slot or a zero species value. */
+/* NAME-T1 fn_80077A5C */
+u8 menuCBRule_IsBlankPokemon(void* pokemon) {
+    s32 result;
+
+    result = 0;
+    if (pokemon == 0 || pokemonGetStatus(pokemon, 0, POKEMON_STATUS_SPECIES, 0) == 0) {
+        result = 1;
+    }
+    return result;
+}
+
+extern u8* savedataBattleGetRulePtr(void);
+
+/* 0x80077AAC-0x80077B60: fixed-index byte accessors into the
+ * savedataBattleGetRulePtr() record, one per battle-rule switch. */
+/* NAME-T1 fn_80077AAC */
+u8 menuCBRule_EnableSkill_SonicBoom(void) { return savedataBattleGetRulePtr()[0x13]; } /* Sonic Boom / Dragon Rage */
+
+/* NAME-T1 fn_80077AD0 */
+u8 menuCBRule_EnableSkill_Michidure(void) { return savedataBattleGetRulePtr()[0x12]; } /* Destiny Bond / Perish Song on the last Pokemon */
+
+/* NAME-T1 fn_80077AF4 */
+u8 menuCBRule_ProhibitionSuicide(void) { return savedataBattleGetRulePtr()[0x11]; }
+
+/* NAME-T1 fn_80077B18 */
+u8 menuCBRule_EnableSkillSwap(void) { return savedataBattleGetRulePtr()[0x10]; }
+
+/* NAME-T1 fn_80077B3C */
+u8 menuCBRule_EnableSbToIceed(void) { return savedataBattleGetRulePtr()[0xf]; }
+
+/* NAME-T1 fn_80077B60 */
+u8 menuCBRule_EnableSbToSleep(void) { return savedataBattleGetRulePtr()[0xe]; } /* the sleep clause */
+
+/* menuCBRule_GetCommandTimeLimit (0x80077B84): fixed-index s16 accessor into the same record. */
+s16 menuCBRule_GetCommandTimeLimit(void) { return DISC_S16(&((s16*)savedataBattleGetRulePtr())[0xb]); }
+
+/* menuCBRule_GetBattleTimeLimit (0x80077BA8): same shape, scaled by 0x3c. */
+s32 menuCBRule_GetBattleTimeLimit(void) {
+    return DISC_S16(&((s16*)savedataBattleGetRulePtr())[0xa]) * 0x3c; /* rule record: big-endian on the PC */
+}
+
+/* fn_80077BD0 (0x80077BD0): accept initialized save-status values. */
+u8 fn_80077BD0(void) {
+    s32 value;
+
+    value = ((s32*)PC_PTR(savedataGetStatus(0, 0xE)))[2];
+    switch (value) {
+    case 0:
+    case 1:
+    case 2:
+        return 1;
+    }
+    return 0;
+}
+
+/* menuCBRule_CheckValidItem (0x80077C1C): handle sentinel item ids locally. */
+u8 menuCBRule_CheckValidItem(u16 item) {
+    switch (item) {
+    case 0:
+        return 1;
+    case 0xAF:
+        return 0;
+    default:
+        return fn_80142984(item);
+    }
+}
+
+extern u32 lbl_80478928;
+extern u16 lbl_802EE458[];
+
+typedef struct DISC_STRUCT MenuRuleItemRestrictions { /* the rule record: big-endian on the PC */
+    u8 pad_00[8];
+    s32 mode;
+    u8 pad_0C[0xC];
+    u8 item_disabled[0x3C];
+} MenuRuleItemRestrictions;
+
+/* menuRuleIsItemAllowed (0x80077C68): apply the current rule's item restriction. */
+/* NAME-T3 fn_80077C68 */
+u8 menuRuleIsItemAllowed(u16 item) {
+    MenuRuleItemRestrictions* rule;
+    u32 i;
+
+    rule = (MenuRuleItemRestrictions*)savedataBattleGetRulePtr();
+    if (menuCBRule_CheckValidItem(item) == 0) {
+        return 0;
+    }
+
+    switch (rule->mode) {
+    case 0:
+        return 1;
+    case 1:
+        return item == 0;
+    case 2:
+        for (i = 0; i < lbl_80478928; i++) {
+            if (item == lbl_802EE458[i]) {
+                return rule->item_disabled[i] == 0;
+            }
+        }
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+/* menuRuleGetRegulationItem (0x80077D88): bounds-checked table lookup. */
+/* NAME-T3 fn_80077D88 */
+u16 menuRuleGetRegulationItem(s32 index) {
+    if (index < 0 || lbl_80478928 <= (u32)index) {
+        return 0;
+    }
+    return lbl_802EE458[index];
+}
+
+/* savedataBattleGetEntryCount (0x80077DB8): map the current save state to a rule value. */
+s32 savedataBattleGetEntryCount(void) {
+    s32* entry;
+    s32 state;
+
+    entry = PC_PTR(savedataGetStatus(0, 0xE));
+    if (entry[0] == 2) {
+        entry = PC_PTR(savedataGetStatus(0, 0xE));
+        if (entry[2] == 0) {
+            return 6;
+        }
+    }
+
+    entry = PC_PTR(savedataGetStatus(0, 0xE));
+    state = entry[1];
+    switch (state) {
+    case 0:
+        return 3;
+    case 1:
+        return 4;
+    case 2:
+        break;
+    default:
+        break;
+    }
+    return 2;
+}
+
+extern u8 lbl_80268940[];
+
+/* menuCBRule_ConstantRule (0x80077E50): fixed-slot table lookup, NULL out of range. */
+void* menuCBRule_ConstantRule(s32 index) {
+    switch (index) {
+    case 0:
+    case 1:
+    case 2:
+        return lbl_80268940 + (index * 0x54);
+    }
+    return (void*)0;
+}
+
+/* menuCBRule_Copy (0x80077E80): fixed-size rule record copy. */
+/* NAME-T1 fn_80077E80 */
+void menuCBRule_Copy(void* dst, void* src) {
+    memcpy(dst, src, 0x54);
+}
+
+/* menuCBRule_IsEquals (0x80077EA4): fixed-size rule record equality check. */
+/* NAME-T1 fn_80077EA4 */
+u8 menuCBRule_IsEquals(u16* s1, u16* s2) {
+    return memcmp(s1, s2, 0x54) == 0;
+}
+

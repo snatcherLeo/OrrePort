@@ -1,0 +1,19 @@
+{
+  "_what": "Run 2's save edit E2, after the Cologne Case (between P17a and P17b; playthrough-guide.md parts 7 and 9). Items: x99 each of Joy, Excite and Vivid Scent (snatcherLeo, 2026-10-19); one each of the bag-only item paths the story never gives: Sacred Ash, a Sun Stone, an Oran Berry, a Repel (snatcherLeo, 2026-10-20); an Everstone for the evolution tests (the Rare Candies come from E1's x99: a recipe sets a count, so listing them here would lower it). Pokemon (snatcherLeo, 2026-10-20: evolution methods, legal and checked against the disc): Sunkern Lv 5 (Sun Stone, kind 7), Azurill Lv 5 at friendship 220 holding the Everstone (friendship, kind 1; Everstone), three Tyrogue Lv 19 (Atk > Def, Atk = Def, Atk < Def: kinds 8, 9, 10). P17a must end with ONE Pokemon in the party: the editor adds to free party slots only.",
+  "add_pokemon": [
+    {"species": 191, "level": 5, "nature": 0, "ivs": 31, "moves": [71], "_note": "Sunkern: Absorb (level-up); evolves with the Sun Stone (kind 7, item 93)"},
+    {"species": 350, "level": 5, "nature": 0, "ivs": 31, "moves": [150, 204], "friendship": 220, "item": 195, "_note": "Azurill: Splash, Charm (level-up); friendship 220 (kind 1 needs 220+); holds the Everstone first"},
+    {"species": 236, "level": 19, "nature": 1, "ivs": 31, "moves": [33], "_note": "Tyrogue, Lonely (+Atk -Def): Attack > Defense -> Hitmonlee (kind 8) at Lv 20"},
+    {"species": 236, "level": 19, "nature": 0, "ivs": 31, "moves": [33], "_note": "Tyrogue, Hardy (neutral): Attack = Defense -> Hitmontop (kind 9) at Lv 20"},
+    {"species": 236, "level": 19, "nature": 5, "ivs": 31, "moves": [33], "_note": "Tyrogue, Bold (+Def -Atk): Attack < Defense -> Hitmonchan (kind 10) at Lv 20"}
+  ],
+  "set_items": [
+    {"pocket": "colognes", "item": 543, "count": 99},
+    {"pocket": "colognes", "item": 544, "count": 99},
+    {"pocket": "colognes", "item": 545, "count": 99},
+    {"pocket": "normal", "item": 45, "count": 1},
+    {"pocket": "normal", "item": 93, "count": 1},
+    {"pocket": "berries", "item": 139, "count": 1},
+    {"pocket": "normal", "item": 86, "count": 1}
+  ]
+}

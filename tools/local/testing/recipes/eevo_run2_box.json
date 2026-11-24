@@ -1,0 +1,10 @@
+{
+  "_what": "E-EVO as applied (snatcherLeo, 2026-10-24: EVO now, the GBA trade evolutions later with S16): eevo_run2.json's four Pokemon put in the first free PC box slots instead of the party (the party is the full Ho-Oh team), and the PC's Rare Candies set to x10 (3 were left; four are needed). At a PC: leave one Pokemon in the party, take these four, keep a Poke Ball in the bag for Shedinja.",
+  "add_pokemon": [
+    {"species": 290, "level": 6, "nature": 0, "ivs": 31, "moves": [33, 81, 40], "pid_upper_mod10": "low", "to": "box", "_note": "Wurmple -> Silcoon at Lv 7"},
+    {"species": 290, "level": 6, "nature": 0, "ivs": 31, "moves": [33, 81, 40], "pid_upper_mod10": "high", "to": "box", "_note": "Wurmple -> Cascoon at Lv 7"},
+    {"species": 301, "level": 19, "nature": 0, "ivs": 31, "moves": [10, 106, 141], "to": "box", "_note": "Nincada -> Ninjask at Lv 20, plus Shedinja into a free party slot"},
+    {"species": 328, "level": 5, "nature": 0, "ivs": 31, "moves": [150], "beauty": 170, "to": "box", "_note": "Feebas, Beauty 170 -> Milotic on its next level-up"}
+  ],
+  "set_items": [{"pocket": "pc", "item": 68, "count": 10}]
+}

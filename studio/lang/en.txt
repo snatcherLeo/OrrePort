@@ -1,0 +1,747 @@
+# OrrePort Studio's words in English: the source for every translation of Studio.
+#
+# The same format and rules as OrrePort's own language files (port/ui/lang/en.txt explains them for translators):
+# "key = value", change only the text after "=", keep {names} as written, \n starts a new line, "#" lines are notes.
+# Studio keeps its own files (2026-11-18): Studio is its own program, so its words live here, one file per
+# language, checked by the same tool as OrrePort's (tools/local/lang_check.py).
+
+# ---- About this file ----
+language.name = English
+plural = one-other
+
+# ---- The window ----
+# the window's title (title bar, taskbar)
+studio.app.title = OrrePort Studio
+
+# ---- The editor rail (left edge) ----
+# each editor's name: shown on its "Coming soon" page and read by screen readers
+studio.editor.pokemon = Pokémon
+studio.editor.move = Moves
+studio.editor.item = Items
+studio.editor.trainer = Trainers
+studio.editor.people = People
+# an editor that isn't built yet; {editor} is one of the names above
+studio.coming_soon.title = {editor}: coming soon
+studio.coming_soon.body = This editor isn't built yet. The Pokémon editor comes first; the others follow one by one.
+# ---- "Coming soon" pages: what each editor will do (the project's drafts from the project plan, 2026-11-22) ----
+# shown under "{editor}: coming soon" on that editor's page, in place of the line above (which stays the fallback);
+# one or two sentences, wrapped in a 520-pixel box, read by screen readers too
+# the Moves editor's coming-soon page
+studio.coming_soon.move = Every move in the game: its power, accuracy, type and effect, and how it looks in battle, including the versions some Pokémon have of their own.
+# the Items editor's coming-soon page
+studio.coming_soon.item = Every item, from Poké Balls and Berries to TMs and key items: what each one does, its description and its price.
+# the Trainers editor's coming-soon page
+studio.coming_soon.trainer = The trainers you battle: their teams, the items they use, what you win, and where and when you meet them.
+# the People editor's coming-soon page
+studio.coming_soon.people = The game's characters, from the hero and Rui to everyone you meet in Orre: their models and how they look and move.
+# the Types editor's coming-soon page
+studio.coming_soon.type = The types and how they match up in battle: which attacks are strong, weak or have no effect against each type.
+# the Abilities editor's coming-soon page
+studio.coming_soon.ability = Every ability: what it does in battle and which Pokémon have it.
+# the Battle editor's coming-soon page (the rules of battle)
+studio.coming_soon.battle = The rules of battle: experience, catching and snagging, Hyper Mode, weather and status lengths.
+# a second, smaller line under it, on the Moves, Items, Trainers and People pages only (the editors decided as
+# view-only first)
+studio.coming_soon.edit_note = You'll be able to look through it first; changing it comes with mods.
+
+# ---- The Pokémon list ----
+# the list's heading (short, capitals in English)
+studio.list.title = POKÉMON
+# the hint inside the empty search box (short)
+studio.list.search = Search by name or number
+# the global search: the top bar's field (short: about 20 characters show) and the Ctrl+K palette's field
+studio.search.field = Search everything
+studio.search.palette = Search or jump to…
+# shown when nothing matches; {query} is what was typed
+studio.search.none = No matches for “{query}”
+# the kind of each result, at the row's right end (short)
+studio.search.kind_pokemon = Pokémon
+studio.search.kind_editor = Editor
+# the palette's footer
+studio.search.hint = ↑ ↓ to move · Enter to open · Ctrl+Enter in a new tab · Esc to close
+# the line above the results when a typed word was corrected; {typed} as typed, {word} the word searched instead
+studio.search.corrected = “{typed}” searched as “{word}”
+# when nothing is close to a typed word; the search runs on the others
+studio.search.dropped = Nothing has “{typed}”: searched for the other words
+# what matched when it wasn't the name (after the result's name, short)
+studio.search.via_type = {type} type
+studio.search.via_ability = Ability: {ability}
+# a tab's right-click menu
+studio.tabmenu.move_new = Move to new window
+studio.tabmenu.duplicate = Duplicate
+studio.tabmenu.close = Close
+studio.tabmenu.close_others = Close other tabs
+studio.tabmenu.close_right = Close tabs to the right
+# under each name in the list; {number} is the National Pokédex number, e.g. "No. 001" (short)
+studio.list.number = No. {number}
+# when nothing matches the search; {text} is what was typed
+studio.list.empty = No Pokémon match “{text}”.
+
+# ---- The Pokémon page (v2) ----
+# under the name, one line: {category} the disc's kind of Pokémon ("Seed"), {national} the National Pokédex number,
+# {own} this game's internal number, {height} and {weight} from the two lines below
+studio.page.info = {category} Pokémon  ·  No. {national} National Pokédex  ·  No. {own} in this game  ·  {height}  ·  {weight}
+# the height as the US disc stores it, feet and inches, e.g. 2′04″
+studio.page.height = {feet}′{inches}″
+# the weight as the US disc stores it, e.g. 15.2 lb
+studio.page.weight = {pounds} lb
+# the era strip: which game's values the page shows (short)
+studio.era.label = ERA
+studio.era.gen = Gen {n}
+studio.era.colosseum = Colosseum
+# the era bar's first button, shown by default: this disc's values, which are Gen 3's (Ruby / Sapphire) and XD's (its
+# species and move values are the same). "XD" stays as is in every language (the game's own short name). short
+studio.era.gen3_colosseum = Gen 3 · Colosseum · XD
+studio.era.note = the game's own values
+# the tabs (short)
+studio.tab.overview = Overview
+studio.tab.moves = Moves
+studio.tab.looks = Looks
+# the Pokémon editor's tab of styles (2026-11-22: the Looks tab renamed; drawn second, after Overview; short)
+studio.tab.styles = Styles
+# the Styles tab: the styles card's title, and what the picked style uses (titles are small capitals, short)
+studio.styles.title = STYLES
+studio.styles.parts_title = WHAT THIS STYLE USES
+# a style's name: the game's own, and the Japanese release's (Jynx's darker face); named by disc, as the two read
+# side by side (snatcherLeo, 2026-11-22: "Colosseum (JPN)", to stay consistent with "Colosseum (US)")
+studio.styles.game = Colosseum (US)
+studio.styles.japanese = Colosseum (JPN)
+# where a style comes from (small labels under its name)
+studio.styles.src_disc = your disc
+studio.styles.src_jp = Japanese disc
+# the marks on a style: the one shown in Studio, and the one the game shows
+studio.styles.viewing = viewing
+studio.styles.in_game = in game
+# Jynx's styles card when the Japanese disc isn't linked (wraps; a sentence)
+studio.styles.no_jp = Link your Japanese disc in OrrePort (Add a language disc…) to see the Colosseum (JPN) style.
+# the parts of a style (the left column of the parts card; short)
+studio.styles.part.model = Model
+studio.styles.part.shiny = Shiny
+studio.styles.part.mug_shots = Mug shots
+studio.styles.part.pc_pictures = PC pictures
+studio.styles.part.cry = Cry
+studio.styles.part.moves = Move versions
+# what a part is, for these styles
+studio.styles.model_game = The game's model, with its animations
+studio.styles.model_jp = The Japanese disc's model, with its animations
+studio.styles.game_part = The game's
+studio.styles.pictures_below = The game's (below)
+# each part's choice of where it comes from, faded until editing (short)
+studio.styles.from = from ▾
+studio.styles.later_note = Taking parts from other styles, your own files or mods comes with editing.
+# the Overview's Cries card (2026-11-22): its title (small capitals, short), the two cries' names, the fainting cry's
+# tag (Studio makes it from the cry: a preview, not what the game plays), a length ("1.0 s"), no cry, the link
+studio.cries.title = CRIES
+studio.cries.cry = Cry
+studio.cries.faint = Fainting cry
+studio.cries.preview = preview
+studio.cries.seconds = {n} s
+studio.cries.none = This Pokémon has no cry on the disc.
+studio.cries.in_sound = In Sound →
+# the Sound tab's cries card: its title (small capitals), when the game plays the cry (after the "Cry" heading, short),
+# the choices (the game's, for both cries; how the fainting cry is made; your own, later), the tag of
+# the one in use, and the note on forms (wraps)
+studio.sound.cries_title = CRIES
+studio.sound.cry_where = sent out, a Shadow Pokémon revealed, evolution, Strategy Memo
+studio.sound.game = Colosseum · the game's own
+studio.sound.made = The original cry, played lower and slower
+studio.sound.add_cry = Add your own cry… (comes with modding)
+studio.sound.add_faint = Add your own fainting cry… (comes with modding)
+studio.sound.in_use = in use
+studio.sound.forms = Forms share their species' cries: every form of this Pokémon plays these two.
+# the Sound tab's second card: where the game plays the cries (title in small capitals; rows: when, which cry), and
+# how styles use them (wraps)
+studio.sound.where_title = WHERE CRIES PLAY (IN GAME)
+studio.sound.where.sent_out = Sent out in battle
+studio.sound.where.shadow = A Shadow Pokémon revealed
+studio.sound.where.evolution = Evolution
+studio.sound.where.memo = Strategy Memo
+studio.sound.where.faint = Fainting
+studio.sound.where.cry = cry
+studio.sound.where.cry_both = cry, before and after
+studio.sound.where.faint_val = the original cry, lower and slower
+studio.sound.style_note = A style picks which of these it uses (Styles → What this style uses → Cry), so a style can carry its own cry.
+# the Overview's model card: the link to the Styles tab (green; short)
+studio.view.change_style = Change style… →
+studio.tab.sound = Sound
+studio.tab.animations = Animations
+studio.tab.status = Status and use
+# a tab that isn't built yet; {tab} is its name
+studio.tab.planned_title = {tab}: planned
+studio.tab.planned_body = This part of the Pokémon editor is planned. Overview, Moves and Looks show what Studio reads from your disc so far.
+# the Overview's cards (short, capitals in English)
+studio.card.stats = BASE STATS
+studio.card.ability = ABILITY
+studio.card.matchups = MATCHUPS
+studio.card.evolution = EVOLUTION
+# the stat rows
+studio.statname.hp = HP
+studio.statname.attack = Attack
+studio.statname.defense = Defense
+studio.statname.sp_atk = Sp. Atk
+studio.statname.sp_def = Sp. Def
+studio.statname.speed = Speed
+studio.statname.total = Total
+# beside each ability (Colosseum's abilities all come from Gen 3)
+studio.ability.since = from Gen 3
+studio.ability.second = Second ability
+studio.ability.none = none
+# the matchup rows: how hard each type's moves hit this Pokémon
+studio.match.x4 = Weak to (×4)
+studio.match.x2 = Weak to (×2)
+studio.match.half = Resists (×½)
+studio.match.quarter = Resists (×¼)
+studio.match.zero = Immune to (×0)
+# how each evolution happens (Gen 3's methods); {level} is a level
+studio.evo.none = Doesn't evolve.
+studio.evo.kind.1 = Friendship
+studio.evo.kind.2 = Friendship (day)
+studio.evo.kind.3 = Friendship (night)
+studio.evo.kind.4 = Lv. {level}
+studio.evo.kind.5 = Trade
+# {item} is the item's name from the disc (e.g. Thunderstone)
+studio.evo.kind.6 = Trade holding {item}
+studio.evo.kind.7 = {item}
+studio.evo.kind.8 = Lv. {level}, Attack > Defense
+studio.evo.kind.9 = Lv. {level}, Attack = Defense
+studio.evo.kind.10 = Lv. {level}, Defense > Attack
+studio.evo.kind.11 = Lv. {level} (by personality)
+studio.evo.kind.12 = Lv. {level} (by personality)
+studio.evo.kind.13 = Lv. {level}
+studio.evo.kind.14 = Lv. {level} (with a free slot)
+studio.evo.kind.15 = Beauty
+# under each picture on the Looks tab: the game's own picture is the default and can't be removed
+studio.looks.default = Default: Colosseum 🔒
+# Looks tab: a picture's size in pixels, under its name (the exact picture from the disc). short
+studio.looks.size = {w} × {h} px
+# the inspector (right)
+studio.insp.selected = SELECTED
+studio.insp.hint = Pick a stat, ability, type or matchup on the Overview to see what it means in the game. The model plays its idle animation; switch to its standing pose above it.
+studio.insp.click = Everything named on the page is clickable: Pokémon open here, types and abilities in their editors.
+studio.insp.open_type = Open in the Type editor
+studio.insp.open_ability = Open in the Ability editor
+studio.insp.model_title = Battle model
+# what each base stat does in battle (Gen 3 rules, as Colosseum uses them)
+studio.help.stat.0 = How much damage it can take before fainting. Higher means it lasts longer.
+studio.help.stat.1 = Strength of its physical moves. In Colosseum a move is physical or special by its type.
+studio.help.stat.2 = Cuts the damage it takes from physical moves.
+studio.help.stat.3 = Strength of its special moves.
+studio.help.stat.4 = Cuts the damage it takes from special moves.
+studio.help.stat.5 = Decides who moves first each turn.
+# under an ability's own description (which comes from the disc)
+studio.help.ability = Abilities work by themselves in battle. The description above is the game's own, from your disc.
+# a type: {type} is its name, {types} a list of type names
+studio.type.physical = {type} moves are physical in Colosseum: Attack and Defense decide their damage. Colosseum keeps this choice in its type table.
+studio.type.special = {type} moves are special in Colosseum: Sp. Atk and Sp. Def decide their damage. Colosseum keeps this choice in its type table.
+studio.type.neither = {type} moves are neither physical nor special.
+studio.type.strong = Super effective (×2) on: {types}
+studio.type.weak = Not very effective (×½) on: {types}
+studio.type.noeffect = No effect on: {types}
+# the editors the page links to (names for their "Coming soon" pages)
+studio.editor.type = Types
+studio.editor.ability = Abilities
+
+# ---- The record page ----
+# under the name: {category} the kind of Pokémon from the disc ("Seed"), {national} the National Pokédex number,
+# {own} the number this game uses internally
+studio.page.subtitle = {category} Pokémon  ·  No. {national} in the National Pokédex  ·  No. {own} in this game
+# above the 3D view (short, capitals in English)
+studio.stage.title = BATTLE MODEL
+# the 3D view's buttons (short)
+studio.viewer.spin_on = Spin: on
+studio.viewer.spin_off = Spin: off
+studio.viewer.reset = Reset view
+# the 3D view's motion drop-down (short): the Pokémon's idle animation, or its standing (bind) pose
+studio.viewer.motion_idle = Idle
+studio.viewer.motion_standing = Standing pose
+# the six base stats and their total (short, capitals in English)
+studio.stat.hp = HP
+studio.stat.attack = ATTACK
+studio.stat.defense = DEFENSE
+studio.stat.sp_atk = SP. ATK
+studio.stat.sp_def = SP. DEF
+studio.stat.speed = SPEED
+studio.stat.total = TOTAL
+
+# ---- Types (the game's type numbers; short) ----
+studio.type.0 = Normal
+studio.type.1 = Fighting
+studio.type.2 = Flying
+studio.type.3 = Poison
+studio.type.4 = Ground
+studio.type.5 = Rock
+studio.type.6 = Bug
+studio.type.7 = Ghost
+studio.type.8 = Steel
+studio.type.9 = ???
+studio.type.10 = Fire
+studio.type.11 = Water
+studio.type.12 = Grass
+studio.type.13 = Electric
+studio.type.14 = Psychic
+studio.type.15 = Ice
+studio.type.16 = Dragon
+studio.type.17 = Dark
+
+# ---- The inspector (right) ----
+# section headings (short, capitals in English)
+studio.inspector.mug_shots = MUG SHOTS
+studio.inspector.pc_pictures = PC PICTURES
+studio.inspector.model = MODEL
+# the labels under each picture (short)
+studio.pic.normal = Normal
+studio.pic.shiny = Shiny
+# the same mug shot turned the other way (a separately drawn face, for the Pokémon whose disc picture has one)
+studio.pic.normal_other_way = Normal, turned
+studio.pic.shiny_other_way = Shiny, turned
+# the model's facts; {triangles}, {parts} and {textures} are numbers
+studio.model.info = Battle model: {triangles} triangles, {parts} parts, {textures} textures
+studio.model.loading = Reading the model…
+studio.model.missing = This Pokémon has no battle model on the disc.
+studio.model.bind_pose = Drawn without the game's own lights, shine layers or shiny colours yet.
+# when the 3D view can't start; {reason} says why
+studio.model.none = The 3D view couldn't start: {reason}
+# where every value on the page comes from
+studio.from_disc = From your game disc
+
+# ---- The developer view (Ctrl+Shift+D: Studio's own memory and disk use) ----
+# {private}, {working}, {peak}, {read}, {written} are numbers of megabytes
+studio.dev.memory = Memory: {private} MB private, {working} MB working set (highest {peak} MB)
+studio.dev.disk = Disk since start: {read} MB read, {written} MB written
+studio.dev.base = After the first load: {private} MB private (allowed growth: 150 MB)
+studio.dev.ok = Nothing out of place.
+studio.dev.out_of_place = Out of place:
+studio.dev.warn.private = Private memory went past its 600 MB budget.
+studio.dev.warn.growth = Memory grew more than 150 MB past its level after loading.
+studio.dev.warn.read = One piece of work read more than 200 MB from disk.
+studio.dev.warn.written = More than 5 MB was written to disk between two checks.
+
+# ---- The disc ----
+studio.disc.reading = Reading your disc…
+studio.disc.none_title = Choose your Pokémon Colosseum disc
+studio.disc.none_body = Studio reads everything from your own copy of the game. Choose its disc image (ISO, GCM, RVZ and the other formats Dolphin uses). Nothing is changed on it.
+studio.disc.choose = Choose disc…
+studio.disc.choose_title = Choose your Pokémon Colosseum disc image
+studio.disc.filter = Disc images
+studio.disc.filter_all = All files
+# {reason} says what went wrong, in plain words
+studio.disc.error = The disc couldn't be read: {reason}. Choose another disc image.
+
+# ---- forms: the Forms card below Evolution on the Overview (short: each name sits under a 48-pixel thumbnail) ----
+studio.card.forms = FORMS
+# the Forms card's top right, for species whose forms all exist in Colosseum (Unown, Castform)
+studio.form.hint = Click a form to see its model and pictures
+studio.form.normal = Normal
+studio.form.castform.sunny = Sunny
+studio.form.castform.rainy = Rainy
+studio.form.castform.snowy = Snowy
+studio.form.deoxys.normal = Normal
+studio.form.deoxys.attack = Attack
+studio.form.deoxys.defense = Defense
+studio.form.deoxys.speed = Speed
+# after Deoxys's four forms (three greyed)
+studio.form.deoxys.note = Only the Normal Forme exists in Colosseum
+
+# ---- the v3 page (2026-11-18) ----
+# the tab bar: a Home tab's name (beside OrrePort's O; "+" opens one), and the page shown in it. short
+studio.home.tab = Home
+# the tab bar's Back / Forward arrows: hover card title and line (short)
+studio.nav.back = Back
+studio.nav.back_help = The Pokémon you looked at before in this tab. Alt+Left or the mouse's back button too.
+studio.nav.forward = Forward
+studio.nav.forward_help = The Pokémon you went back from. Alt+Right or the mouse's forward button too.
+studio.home.title = OrrePort Studio
+studio.home.body = This is Studio's start page; every editor will have its place here. For now, open one from the rail on the left, or search with Ctrl+K.
+# Home's third button (4.4, 2026-11-23): it starts OrrePort from this folder; while OrrePort is open it brings it forward
+# and reads the second line (the hub's link says "Open Studio" / "Studio is opened" the same way, snatcherLeo's wording). " ↗"
+# is added after either; short
+studio.home.open_orreport = Open OrrePort
+studio.home.orreport_opened = OrrePort is opened
+# (a toast when the button can't find OrrePort.exe beside Studio, for example in a development build)
+studio.home.orreport_missing = OrrePort isn't in this folder, so it couldn't be started.
+# Settings: the page's (and its tab's) name, on Home's gear button too. short
+studio.settings.title = Settings
+# Settings: its keyboard shortcut, shown beside Home's gear button (keep the keys as Windows names them). short
+studio.settings.keys = Ctrl+,
+# Settings: the first pane, in the list on the page's left. short
+studio.settings.appearance = Appearance
+# Settings > Appearance: the theme setting's name
+studio.settings.theme = Theme
+# Settings > Appearance: what the theme setting does (under its name)
+studio.settings.theme_help = Light or dark. Match Windows follows your Windows light or dark mode, and changes with it.
+# Settings > Appearance: the theme's three choices, on a switch. short
+studio.settings.theme_windows = Match Windows
+studio.settings.theme_light = Light
+studio.settings.theme_dark = Dark
+# Settings > Appearance: under the theme, before one is picked in Studio
+studio.settings.theme_shared = Following OrrePort's Theme setting until you choose here.
+# Settings > Appearance: under the theme, once one is picked in Studio
+studio.settings.theme_saved = Saved in Studio's preferences.
+# Settings' Discs pane (4.4, 2026-11-23): its name in the pane list and its heading
+studio.settings.discs = Discs
+# The rows' words are OrrePort's shared discs.* (and common.cancel) since the project's c4de3f0b7 (2026-11-23): the hub's
+# Discs panel took Studio's wording word for word, so both programs read one text (lang_load_shared)
+# Studio's own lines in the pane: under the card (no period, snatcherLeo 2026-11-23), and under the US row when the disc Studio
+# is using was removed or deleted from the ROM folder while Studio was open
+studio.discs.shared = Shared with OrrePort
+studio.discs.in_use_gone = The disc Studio is using is no longer in the ROM folder. Studio keeps using it until you close it; add a US disc here before the next start.
+# (a picked file that doesn't fit its row: those lines are OrrePort's own, read from its language files so both
+# programs say them word for word (snatcherLeo, 2026-11-23): disc.unreadable, disc.archive, disc.wrong, disc.wrong.region,
+# disc.name.*, disc.languages.*, hub.lang.us_disc, hub.lang.not_lang, hub.lang.unreadable, hub.lang.already,
+# check.dol.text, check.verify_hint, and hub.lang.not_original: a European or Japanese disc whose program file isn't
+# the original release's, added to OrrePort's file by Main on 2026-11-23, 344a111c0)
+# Settings' fourth pane (4.4, 2026-11-23): its name in the pane list and its heading
+studio.settings.about = About
+# Updates (4.4): the lines both programs show are OrrePort's update.* (shared word for word, read from its language
+# file: lang_load_shared; in port/ui/lang since the project's merge f2ef94fd8, so Studio keeps no copies of them).
+# About's last row, the logs folder (snatcherLeo, 2026-11-23: "have Studio app also have this, so we can match both "About"
+# tabs in both apps"): OrrePort's settings.logs, settings.logs.sub and settings.logs.open, shared (in port/ui/lang
+# since 40ad8a0d9, so no copies here)# Studio's own lines for the update (the restart is Studio's)
+studio.update.ready_body = Applies when you restart Studio; your tabs come back.
+studio.update.restart_by_hand = Applies the next time OrrePort and Studio start.
+# Settings' third pane (4.3 part 3): its name in the pane list, then three rows (a name, what it does, its button)
+studio.settings.help = Help and reports
+studio.settings.report = Report a problem
+studio.settings.report_help = Saves a zip with what's needed to find the problem, ready to paste where you share reports. F8 opens it anywhere in Studio.
+# (the button; short)
+studio.settings.report_button = Report a problem…
+studio.settings.reports_dir = Reports folder
+studio.settings.reports_dir_help = Where your saved reports are kept, beside OrrePort's own.
+studio.settings.logs_dir = Logs folder
+studio.settings.logs_dir_help = Studio's logs: what it did in each of your last ten sessions.
+# (the button for both folders; short)
+studio.settings.open_folder = Open folder
+# Report a problem's panel (4.3 part 3): its title and what it does, the note's label and the hint under it, the two
+# ticks, the privacy line, the buttons; then the saved screen (title, what to do next, its buttons) and the error line
+studio.report.title = Report a problem
+# (its key, beside the Report a problem button on Home; short)
+studio.report.keys = F8
+studio.report.intro = Saves a zip with what's needed to find the problem, ready to share.
+studio.report.note_label = What happened? (optional)
+studio.report.note_hint = What you were doing, what you expected, and what went wrong.
+studio.report.tick_shots = Include a screenshot of each open window
+studio.report.tick_open = Include what's open, so it can be reopened
+studio.report.privacy = Your report stays on this PC until you share it. It never includes game files, and your Windows user name and folders are hidden.
+studio.report.save = Save report
+studio.report.cancel = Cancel
+# The saved screen's lines are OrrePort's own since 2026-11-23 (its report took this screen, snatcherLeo: "copy what Studio
+# does"), read from its language file so both say the same: report.saved_body, report.saved_not_copied, report.size,
+# report.open_folder, report.done, report.too_big (in OrrePort's port/ui/lang/en.txt since 5a021c3ef). No channel is
+# named (snatcherLeo's rule of 2026-11-13).
+# Studio's own sentence after report.too_big (OrrePort's report has no ticks to untick: 2026-11-23)
+studio.report.too_big_hint = Untick the screenshots and save again.
+# (the bar after an unexpected close uses OrrePort's shared report.crash_bar / crash_report / crash_dismiss since
+# 8ef34d4b8, {program} = Studio; the bar itself is off in Studio for now, snatcherLeo 2026-11-22: kCrashBar)
+studio.report.failed =The report couldn't be saved. Try again, or open the logs folder from Settings and send the newest log.
+# the rail's label for an editor that isn't built yet
+studio.rail.soon = {editor} · coming soon
+studio.editor.battle = Battle
+# the header: "Seed Pokémon", the number box ("No. 001" + "National Dex"), "2'04" · 15.2 lb"
+studio.page.category = {category} Pokémon
+studio.page.dex = No. {national}
+studio.page.dex_label = National Dex
+studio.page.measure = {height} · {weight}
+studio.page.copy = Copy / share
+studio.page.create_mod = Create a mod
+studio.help.copy = Copies this Pokémon as a line of text. A Showdown set and a link come later.
+studio.help.create_mod = Arrives with editing: copy this Pokémon into a mod, or make a new species from it.
+# what Copy / share puts on the clipboard (one line)
+studio.copy.text = {name} ({category} Pokémon, No. {national}) · {types} · HP {hp} / Atk {atk} / Def {def} / SpA {spa} / SpD {spd} / Spe {spe} · {abilities}
+studio.toast.copied = Copied to the clipboard
+# the era bar (short: segmented buttons)
+studio.era.letsgo = Let's Go
+studio.era.legends_arceus = Legends: Arceus
+studio.era.legends_za = Legends: Z-A
+studio.help.era = Coming in a future update
+# the model card's footer
+studio.viewer.hint = Drag to turn · wheel to zoom
+# the Training card
+studio.card.training = TRAINING
+studio.card.training_src = disc + breeding data
+studio.card.abilities = ABILITIES
+studio.train.exp_group = EXP group
+studio.train.catch_rate = Catch rate
+studio.train.gender = Gender
+studio.train.friendship = Friendship
+studio.train.exp_given = EXP given
+studio.train.effort = Effort given
+studio.train.held = Held (wild)
+studio.train.eggs = Egg groups
+studio.growth.0 = Medium Fast
+studio.growth.1 = Erratic
+studio.growth.2 = Fluctuating
+studio.growth.3 = Medium Slow
+studio.growth.4 = Fast
+studio.growth.5 = Slow
+studio.catch.value = {rate} · {how}
+studio.catch.hard = hard
+studio.catch.medium = medium
+studio.catch.easy = easy
+studio.gender.male = {percent}% male
+studio.gender.none = Genderless
+studio.gender.female_only = Female only
+studio.gender.male_only = Male only
+# one stat's effort: "1 Sp. Atk"
+studio.effort.item = {n} {stat}
+studio.held.none = none
+studio.eggs.outside = arrives with the outside data
+studio.help.train.0 = How fast it gains levels. The slower groups need more EXP to reach level 100.
+studio.help.train.1 = Out of 255: the higher, the easier to catch (in Colosseum, to snag).
+studio.help.train.2 = How often it is male or female. Some Pokémon have no gender.
+studio.help.train.3 = How friendly it is when you first get it. Friendship makes some Pokémon evolve.
+studio.help.train.4 = The base EXP it gives when it is defeated.
+studio.help.train.5 = The effort points it gives when it is defeated, raising that stat as the winner trains.
+studio.help.train.6 = The items it can hold when met in the wild.
+studio.help.train.7 = Colosseum has no breeding: the groups come from the outside data, for the full database.
+# the Abilities card
+studio.ability.slot1 = Ability 1
+studio.ability.slot2 = Ability 2
+studio.ability.hidden = Hidden
+studio.ability.none_colo = none in Colosseum
+studio.ability.hidden_note = arrives in Gen 5 (outside data)
+studio.help.ability_open = Click to open it in the Ability editor.
+studio.help.hidden = Hidden abilities began in Gen 5. They arrive with the outside data.
+studio.help.type_open = Click to open it in the Type editor.
+# a base stat's hover card title: "Base Attack: 49"
+studio.help.stat_title = Base {stat}: {value}
+# the Evolution card: "Bulbasaur line · click any Pokémon to open it (Ctrl+click: new tab)", "5 evolutions"
+studio.evo.line = {name} line
+studio.evo.hint = {line} · click any Pokémon to open it (Ctrl+click: new tab)
+studio.evo.count = {count} evolutions
+# a later stage's method in the fan: "Lv. 10 · from Silcoon"
+studio.evo.from = {method} · from {name}
+studio.help.item_link = Click to open it in the Item editor.
+studio.help.friend_link = Click to open Friendship in the Battle editor's game rules (coming soon).
+
+# ---- The Moves tab (the learnset on the left, the move played on the Pokémon on the right) ----
+# the learnset card's heading and its three groups (a switch: short)
+studio.moves.learnset = LEARNSET
+studio.moves.group_level = Level-up
+studio.moves.group_tm = TM / HM
+studio.moves.group_egg = Egg moves
+# the fourth group: the Pokémon's own battle animations that no move names: hit, faint, extra idles (a switch: short)
+studio.moves.group_react = Reactions
+# the Reactions rows, one per animation slot: 8 a hit, 9 a hit with a second motion, 10 fainting, 11 and 16 extra idle
+# animations (the names of 9 and 16 are likely, not certain)
+studio.moves.react.8 = Hit
+studio.moves.react.9 = Hit, second motion
+studio.moves.react.10 = Faint
+studio.moves.react.11 = Idle 2
+studio.moves.react.16 = Idle 3
+# the Reactions table's column headings, shown in small capitals (short)
+studio.moves.col_anim = ANIMATION
+studio.moves.col_slot = SLOT
+studio.moves.col_frames = FRAMES
+# a Reactions row whose slot has no animation of its own: the game plays the idle there, or the model's slot table is
+# shorter (short)
+studio.moves.react_idle = uses the idle
+studio.moves.react_missing = not in this model
+# an empty slot the game has no known stand-in for (short)
+studio.moves.react_empty = empty
+# the hover line on a row whose name is a guess; {slot} its slot number
+studio.moves.react_likely = Name likely: what slot {slot} is for comes from how the game uses it; the game itself names no slot.
+# the preview's facts for a reaction: "Animation slot 10 · 60 frames", or why there is no animation
+studio.moves.react_info = Animation slot {slot} · {count} frames
+studio.moves.react_info_idle = Slot {slot} is empty in this model; the game plays the idle there.
+studio.moves.react_info_missing = This model has no slot {slot}.
+studio.moves.react_info_empty = Slot {slot} is empty in this model.
+# the facts' second label for a reaction, and its note per slot
+studio.moves.info_note = Note
+studio.moves.react_note.8 = Plays when this Pokémon takes a hit.
+studio.moves.react_note.9 = A hit with a second motion; when the game plays it is still being looked into.
+studio.moves.react_note.10 = The animation alone; the full faint (sinking, fading, the cry) comes with move effects.
+studio.moves.react_note.11 = A second idle; most models leave this slot empty and use the idle.
+studio.moves.react_note.16 = A third idle, found only in models with all 17 animation slots.
+# the learnset's Animation column heading (small capitals, short; 2026-11-22): the animation each move plays
+studio.moves.col_animation = ANIMATION
+# the Animations tab (2026-11-22): the list's title with how many ({n}), its column heading (small capitals), a row's
+# length ("69 frames"), the tag on an animation nothing in the game plays (short), and the faded row for later
+studio.anim.title = ANIMATIONS · {n}
+studio.anim.col_name = NAME
+studio.anim.frames = {n} frames
+studio.anim.unused = not played in the game?
+# the tag on an animation the game doesn't play whose purpose is known (a faint while flying; short)
+studio.anim.unused_known = unused in the game
+# the name of a Flying Pokémon's unused faint, played in the air (the game has it but never plays it)
+studio.anim.faint_flying = Faint while flying
+# the name of an alternate standing loop the game has but never plays
+studio.anim.idle_alt = Idle (alternate)
+studio.anim.add = + Add an animation… (comes with modding)
+# an animation's name: what the game uses it for (readings of the game's data, likely), or its number when nothing
+# names it; the eyes' own animations (blinking, closing, opening)
+studio.anim.name.0 = Idle
+studio.anim.name.1 = Ranged attack
+studio.anim.name.2 = Body attack
+studio.anim.name.3 = Strike attack
+studio.anim.name.4 = Kick
+studio.anim.name.5 = Take off
+studio.anim.name.6 = Dive from above
+studio.anim.name.7 = Peck
+studio.anim.name.8 = Hit
+studio.anim.name.10 = Faint
+studio.anim.name.11 = Idle 2
+studio.anim.name.12 = Signature move
+studio.anim.name.13 = Power move
+studio.anim.name.14 = Tail swing
+studio.anim.name.15 = Guard
+studio.anim.name.16 = Idle 3
+studio.anim.numbered = Animation {n}
+studio.anim.eyes = Eyes (animation {n})
+# the Used by card: its title (small capitals), the right side ("Strike attack · 7 moves in Golduck's learnset"), the
+# line when no move plays it, a chip's small label (Lv 5; TM01 comes from the learnset; Egg), and a line on what the
+# game plays it for outside moves ({name}: the Pokémon)
+studio.anim.used_title = USED BY
+studio.anim.used_count = {anim} · moves in {name}'s learnset: {n}
+studio.anim.used_none = No move in {name}'s learnset plays it.
+studio.anim.chip_level = Lv {n}
+studio.anim.chip_egg = Egg
+studio.anim.role.idle = {name}'s standing loop; moves with no body motion play it too.
+studio.anim.role.hit = Played when {name} is hit; a knockout blow plays it, then Faint.
+studio.anim.role.faint = Played when {name} faints, on its own or after Hit.
+studio.anim.role.idle_more = Another idle; when the game plays it isn't confirmed.
+# the preview's facts on the Animations tab (labels), and the Moves tab's link to the move's animation (short)
+studio.anim.info_name = Animation
+studio.anim.info_len = Length
+studio.anim.see = See it in Animations →
+# a faded button (a later version): short
+studio.moves.edit = Edit learnset
+# the table's column headings, shown in small capitals (short: "Acc." is accuracy)
+studio.moves.col_level = LV
+studio.moves.col_tm = TM
+studio.moves.col_move = MOVE
+studio.moves.col_type = TYPE
+studio.moves.col_kind = KIND
+studio.moves.col_power = POWER
+studio.moves.col_acc = ACC.
+studio.moves.col_pp = PP
+# a machine in the first column, {n} its two-digit number: "TM06", "HM01" (the games' own short names; short)
+studio.moves.tm = TM{n}
+studio.moves.hm = HM{n}
+# the move's kind (Gen 3: by its type; status moves have no power): short
+studio.moves.kind_physical = Physical
+studio.moves.kind_special = Special
+studio.moves.kind_status = Status
+# a small tag after a move's name: this Pokémon has its own animation for it (short)
+studio.moves.own = own version
+# when a group is empty; {name} is the Pokémon
+studio.moves.none_level = {name} learns no moves by level.
+studio.moves.none_tm = {name} can't learn any TM or HM.
+studio.moves.none_egg = {name} has no egg moves.
+# the preview card's heading, and its right side: "Vine Whip on Bulbasaur"
+studio.moves.preview = PREVIEW
+studio.moves.preview_on = {move} on {name}
+# the preview's two views (a switch: short)
+studio.moves.view_studio = Studio view
+studio.moves.view_plain = Plain stage
+# the third view: a battle stage around the Pokémon, Mt. Battle's valley (short)
+studio.moves.view_arena = Arena
+# a two-turn move's turns (Fly, Dig, Solar Beam...), a switch on the preview's controls row: the first turn's charge
+# (short)
+studio.moves.turn1 = Turn 1
+# ...and the second turn's attack (short)
+studio.moves.turn2 = Turn 2
+# the parts picker for moves with a follow-up of their own (Thief taking the item, Wish coming true, Substitute...):
+# the move itself (short)
+studio.moves.parts_move = Move
+# ...its follow-up alone (short)
+studio.moves.parts_follow = Follow-up
+# ...the move, then its follow-up (short)
+studio.moves.parts_both = Both
+studio.moves.help_studio = Drag the model to turn it, the wheel zooms, a double-click puts it back. Works while the move plays or is held on a frame.
+studio.moves.help_plain = The angle of the developers' own move viewer, on its plain grey backdrop, with the Pokémon framed to fill the stage. Drag to turn around it, the wheel zooms, a double-click goes back to the game's angle.
+# faded buttons beside the views (later versions; short)
+studio.moves.test = Test in game
+studio.moves.rate = Game rate · 120 Hz
+# the frame rate button's hover title
+studio.moves.rate_title = Frame rate
+# the Play button (Pause while the move plays; short)
+studio.moves.play = Play
+studio.moves.pause = Pause
+# the frame buttons' hover titles and help
+studio.moves.step_back = Previous frame
+studio.moves.step_forward = Next frame
+studio.moves.help_step = Holds the move and shows one frame at a time, at the battle's 30 frames a second. Shortcuts: comma and period; Space plays and pauses.
+# beside the frame buttons: "Frame 12 of 40" while held, else "40 frames"
+studio.moves.frame = Frame {n} of {count}
+studio.moves.frames = {count} frames
+# a faded switch (a later version): short
+studio.moves.particles = Particles
+# the facts under the preview: their labels
+studio.moves.info_type = Type
+studio.moves.info_numbers = Power · Acc. · PP
+studio.moves.info_learned = Learned
+studio.moves.info_anim = Animation
+studio.moves.info_desc = Description
+# how it's learned: "at level 7", "from TM06" ({machine} is "TM06"), "as an egg move"
+studio.moves.learned_level = at level {n}
+studio.moves.learned_machine = from {machine}
+studio.moves.learned_egg = as an egg move
+# the body animation: "slot 2 · animation 4 · 40 frames" (the model's animation slot and animation numbers)
+studio.moves.anim = slot {slot} · animation {anim} · {count} frames
+studio.moves.anim_slot_only = slot {slot} (the model has no animation there)
+studio.moves.anim_none = none (no effect file names one)
+# the version note; {name} is the Pokémon, {move} the move
+studio.moves.note_own = {name} has its own version of {move}: the game plays this Pokémon's own effect for it.
+studio.moves.note_general = {name} uses the general {move}: the same effect every Pokémon plays, fitted to its own body.
+studio.moves.open_editor = Open {move} in the Move editor
+studio.moves.editor_title = Open in the Move editor
+studio.moves.editor_help = The move's own page: its data, its general look and every Pokémon's own version. Coming soon.
+# the "Make it your own" section: its heading (small capitals) and its faded buttons (later versions; short)
+studio.moves.make_own = MAKE IT YOUR OWN
+studio.moves.swap_anim = Swap animation…
+studio.moves.swap_particles = Swap particles…
+studio.moves.attach = Attach points
+studio.moves.sounds = Sound clips…
+studio.moves.reaction = Hit reaction…
+# the faded controls' hover help, in order: Edit learnset, Test in game, Frame rate, Particles, Swap animation, Swap
+# particles, Attach points, Sound clips, Hit reaction
+studio.moves.help_later.0 = Add, remove or re-level moves in a mod. Comes with editing.
+studio.moves.help_later.1 = Opens OrrePort straight into a plain battle stage, where the game itself plays this move with its own camera, lights, particles and timing. Comes in a later version.
+studio.moves.help_later.2 = The game's own rate or your screen's, one choice for every preview in Studio. Comes later.
+studio.moves.help_later.3 = The move's effects (sparks, leaves, beams). Drawing them comes in a later version; the body animation plays now.
+studio.moves.help_later.4 = Pick which of this Pokémon's animations plays for this move. Comes with mods.
+studio.moves.help_later.5 = Pick an effect from the particle library, or open it in the Move editor. Comes with mods.
+studio.moves.help_later.6 = Where this Pokémon's version attaches its effects (mouth, hands, cannons). Comes with mods.
+studio.moves.help_later.7 = Your own sounds for this move's look. Comes with mods.
+studio.moves.help_later.8 = What the target does when hit: by type, by move, super effective or a critical hit. Comes with mods.
+# the Particles switch's hover help: on the Overview's model card, and on the Moves tab (the same setting)
+studio.help.particles = This Pokémon's own effects, such as Charizard's tail flame, Vaporeon's sparkle or the glow around Lanturn's lures. Click to turn them off or on, here and on the Moves tab.
+# the 3D views' rate button (Moves tab, short): the game's own rate, or a rate in Hz ({n}) smoothed between the game's
+# frames; the menu's first entry says what the game's rate is
+studio.rate.game = Game rate
+studio.rate.hz = {n} Hz
+studio.rate.menu_game = Game rate (30 frames a second, as the game)
+# the rate button's hover help
+studio.help.rate = How fast the 3D views play: the game's own rate, exactly as the game, or your screen's rate up to 240 Hz, smoothed between the game's frames. One setting for every view.
+# the Overview's model card header: the ↺ button's hover card, shown once the model has been turned or zoomed (title
+# short; the body one sentence, it sits over the model)
+studio.view.reset = Reset view
+# the word beside the ↺ arrow on the button itself, where the header has room (very short)
+studio.view.reset_short = Reset
+studio.help.reset = Back to the model's starting angle and zoom. Double-clicking the model does the same.
+# the 3D view's lighting switch (beside Particles, on the Overview's model card and the Moves tab; short): on = the
+# game's own arena lights, off = Studio's even light
+studio.view.lighting = Game lighting
+# its hover help, when on and when off
+studio.help.lighting_on = The arena's own lights, as the game lights this Pokémon in battle. Click for even lighting.
+studio.help.lighting_off = Even lighting: see a model's own colours and textures without the arena's lights. Click for the game's lighting.
+studio.help.particles_moves =This Pokémon's own effects, its particles and glows; the same switch as the Overview's. A move's own effects always play.
+# the Moves tab's battle camera switch (left of Game lighting; short): on = the move is filmed by the battle's own
+# camera, off = Studio's camera stays, free to turn and zoom
+studio.view.battle_camera = Battle camera
+# its hover help, when on and when off
+studio.help.battle_camera_on = The move is filmed as the battle films it: a shot picked at random from the game's own camera moves, then a cut to the target. Click to keep Studio's camera, free to turn and zoom.
+studio.help.battle_camera_off = Studio's camera stays while the move plays, so you can turn and zoom around it. Click for the battle's camera.
+# the Moves preview's target: a chip on the left of the switches row (short), "Target  Box ▾" or "Target  Umbreon ▾"
+studio.moves.target = Target
+# the plain test box (short)
+studio.moves.target_box = Box
+# the target menu's last line: opens the search to pick any Pokémon
+studio.moves.target_choose = Choose a Pokémon…
+# the search palette's bottom line while choosing the target
+studio.moves.target_pick_hint = ↑ ↓ to move · Enter to make it the target · Esc to close
+# the chip's hover help
+studio.help.target = Who takes the move's hit: a plain box, or any Pokémon from your list. A Pokémon reacts with its own hit animation and timing, as it would in battle.
+# under the preview when the chosen target has no animation for the move's hit (its slot); {name} the Pokémon
+studio.moves.target_no_hit = {name} has no hit animation (slot {slot}), so it doesn't flinch
+

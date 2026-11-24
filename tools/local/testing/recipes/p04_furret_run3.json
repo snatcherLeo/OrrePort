@@ -1,0 +1,9 @@
+{
+  "_what": "the reference playthrough, after P04's team edits (snatcherLeo, 2026-11-03): \"Can we replace Sneasel with Furret instead, so it'll be a Furret that is level 30 and knows \\\"Helping Hand, Slash, Quick Attack, Protect\\\".\" Sneasel is moved to the PC box unchanged (nothing deleted); Furret takes its party slot. Furret's nature is the project's choice (snatcherLeo gave level and moves): Adamant, as the other physical attackers; IVs 31 as in the earlier edits.",
+  "move_to_box": [
+    {"species": 215, "_note": "Sneasel Lv 31 to the first free box slot, unchanged"}
+  ],
+  "add_pokemon": [
+    {"species": 162, "level": 30, "nature": 3, "ivs": 31, "moves": [270, 163, 98, 182], "_note": "Furret, Adamant: Helping Hand, Slash, Quick Attack, Protect"}
+  ]
+}

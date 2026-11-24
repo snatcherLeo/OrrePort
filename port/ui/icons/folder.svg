@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- A one-colour folder for the hub's "Change save..." button (mockup 53, snatcherLeo: the yellow emoji folder was the only
+     full-colour graphic). White, filled paths only (port/src/pc_svg.cpp reads no strokes): a 2-unit outline as a ring.
+     hub.rcss tints it (image-color) the button's text colour. Drawn by Main; no outside art. -->
+<path fill="#FFFFFF" fill-rule="evenodd" d="M2 7.5 Q2 4.5 5 4.5 H9.914 L11.914 6.5 H19 Q22 6.5 22 9.5 V17 Q22 20 19 20 H5 Q2 20 2 17 Z M4 7.5 Q4 6.5 5 6.5 H9.086 L11.086 8.5 H19 Q20 8.5 20 9.5 V17 Q20 18 19 18 H5 Q4 18 4 17 Z"/>
+</svg>

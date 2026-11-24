@@ -1,0 +1,51 @@
+# Save block fields known from the game's code (hand-kept, each with its evidence; offsets and sizes only, no game
+# data). savepc.py merges them into the traced fields of save_fields.txt, so a field stays swapped even when no
+# save-trace run happened to read it. save_keep.txt still wins (text kept as bytes). Same syntax as save_keep.txt:
+#   OFFSET SIZE                                   one field
+#   records BASE STRIDE COUNT OFF:SIZE ...        the same fields in COUNT records of STRIDE bytes from BASE
+#   mirror SRC SIZE DEST ...                      a struct copied whole: the fields found in [SRC, SRC + SIZE) (traced
+#                                                 or listed here, after the keep list) repeated at each DEST
+
+# Strategy Memo (section 12, block +0x82A8): a u16 count, then 500 records of 12 bytes from +0x82AC: the species id
+# (u16, top bit = not yet viewed), the catching trainer's id (u32) and the Pokemon's personality value (u32).
+# Evidence: memoInit (0x1F4 records, stride 12), memoDataSet, memoDataGetPokemonTrainerRndFromID / ...RndFromID
+# (memo_candidate_8025FF18.c, memo_r57b_8025FD34_suffix.c). The traces had seen the trainer id only in records 0-1,
+# so from record 2 on it reached the card in the PC's byte order (verified on P01's end save, 2026-10-27).
+records 0x82AC 12 500 0:2 4:4 8:4
+
+# Daycare (section 11, block +0x8168, 0x140 bytes, 2026-10-29): +0 state (u8), +1 the Pokemon's level when it
+# was left (u8), +4 its heart value when it was left (s32), then one Pokemon record of 0x138 bytes from +8 (+0x8170),
+# the same record as a party slot. Evidence: daycareGetState / daycareGetValue1 / daycareGetValue4 /
+# sodateyaGetPokemonPtr (field_exact_801ED218.c), sodateyaGetPokemonDPValue and sodateyaCalcPrice (etctool.c). The
+# record's multi-byte fields are the party record's 47 traced fields (identical in all six party slots of
+# save_fields.txt, record base +0xA0). No save trace had a Pokemon in the daycare, so the PC wrote all of it in its own
+# byte order (verified on P11's end save, 2026-10-29: every u16 / u32 of the record and the +4 value reversed).
+0x816C 4
+records 0x8170 0x138 1 0:2 4:4 12:2 20:4 92:4 100:2 102:2 108:4 112:2 116:4 120:2 124:2 128:2 132:2 136:2 138:2 140:2 142:2 144:2 146:2 148:2 150:2 152:2 154:2 156:2 158:2 160:2 162:2 164:2 166:2 168:2 170:2 172:2 174:2 176:2 210:2 212:2 214:2 216:2 220:4 224:4 228:2 232:2 234:2 240:4 244:2 248:4
+
+# Battle Mode's trainer records (section 14, block +0xE3E8, 2026-10-30, port-gaps 42). Each 0x1660-byte entry is
+# built by menuCBBiosCreateTrainerHero (menu_middle.c): u16 trainer id +0, u16 kept id +2, u32 trainer kind +4
+# (menuMiddleTrainerKind), then two whole HeroSaveData copies (0xB18 bytes, heroBiosCopy) at +0x2C and +0xB44;
+# menuColosseumBattleSetup writes a u32 at +0x24 and copies each entry 0x5984 bytes further on. Entries: four from
+# section +0x24 (savedataBattleGetEntryPtr, stride 0x1660), their four copies from +0x59A8, and the saved hero at
+# +0xB328 (savedataBattleSetSavedHero, a 0x1660-byte memcpy). HeroSaveData is save section 2 (block +0x70, 0xB18), so
+# its traced fields are mirrored into all 18 copies. No save trace had covered section 14 (3 fields), so the PC wrote
+# it in its own byte order (verified on P24's end save: with these fields the player's entry, its copy and the saved
+# hero match the console's byte for byte; the three computer trainers' entries then differ only in values).
+records 0xE40C 0x1660 4 0:2 2:2 4:4 0x24:4
+records 0x13D90 0x1660 4 0:2 2:2 4:4 0x24:4
+records 0x19710 0x1660 1 0:2 2:2 4:4 0x24:4
+
+# Battle Mode's run words and a suspended Mt. Battle run (section 14, block +0xE3E8, 2026-10-31, port-gaps 45).
+# The section starts with seven 4-byte run words (GbaConvSaveHeader: the Battle Mode kind +0, then +4 .. +0x18: the
+# rule, the colosseum, the wins and the counter; menuColosseumBattle.c reads and writes them as s32), then the byte
+# +0x1C. Suspending a run (menuSaveLoadSaveGame, gba_conv.c) copies the seven words to section +0xC98C and fills the
+# player memo at +0xC9A8 (GbaConvPlayerMemo: u8 valid, then u32 room +0xC9AC, u32 previous floor +0xC9B0, six f32 for
+# the position and rotation from +0xC9B4, four u32 story values from +0xC9CC); menuCBResumeYama reads them back. No save
+# trace had covered them, so on the PC a card's suspended run loaded in the GameCube's byte order: sitting 43 (a
+# resumed Mt. Battle run) asserted in menuTaisenDrawPartyList ("type" neither 0 nor 1). The six 0x54-byte rules from
+# +0xC9DC stay out on purpose: the PC keeps them in the disc's big-endian bytes (DISC_S16 readers, menu_exact_80077A5C.c).
+records 0xE3E8 4 7 0:4
+records 0x1AD74 4 7 0:4
+records 0x1AD94 4 12 0:4
+mirror 0x70 0xB18 0x0E438 0x0EF50 0x0FA98 0x105B0 0x110F8 0x11C10 0x12758 0x13270 0x13DBC 0x148D4 0x1541C 0x15F34 0x16A7C 0x17594 0x180DC 0x18BF4 0x1973C 0x1A254

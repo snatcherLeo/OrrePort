@@ -1,0 +1,14 @@
+# P17b (sitting 028_20261023_0041): logged resyncs for the second pass (2026-10-30; match ledger, P17b rows).
+# Settings: P14's (resyncs/P14_024.txt) + ORRE_ROLL_SEEDS for its 3 battles (100, 107, 320: roll_resync_spec.py
+# --all-battles on replay_2, one PLAYREC_RNGCALL capture 139687-145056,224763-231752,237683-244708, checked: 873 flag
+# changes identical). The first run (p2_P17ba) reached room entry 51 of 158 and stopped before room 0x2A.
+#
+# 1. (2026-10-30) Wes placed where the console's stands 540 frames into the menu-room visit before room 0x2A (console
+#    entry 51, recorder room id 0x38F while he walks; the PC's visit starts at its frame 68537 in the reference run
+#    p2_P17ba; the menus of that visit match the console's to 1-2 frames). From +500 to +520 the console's Wes slows as
+#    he steps down a ledge (height 83.6 to 80); the PC's was already down at +493 and kept going, so from there it ran
+#    about 20 frames ahead of the inputs, took the stairs early, went north instead of east at the bottom and got stuck
+#    at (-142.9, 41.7). Values from replay_1/pos.csv (frame 68439). Apply with --log <p2_P17ba>/run.log.
+@69077 npc 0 -131.7640 79.9999 -62.9154  # console 0x38F visit 51 +540
+#    With it (p2_P17bb): all 158 room entries and all 3 battles as on the console, story flags the same at every entry,
+#    to the end; the end save's flags identical.

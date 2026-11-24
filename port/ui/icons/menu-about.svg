@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- OrrePort menu icon: About (an "i": its dot, its stem with a foot and a cap). Filled shapes only (port/src/pc_svg.cpp); drawn white, tinted by the menu. Added 2026-11-23 for the About tab. -->
+<path fill="#FFFFFF" d="M10 5 Q10 3 12 3 Q14 3 14 5 Q14 7 12 7 Q10 7 10 5 Z"/>
+<path fill="#FFFFFF" d="M9 9 H13.5 V18.5 H15.5 V21 H8.5 V18.5 H10.5 V11.5 H9 Z"/>
+</svg>

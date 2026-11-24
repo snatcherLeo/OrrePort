@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width="88" height="88">
+<!-- A filled circle, the round buttons' face (the disc's pencil): drawn as a picture so its edge is smoothed, as the
+     shelf's ring (shelf-ring.svg says why: RmlUi draws a round border and a round background with no edge smoothing).
+     Radius 41.5 in an 88-unit square, so the ring (radius 42 to 39) drawn on top covers its edge. Each circle is 16
+     quadratic pieces. White; hub.rcss tints it (image-color). Drawn by 2026-11-13 (snatcherLeo: "can we confirm, the
+     outline on this pencil icon ... isn't choppy"). -->
+<path fill="#FFFFFF" d="M85.500 44.000 Q85.500 52.255 82.341 59.881 Q79.182 67.508 73.345 73.345 Q67.508 79.182 59.881 82.341 Q52.255 85.500 44.000 85.500 Q35.745 85.500 28.119 82.341 Q20.492 79.182 14.655 73.345 Q8.818 67.508 5.659 59.881 Q2.500 52.255 2.500 44.000 Q2.500 35.745 5.659 28.119 Q8.818 20.492 14.655 14.655 Q20.492 8.818 28.119 5.659 Q35.745 2.500 44.000 2.500 Q52.255 2.500 59.881 5.659 Q67.508 8.818 73.345 14.655 Q79.182 20.492 82.341 28.119 Q85.500 35.745 85.500 44.000 Z"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 46" width="40" height="46">
+<!-- The hub's save card symbol for a .gci save: a GameCube memory card (its arrow, the label window, one notch per side;
+     snatcherLeo, 2026-11-13). White, filled paths only (port/src/pc_svg.cpp reads no strokes): the outlines are strokes turned
+     into rings (outer and inner edges, even-odd), 2.4 and 2.0 units wide: a little heavier than the mockup's 1.8 and
+     1.6, because at the hub's ~30 px the thinner rings lost their colour (checked 2026-11-13 in a test window). hub.rcss
+     tints it (image-color) GameCube indigo. Drawn by Main; no outside art. -->
+<path fill="#FFFFFF" fill-opacity="0.2" d="M5.5 2 H34.5 Q37 2 37 4.5 V32.6 L35.5 34.5 L37 36.4 V41.5 Q37 44 34.5 44 H5.5 Q3 44 3 41.5 V36.4 L4.5 34.5 L3 32.6 V4.5 Q3 2 5.5 2 Z"/>
+<path fill="#FFFFFF" fill-rule="evenodd" d="M5.5 0.8 H34.5 Q38.2 0.8 38.2 4.5 V33.017 L37.03 34.5 L38.2 35.983 V41.5 Q38.2 45.2 34.5 45.2 H5.5 Q1.8 45.2 1.8 41.5 V35.983 L2.97 34.5 L1.8 33.017 V4.5 Q1.8 0.8 5.5 0.8 Z M5.5 3.2 H34.5 Q35.8 3.2 35.8 4.5 V32.183 L33.971 34.5 L35.8 36.817 V41.5 Q35.8 42.8 34.5 42.8 H5.5 Q4.2 42.8 4.2 41.5 V36.817 L6.029 34.5 L4.2 32.183 V4.5 Q4.2 3.2 5.5 3.2 Z"/>
+<path fill="#FFFFFF" d="M20 4.3 L22 7.3 H18 Z"/>
+<path fill="#FFFFFF" fill-rule="evenodd" d="M9.2 8.6 H30.8 Q34 8.6 34 11.8 V26.8 Q34 30 30.8 30 H9.2 Q6 30 6 26.8 V11.8 Q6 8.6 9.2 8.6 Z M9.2 10.6 H30.8 Q32 10.6 32 11.8 V26.8 Q32 28 30.8 28 H9.2 Q8 28 8 26.8 V11.8 Q8 10.6 9.2 10.6 Z"/>
+</svg>

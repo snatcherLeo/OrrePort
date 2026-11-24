@@ -1,0 +1,386 @@
+/**
+ * @file fight_menu_exact_80264ADC.c
+ * @brief _fightMenuFightTrainerGcHeroOpenMenuSubBallSelectTargetPokemon, 0x80264ADC - 0x80264D58.
+ *
+ * Function-boundary carve of fightMenu.cpp (see fight_menu.c): a data-free
+ * exact function between the GcHero menu candidates. GC/1.3 -O4,s, no
+ * pragmas.
+ */
+#include "game/colosseum.h"
+#include "game/trainer.h"
+#include "game/pokemon.h"
+#include "game/constants/battle_messages.h"
+
+/* =========================================================================
+ * Duplicated declarations (verbatim from the original colosseum_battle.c
+ * preamble, present in every split segment so each TU keeps the same
+ * external visibility it had before the split)
+ * ========================================================================= */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32   pokemonSetStatus();
+#endif
+
+/* Battle system functions */
+extern void battleCameraSelect();
+
+/* Sound functions */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void soundStop();     /* Stop sound */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void std104_soundSetBackgroundMusic();     /* Fade out music */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void std105_soundPlayEffect();     /* Start BGM */
+#endif
+
+/* SDA2 float constants used by asm wrappers */
+extern f32 lbl_8047E678;
+extern f32 lbl_8047E67C;
+
+/* SDA1 globals used by asm wrappers */
+extern u32 lbl_8047B668;
+extern u32 lbl_8047B66C;
+extern u32 lbl_8047B670;
+
+/* Data labels used by asm wrappers */
+extern u8  lbl_8039A6B8[];
+extern u8  lbl_8039A6A8[];
+extern int lbl_804782BC[];
+extern u8  lbl_804782E0[];
+extern u8  lbl_804783E0[];
+
+/* Forward declarations for functions used as addresses in asm wrappers */
+void ShortCommandProc(int r3);
+void ReadProc(int r3);
+void WriteProc(int r3);
+void __GBASyncCallback(int r3);
+u32  __GBASync(int r3);
+u32  __GBATransfer(int r3, u32 r4, u32 r5, u32 r6);
+
+/* Forward declarations for asm wrapper bl targets (use () form for compat) */
+extern void DSPInit();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void set__5GSvecFfff();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern int  _fadeEffectGetRandom__FUl();
+#endif
+extern u32  pokemonBiosGetCatchTrainerRnd();
+extern u32  pokemonBiosGetRnd();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16  pokemonBiosGetPokemonDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32  savedataGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern int  fadeCheck();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fadeSet(f32 duration, u32 mode);
+#endif
+extern int  wazaSequenceSysRelease();
+extern int  wazaSequenceSysInitWithoutParticles();
+extern void OSRegisterResetFunction();
+extern void OSInitAlarm();
+extern void OSInitThreadQueue();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memcpy();
+#endif
+
+/* Forward declarations for converted functions */
+u32 evolutionWazaLearn();
+int fightTrainerAiWazaValueKuroikiri(void* ctx, u32 param1, u32 param2, u32 param3);
+void fightTrainerAiWazaValueHimitunotikara(void* ctx, u32 param1, u32 param2, u32 param3);
+s32 fightTrainerAiSelectIrekaeDasuFightPokemon(void* ctx, u32 param1, u32 param2, u32 param3);
+u32 fightTrainerAiWazaHit045(void* trainerCtx, u32 trainerSlot, u32 resultSlot, u32 resultType);
+u32 fightMenuFightTrainerGcHeroOpenMenu(u32 trainer, u32 side, u32 canCancel);
+
+extern u32 fightTargetGetPtr(u32 slotType, u32 ptr, u32 count);
+extern u32 fightOutPokemonCheckFightOut(void* r3);
+extern u32 fightSideGetStatus(u8* ptr1, u32 param2, u32 slotType, u32 param5);
+extern u32 fightTargetGetTragetPtrToRelativeHostSideFightTargetId(u32 param1, u32 param2);
+extern u8* fightTargetDataBiosGetPtr(u32 index);
+extern u32 fightTargetDataBiosGetBuff(u8* ptr);
+extern u8 fn_801F18DC(u32 param_1);
+extern void* fightOutPokemonGetPokemonPtr(void* ctx);
+extern u8 pokemonIsDarkPokemon(u8* pokemon);
+
+/* Address: 0x80264ADC | Size: 0x27C | Ghidra import */
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+u32 _fightMenuFightTrainerGcHeroOpenMenuSubBallSelectTargetPokemon__FP15FightOutPokemonUsUs(u32 r3,u32 r4,u32 r5)
+
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int menuFightCloseTarget();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int menuFightOpenTarget();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int winMsgCloseFight();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int winMsgOpenFight();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int std082_flagGetValue();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int fightMainWaitFrame();
+#endif
+  u16 uVar4;
+  u32 uVar1;
+  u8 cVar6;
+  int iVar2;
+  u32 sVar5; /* the target id; only its low 16 bits are tested */
+  u32 uVar3;
+  u32 found;
+  u8 auStack_38 [0x24];
+  u32 local_34;
+  u32 local_2c;
+  u32 local_24;
+  u32 local_1c;
+  u8 local_18;
+  u8 local_17;
+  
+LAB_00261af4:
+  uVar1 = fightTargetGetPtr(0xf,r3,r5);
+    cVar6 = fightOutPokemonCheckFightOut(PC_PTR(uVar1));
+    if (cVar6 == '\x01') {
+    found = fightTargetGetPtr(2,uVar1,r5);
+    if (found == 0) {
+      uVar3 = 0;
+    }
+    else {
+      uVar4 = fightSideGetStatus(PC_PTR(found),0,5,0);
+      sVar5 = fightTargetGetTragetPtrToRelativeHostSideFightTargetId(uVar1,r5);
+      if ((u16)sVar5 == 0) {
+        uVar3 = 0;
+      }
+      else {
+        uVar3 = fightTargetDataBiosGetBuff(fightTargetDataBiosGetPtr(sVar5));
+        if ((int)uVar3 < 0) {
+          uVar3 = 0;
+        }
+        else {
+          uVar3 = fightSideGetStatus(0,uVar4,3,uVar3 & 0xffff);
+        }
+      }
+    }
+  }
+  else {
+    uVar3 = 0;
+  }
+  *(u32 *)(auStack_38 + 4) = uVar3;
+  {
+    u32 uVar1b;
+    u16 uVar4b;
+
+    uVar1b = fightTargetGetPtr(0x10,r3,r5);
+    cVar6 = fightOutPokemonCheckFightOut(PC_PTR(uVar1b));
+    if (cVar6 == '\x01') {
+      found = fightTargetGetPtr(2,uVar1b,r5);
+      if (found == 0) {
+        uVar3 = 0;
+      }
+      else {
+        uVar4b = fightSideGetStatus(PC_PTR(found),0,5,0);
+        sVar5 = fightTargetGetTragetPtrToRelativeHostSideFightTargetId(uVar1b,r5);
+        if ((u16)sVar5 == 0) {
+          uVar3 = 0;
+        }
+        else {
+          uVar3 = fightTargetDataBiosGetBuff(fightTargetDataBiosGetPtr(sVar5));
+          if ((int)uVar3 < 0) {
+            uVar3 = 0;
+          }
+          else {
+            uVar3 = fightSideGetStatus(0,uVar4b,3,uVar3 & 0xffff);
+          }
+        }
+      }
+    }
+    else {
+      uVar3 = 0;
+    }
+  }
+  *(u32 *)(auStack_38 + 0xc) = uVar3;
+  *(u32 *)(auStack_38 + 0x14) = 0;
+  *(u32 *)(auStack_38 + 0x1c) = 0;
+  auStack_38[0x20] = 2;
+  auStack_38[0x21] = fn_801F18DC(0);
+  iVar2 = menuFightOpenTarget((int*)auStack_38,0,1);
+  if (iVar2 < 0) {
+    menuFightCloseTarget(PC_PTR(1));
+    return 0;
+  }
+  if (iVar2 != 0) goto LAB_00261cb0;
+  uVar1 = fightTargetGetPtr(0xf,r3,r5);
+  goto LAB_00261ccc;
+LAB_00261cb0:
+  if (iVar2 == 1) {
+    uVar1 = fightTargetGetPtr(0x10,r3,r5);
+LAB_00261ccc:
+    cVar6 = fightOutPokemonCheckFightOut(PC_PTR(uVar1));
+    if (cVar6 != '\0') {
+      cVar6 = pokemonIsDarkPokemon(fightOutPokemonGetPokemonPtr(PC_PTR(uVar1)));
+      if (cVar6 == '\0') {
+        uVar3 = std082_flagGetValue(0x99f);
+        if (uVar3 == 0) {
+          winMsgOpenFight(BATTLE_MSG_PARTNER_NO_BLACK_AURA,1,1);
+        }
+        else {
+          winMsgOpenFight(0x7702,1,1);
+        }
+        fightMainWaitFrame(0x40);
+        winMsgCloseFight(0);
+        goto LAB_00261af4;
+      }
+      menuFightCloseTarget(PC_PTR(1));
+      return uVar1;
+    }
+  }
+  goto LAB_00261af4;
+}
+#else
+u32 _fightMenuFightTrainerGcHeroOpenMenuSubBallSelectTargetPokemon__FP15FightOutPokemonUsUs(u32 r3,u32 r4,u32 r5)
+
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int menuFightCloseTarget();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int menuFightOpenTarget();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int winMsgCloseFight();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int winMsgOpenFight();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int std082_flagGetValue();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int fightMainWaitFrame();
+#endif
+  u16 uVar4;
+  u32 uVar1;
+  u8 cVar6;
+  int iVar2;
+  u32 sVar5;
+  u32 uVar3;
+  u32 found;
+  u8 auStack_38 [0x24];
+  u32 local_34;
+  u32 local_2c;
+  u32 local_24;
+  u32 local_1c;
+  u8 local_18;
+  u8 local_17;
+  
+LAB_00261af4:
+  uVar1 = fightTargetGetPtr(0xf,r3,r5);
+    cVar6 = fightOutPokemonCheckFightOut((void*)uVar1);
+    if (cVar6 == '\x01') {
+    found = fightTargetGetPtr(2,uVar1,r5);
+    if (found == 0) {
+      uVar3 = 0;
+    }
+    else {
+      uVar4 = fightSideGetStatus((u8*)found,0,5,0);
+      sVar5 = fightTargetGetTragetPtrToRelativeHostSideFightTargetId(uVar1,r5);
+      if ((u16)sVar5 == 0) {
+        uVar3 = 0;
+      }
+      else {
+        uVar3 = fightTargetDataBiosGetBuff(fightTargetDataBiosGetPtr(sVar5));
+        if ((int)uVar3 < 0) {
+          uVar3 = 0;
+        }
+        else {
+          uVar3 = fightSideGetStatus(0,uVar4,3,uVar3 & 0xffff);
+        }
+      }
+    }
+  }
+  else {
+    uVar3 = 0;
+  }
+  *(u32 *)(auStack_38 + 4) = uVar3;
+  {
+    u32 uVar1b;
+    u16 uVar4b;
+
+    uVar1b = fightTargetGetPtr(0x10,r3,r5);
+    cVar6 = fightOutPokemonCheckFightOut((void*)uVar1b);
+    if (cVar6 == '\x01') {
+      found = fightTargetGetPtr(2,uVar1b,r5);
+      if (found == 0) {
+        uVar3 = 0;
+      }
+      else {
+        uVar4b = fightSideGetStatus((u8*)found,0,5,0);
+        sVar5 = fightTargetGetTragetPtrToRelativeHostSideFightTargetId(uVar1b,r5);
+        if ((u16)sVar5 == 0) {
+          uVar3 = 0;
+        }
+        else {
+          uVar3 = fightTargetDataBiosGetBuff(fightTargetDataBiosGetPtr(sVar5));
+          if ((int)uVar3 < 0) {
+            uVar3 = 0;
+          }
+          else {
+            uVar3 = fightSideGetStatus(0,uVar4b,3,uVar3 & 0xffff);
+          }
+        }
+      }
+    }
+    else {
+      uVar3 = 0;
+    }
+  }
+  *(u32 *)(auStack_38 + 0xc) = uVar3;
+  *(u32 *)(auStack_38 + 0x14) = 0;
+  *(u32 *)(auStack_38 + 0x1c) = 0;
+  auStack_38[0x20] = 2;
+  auStack_38[0x21] = fn_801F18DC(0);
+  iVar2 = menuFightOpenTarget((int*)auStack_38,0,1);
+  if (iVar2 < 0) {
+    menuFightCloseTarget(PC_PTR(1));
+    return 0;
+  }
+  if (iVar2 != 0) goto LAB_00261cb0;
+  uVar1 = fightTargetGetPtr(0xf,r3,r5);
+  goto LAB_00261ccc;
+LAB_00261cb0:
+  if (iVar2 == 1) {
+    uVar1 = fightTargetGetPtr(0x10,r3,r5);
+LAB_00261ccc:
+    cVar6 = fightOutPokemonCheckFightOut((void*)uVar1);
+    if (cVar6 != '\0') {
+      cVar6 = pokemonIsDarkPokemon(fightOutPokemonGetPokemonPtr((void*)uVar1));
+      if (cVar6 == '\0') {
+        uVar3 = std082_flagGetValue(0x99f);
+        if (uVar3 == 0) {
+          winMsgOpenFight(BATTLE_MSG_PARTNER_NO_BLACK_AURA,1,1);
+        }
+        else {
+          winMsgOpenFight(0x7702,1,1);
+        }
+        fightMainWaitFrame(0x40);
+        winMsgCloseFight(0);
+        goto LAB_00261af4;
+      }
+      menuFightCloseTarget(PC_PTR(1));
+      return uVar1;
+    }
+  }
+  goto LAB_00261af4;
+}
+#endif

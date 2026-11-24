@@ -1,0 +1,10 @@
+{
+  "_note": "the reference playthrough, on top of run3_p17_team_lv100.json (snatcherLeo, 2026-11-11): the Battle Mode team's moves, every one legal from Colosseum's level-up or TM lists for a Pokemon caught as that species (checked on the disc). snatcherLeo: 'Raikou should know thunderbolt ... Suicune should know ice beam and surf for sure', 'Suicune, Raikou, Tyranitar, and metagross all need protect', 'give tyranitar and metagross earthquake', 'give metagross meteor mash, tyranitar should know a rock-type move, and crunch', 'Crunch works for Raikou' (Extrasensory: not learnable by Raikou in Gen 3). Espeon and Gengar keep theirs. Levels stay 100; PP full.",
+  "template_slot": 2,
+  "modify_pokemon": [
+    {"species": 248, "level": 100, "ev_lag_ok": true, "moves": [242, 157, 89, 182], "_note": "TYRANITAR: Crunch, Rock Slide, Earthquake, Protect"},
+    {"species": 400, "level": 100, "ev_lag_ok": true, "moves": [309, 94, 89, 182], "_note": "METAGROSS: Meteor Mash, Psychic, Earthquake, Protect"},
+    {"species": 245, "level": 100, "ev_lag_ok": true, "moves": [57, 58, 182, 347], "_note": "SUICUNE: Surf, Ice Beam, Protect, Calm Mind"},
+    {"species": 243, "level": 100, "ev_lag_ok": true, "moves": [85, 182, 242, 347], "_note": "RAIKOU: Thunderbolt, Protect, Crunch, Calm Mind"}
+  ]
+}

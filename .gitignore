@@ -1,0 +1,89 @@
+# IDE folders
+.idea/
+.vs/
+
+# Caches
+__pycache__
+.mypy_cache
+.cache/
+
+# Original files
+orig/*/*
+!orig/*/.gitkeep
+# A local link to someone else's extracted disc; never tracked.
+orig/orig
+*.dol
+*.rel
+*.elf
+*.o
+*.map
+*.MAP
+*.iso
+*.gcm
+*.ciso
+*.rvz
+
+# Build files
+build/
+.ninja_*
+build.ninja
+
+# decompctx output
+ctx.*
+*.ctx
+
+# Generated configs
+objdiff.json
+compile_commands.json
+
+# Local documentation screenshots
+
+# Generated local assembly / extracted snippets
+asm/
+*.inc
+
+# Toolchain binaries
+tools/dtk
+tools/dtk.exe
+tools/objdiff-cli
+tools/objdiff-cli.exe
+tools/mwcc_compiler/
+
+# Miscellaneous
+/*.txt
+*.exe
+*.orig
+*.pre
+
+# Windows compile dependency scratch (Z:\tmp\wt* .d files)
+/*.d
+
+# Local reference data / scratch (not tracked in git)
+tools/symbolmap/xd_ref/GXXE01/_xdsplit
+tools/symbolmap/xd_ref/GXXE01/config/
+tools/decomp_work/scratch/
+.pi-sessions/
+
+# Extracted game data (never commit or push; see the project rules)
+extracted/
+
+# Outside Pokémon data (PokéAPI's CSV tables, Pokémon Showdown's data), raw snapshots kept untouched for Studio's
+# data tables (the project plan's "outside data plan", snatcherLeo 2026-11-17). Kept out of git in raw form; only our own
+# converted tables may be committed, with credit, once the licence read agrees.
+/external/
+
+# OrrePort PC build (port/CMakeLists.txt), never committed
+/build-pc/
+# third-party downloads (fonts, the libusb DLL, Microsoft's driver redistributable): tools/fetch_deps.py fills it,
+# never committed (their licences allow shipping them in the release, not mixing them into the code's history)
+/deps/
+
+# OrrePort debug checkpoints (copies of the game save block), never committed
+/checkpoints/
+
+# snatcherLeo's own save backups and memory-card files (personal data), never committed
+/backup of an early save/
+*.gci
+
+# the public repo's reading guide for code tools (the export writes it)
+!/llms.txt

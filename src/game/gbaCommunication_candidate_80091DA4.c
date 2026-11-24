@@ -1,0 +1,922 @@
+/**
+ * @file gbaCommunication_candidate_80091DA4.c
+ * @brief gbaCommunication carve, 0x80091DA4 - 0x80092FC8 (9 functions).
+ *
+ * Standalone carve: GBA_COMMUNICATION_DECLS_ONLY takes only the shared
+ * declarations from gbaCommunication.c, and the functions are defined here
+ * in address order. Like gbaCommunication_prefix.c, the unit is built with
+ * -opt nopeephole (configure.py) instead of per-function pragmas.
+ */
+#define GBA_COMMUNICATION_DECLS_ONLY
+#include "game/constants/rooms.h"
+#include "src/game/gbaCommunication.c"
+/* 0x0B631000 is a map-object model: its +0x144 is GSmodel's linked particle bank, not gs_material.h's
+ * documentation-only GSmaterialEntry "texture", which sits elsewhere on the PC (pointer audit, 2026-10-19). */
+#include "game/gs_model_struct.h"
+
+/* 0x80091DA4 | size: 0x1A4 */
+void demoScene06(u32 ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSresGetResource(u32 ctx, u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowTextureSize(u32 w, u32 h);
+#endif
+    extern void std116_mapObjectStopAnimation(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelLinkToGSparticleBank(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetGSparticleLinkAttachMode(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void std115_mapObjectPlayAnimation(u32 id, u32 slot, u32 x, u32 y);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void scriptWaitSyncMotion(u32 id, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 fn_800D37CC(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void _threadSwitch(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSgetFrameStep(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std112_modelGetResourceID(u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSmodelSetShadowFlags(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowLight(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowSurface(u32 handle, u32 val, u32 *param);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void cameraPlayAnime(u32 ctx, u32 id, u32 a, u32 b);
+#endif
+    extern void std070_characterAttachToCharacter(u32 ctx, u32 modelHandle, u32 ctx2, u32 handle, u32 flags);
+    extern void cameraWaitSyncAnime(s32 sync);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorRequestChange(u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorSetFadeScript(u32 a, u32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gsParticleKill(void *texture, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std093_getCurrentGroupID(void);
+#endif
+
+    u32 elapsed;
+    u32 waitFrames;
+    u32 cameraElapsed;
+    u32 cameraWaitFrames;
+
+    lbl_8047A690 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x0CE61602));
+    lbl_8047A694 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x0CE61002));
+    GSmodelSetShadowTextureSize(0x280, 0x1E0);
+    std116_mapObjectStopAnimation(0x0CE61000);
+    std115_mapObjectPlayAnimation(0x0CE61004, 1, 0, 0);
+
+    GSmodelLinkToGSparticleBank(PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x0CE61000)), PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x111B1400)));
+    GSmodelSetGSparticleLinkAttachMode(PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x0CE61000)), 4);
+
+    std115_mapObjectPlayAnimation(0x0CE61000, 3, 0, 0);
+    waitFrames = 0x32;
+    if (fn_800D37CC() == 0x32) {
+        waitFrames = (u32)lbl_8047C1E0;
+        if (waitFrames < 1) {
+            waitFrames = 1;
+        }
+    }
+    for (elapsed = 0; elapsed < waitFrames; ) {
+        _threadSwitch();
+        elapsed += GSgetFrameStep();
+    }
+
+    cameraPlayAnime(ctx, 0x0CEF1800, 0, 0);
+    cameraWaitFrames = 1;
+    if (fn_800D37CC() == 0x32) {
+        cameraWaitFrames = (u32)lbl_8047C1D0;
+        if (cameraWaitFrames < 1) {
+            cameraWaitFrames = 1;
+        }
+    }
+    for (cameraElapsed = 0; cameraElapsed < cameraWaitFrames; ) {
+        _threadSwitch();
+        cameraElapsed += GSgetFrameStep();
+    }
+
+    cameraWaitSyncAnime(1);
+    floorRequestChange(ROOM_S2_SNATCHROOM_1);
+    floorSetFadeScript(0, 0);
+}
+
+/* The receiver setup below is expanded twice here and five times in
+ * demoScene04 (same calls, same argument sources). */
+static inline void gbaCommunicationSetShadowReceiver(u32 ctx, u32 model)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSmodelSetShadowFlags(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowLight(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowSurface(u32 handle, u32 val, u32 *param);
+#endif
+    u32 target;
+
+    target = PC_PTR32_IMPLICIT(GSresGetResource(ctx, model));
+    GSmodelSetShadowFlags(PC_PTR(target), 2);
+    GSmodelSetShadowLight(target, lbl_8047A690);
+    GSmodelSetShadowSurface(PC_PTR(target), 1, &lbl_8047A694);
+}
+
+/* 0x80091F48 | size: 0x1F8 */
+void demoScene05(u32 ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSresGetResource(u32 ctx, u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowTextureSize(u32 w, u32 h);
+#endif
+    extern void std116_mapObjectStopAnimation(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelLinkToGSparticleBank(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetGSparticleLinkAttachMode(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void std115_mapObjectPlayAnimation(u32 id, u32 slot, u32 x, u32 y);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void scriptWaitSyncMotion(u32 id, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 fn_800D37CC(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void _threadSwitch(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSgetFrameStep(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std112_modelGetResourceID(u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSmodelSetShadowFlags(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowLight(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowSurface(u32 handle, u32 val, u32 *param);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void cameraPlayAnime(u32 ctx, u32 id, u32 a, u32 b);
+#endif
+    extern void std070_characterAttachToCharacter(u32 ctx, u32 modelHandle, u32 ctx2, u32 handle, u32 flags);
+    extern void cameraWaitSyncAnime(s32 sync);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorRequestChange(u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorSetFadeScript(u32 a, u32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gsParticleKill(void *texture, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std093_getCurrentGroupID(void);
+#endif
+
+    u32 elapsed;
+    u32 waitFrames;
+    u32 animB;
+    u32 modelB;
+    u32 animA;
+    u32 modelA;
+
+    lbl_8047A690 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x06DD1604));
+    lbl_8047A694 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x06DD1001));
+    GSmodelSetShadowTextureSize(0x280, 0x1E0);
+
+    modelA = std112_modelGetResourceID(PC_PTR(0x06BB0400));
+    modelB = std112_modelGetResourceID(PC_PTR(0x0D240400));
+
+    gbaCommunicationSetShadowReceiver(ctx, modelA);
+
+    gbaCommunicationSetShadowReceiver(ctx, modelB);
+
+    cameraPlayAnime(ctx, 0x0B891800, 0, 0);
+    waitFrames = 1;
+    if (fn_800D37CC() == 0x32) {
+        waitFrames = (u32)lbl_8047C1D0;
+        if (waitFrames < 1) {
+            waitFrames = 1;
+        }
+    }
+    for (elapsed = 0; elapsed < waitFrames; ) {
+        _threadSwitch();
+        elapsed += GSgetFrameStep();
+    }
+
+    animA = std112_modelGetResourceID(PC_PTR(0x0B861000));
+    animB = std112_modelGetResourceID(PC_PTR(0x0B861001));
+
+    std070_characterAttachToCharacter(ctx, modelA, ctx, animA, 0);
+    std070_characterAttachToCharacter(ctx, modelB, ctx, animB, 0);
+
+    std115_mapObjectPlayAnimation(modelB, 8, 0, 1);
+    std115_mapObjectPlayAnimation(modelA, 8, 0x32, 0);
+    scriptWaitSyncMotion(modelA, 0);
+    std115_mapObjectPlayAnimation(modelA, 9, 0, 1);
+
+    cameraWaitSyncAnime(1);
+    floorRequestChange(ROOM_S2_OUT_3);
+    floorSetFadeScript(0, 0);
+}
+
+/* 0x80092140 | size: 0x358 */
+void demoScene04(u32 ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowTextureSize(u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std112_modelGetResourceID(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSmodelSetShadowFlags(u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowLight(u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowSurface(u32, u32, u32*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void cameraPlayAnime(u32, u32, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 fn_800D37CC(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSgetFrameStep(void);
+#endif
+    extern void std070_characterAttachToCharacter(u32, u32, u32, u32, u32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void std115_mapObjectPlayAnimation(u32, u32, u32, u32);
+#endif
+    extern void cameraWaitSyncAnime(s32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorRequestChange(u32);
+#endif
+    u32 configured, elapsed, waitFrames;
+    u32 animation0, animation1, animation2, animation3, animation4;
+    u32 model0, model1, model2, model3, model4;
+
+    lbl_8047A690 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x06DD1604));
+    lbl_8047A694 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x06DD1001));
+    GSmodelSetShadowTextureSize(0x280, 0x1E0);
+    model0 = std112_modelGetResourceID(PC_PTR(0x0D240400));
+    model1 = std112_modelGetResourceID(PC_PTR(0x0D240400));
+    model2 = std112_modelGetResourceID(PC_PTR(0x0D240400));
+    model3 = std112_modelGetResourceID(PC_PTR(0x0D240400));
+    model4 = std112_modelGetResourceID(PC_PTR(0x0D240400));
+
+    configured = PC_PTR32_IMPLICIT(GSresGetResource(ctx, model0));
+    GSmodelSetShadowFlags(PC_PTR(configured), 2);
+    GSmodelSetShadowLight(configured, lbl_8047A690);
+    GSmodelSetShadowSurface(PC_PTR(configured), 1, &lbl_8047A694);
+    configured = PC_PTR32_IMPLICIT(GSresGetResource(ctx, model1));
+    GSmodelSetShadowFlags(PC_PTR(configured), 2);
+    GSmodelSetShadowLight(configured, lbl_8047A690);
+    GSmodelSetShadowSurface(PC_PTR(configured), 1, &lbl_8047A694);
+    configured = PC_PTR32_IMPLICIT(GSresGetResource(ctx, model2));
+    GSmodelSetShadowFlags(PC_PTR(configured), 2);
+    GSmodelSetShadowLight(configured, lbl_8047A690);
+    GSmodelSetShadowSurface(PC_PTR(configured), 1, &lbl_8047A694);
+    configured = PC_PTR32_IMPLICIT(GSresGetResource(ctx, model3));
+    GSmodelSetShadowFlags(PC_PTR(configured), 2);
+    GSmodelSetShadowLight(configured, lbl_8047A690);
+    GSmodelSetShadowSurface(PC_PTR(configured), 1, &lbl_8047A694);
+    configured = PC_PTR32_IMPLICIT(GSresGetResource(ctx, model4));
+    GSmodelSetShadowFlags(PC_PTR(configured), 2);
+    GSmodelSetShadowLight(configured, lbl_8047A690);
+    GSmodelSetShadowSurface(PC_PTR(configured), 1, &lbl_8047A694);
+
+    cameraPlayAnime(ctx, 0x0B881800, 0, 0);
+    waitFrames = 1;
+    if (fn_800D37CC() == 0x32) {
+        waitFrames = (u32)lbl_8047C1D0;
+        if (waitFrames < 1) {
+            waitFrames = 1;
+        }
+    }
+    for (elapsed = 0; elapsed < waitFrames;) {
+        _threadSwitch();
+        elapsed += GSgetFrameStep();
+    }
+
+    animation0 = std112_modelGetResourceID(PC_PTR(0x0B851004));
+    animation1 = std112_modelGetResourceID(PC_PTR(0x0B851003));
+    animation2 = std112_modelGetResourceID(PC_PTR(0x0B851001));
+    animation3 = std112_modelGetResourceID(PC_PTR(0x0B851002));
+    animation4 = std112_modelGetResourceID(PC_PTR(0x0B851003));
+    std070_characterAttachToCharacter(ctx, model0, ctx, animation0, 0);
+    std070_characterAttachToCharacter(ctx, model1, ctx, animation1, 0);
+    std070_characterAttachToCharacter(ctx, model2, ctx, animation2, 0);
+    std070_characterAttachToCharacter(ctx, model3, ctx, animation3, 0);
+    std070_characterAttachToCharacter(ctx, model4, ctx, animation4, 0);
+    std115_mapObjectPlayAnimation(model0, 6, 0, 1);
+    std115_mapObjectPlayAnimation(model1, 6, 0, 1);
+    std115_mapObjectPlayAnimation(model2, 8, 0, 1);
+    std115_mapObjectPlayAnimation(model3, 8, 0, 1);
+    std115_mapObjectPlayAnimation(model4, 7, 0, 1);
+    cameraWaitSyncAnime(1);
+    floorRequestChange(ROOM_S2_BOSSROOM_1);
+    floorSetFadeScript(0, 0);
+}
+
+/* 0x80092498 | size: 0x1CC */
+void demoScene03(u32 ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSresGetResource(u32 ctx, u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowTextureSize(u32 w, u32 h);
+#endif
+    extern void std116_mapObjectStopAnimation(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelLinkToGSparticleBank(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetGSparticleLinkAttachMode(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void std115_mapObjectPlayAnimation(u32 id, u32 slot, u32 x, u32 y);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void scriptWaitSyncMotion(u32 id, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 fn_800D37CC(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void _threadSwitch(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSgetFrameStep(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std112_modelGetResourceID(u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSmodelSetShadowFlags(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowLight(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowSurface(u32 handle, u32 val, u32 *param);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void cameraPlayAnime(u32 ctx, u32 id, u32 a, u32 b);
+#endif
+    extern void std070_characterAttachToCharacter(u32 ctx, u32 modelHandle, u32 ctx2, u32 handle, u32 flags);
+    extern void cameraWaitSyncAnime(s32 sync);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorRequestChange(u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorSetFadeScript(u32 a, u32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gsParticleKill(void *texture, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std093_getCurrentGroupID(void);
+#endif
+
+    u32 elapsed;
+    u32 waitFrames;
+    u32 cameraElapsed;
+    u32 cameraWaitFrames;
+    GSmodel *material;
+
+    lbl_8047A690 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x0B631602));
+    lbl_8047A694 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x0B631002));
+    GSmodelSetShadowTextureSize(0x280, 0x1E0);
+    std115_mapObjectPlayAnimation(0x0B631000, 0, 0, 0);
+    waitFrames = 1;
+    if (fn_800D37CC() == 0x32) {
+        waitFrames = (u32)lbl_8047C1D0;
+        if (waitFrames < 1) {
+            waitFrames = 1;
+        }
+    }
+    for (elapsed = 0; elapsed < waitFrames; ) {
+        _threadSwitch();
+        elapsed += GSgetFrameStep();
+    }
+
+    std116_mapObjectStopAnimation(0x0B631000);
+
+    material = (GSmodel *)PC_PTR(GSresGetResource(ctx, 0x0B631000));
+    gsParticleKill(material->linkedGSparticleBank, 1);
+    material->linkedGSparticleBank = NULL;
+
+    GSmodelLinkToGSparticleBank(PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x0B631000)),
+                               PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x112B1400)));
+    GSmodelSetGSparticleLinkAttachMode(PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x0B631000)), 4);
+
+    cameraPlayAnime(ctx, 0x0B831800, 0, 0);
+    cameraWaitFrames = 1;
+    if (fn_800D37CC() == 0x32) {
+        cameraWaitFrames = (u32)lbl_8047C1D0;
+        if (cameraWaitFrames < 1) {
+            cameraWaitFrames = 1;
+        }
+    }
+    for (cameraElapsed = 0; cameraElapsed < cameraWaitFrames; ) {
+        _threadSwitch();
+        cameraElapsed += GSgetFrameStep();
+    }
+
+    std115_mapObjectPlayAnimation(0x0B631000, 0, 0, 0);
+    cameraWaitSyncAnime(1);
+    floorRequestChange(ROOM_S2_BOSSROOM_1);
+    floorSetFadeScript(0, 0);
+}
+
+/* 0x80092664 | size: 0x358 */
+void demoScene02(u32 ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowTextureSize(u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std112_modelGetResourceID(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSmodelSetShadowFlags(u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowLight(u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowSurface(u32, u32, u32*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void cameraPlayAnime(u32, u32, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 fn_800D37CC(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSgetFrameStep(void);
+#endif
+    extern void std070_characterAttachToCharacter(u32, u32, u32, u32, u32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void std115_mapObjectPlayAnimation(u32, u32, u32, u32);
+#endif
+    extern void cameraWaitSyncAnime(s32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorRequestChange(u32);
+#endif
+    u32 configured, elapsed, waitFrames;
+    u32 animation0, animation1, animation2, animation3, animation4;
+    u32 model0, model1, model2, model3, model4;
+
+    lbl_8047A690 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x06DD1604));
+    lbl_8047A694 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x06DD1001));
+    GSmodelSetShadowTextureSize(0x280, 0x1E0);
+    model0 = std112_modelGetResourceID(PC_PTR(0x0D240400));
+    model1 = std112_modelGetResourceID(PC_PTR(0x0D240400));
+    model2 = std112_modelGetResourceID(PC_PTR(0x0D240400));
+    model3 = std112_modelGetResourceID(PC_PTR(0x0D240400));
+    model4 = std112_modelGetResourceID(PC_PTR(0x0D240400));
+
+    configured = PC_PTR32_IMPLICIT(GSresGetResource(ctx, model0));
+    GSmodelSetShadowFlags(PC_PTR(configured), 2);
+    GSmodelSetShadowLight(configured, lbl_8047A690);
+    GSmodelSetShadowSurface(PC_PTR(configured), 1, &lbl_8047A694);
+    configured = PC_PTR32_IMPLICIT(GSresGetResource(ctx, model1));
+    GSmodelSetShadowFlags(PC_PTR(configured), 2);
+    GSmodelSetShadowLight(configured, lbl_8047A690);
+    GSmodelSetShadowSurface(PC_PTR(configured), 1, &lbl_8047A694);
+    configured = PC_PTR32_IMPLICIT(GSresGetResource(ctx, model2));
+    GSmodelSetShadowFlags(PC_PTR(configured), 2);
+    GSmodelSetShadowLight(configured, lbl_8047A690);
+    GSmodelSetShadowSurface(PC_PTR(configured), 1, &lbl_8047A694);
+    configured = PC_PTR32_IMPLICIT(GSresGetResource(ctx, model3));
+    GSmodelSetShadowFlags(PC_PTR(configured), 2);
+    GSmodelSetShadowLight(configured, lbl_8047A690);
+    GSmodelSetShadowSurface(PC_PTR(configured), 1, &lbl_8047A694);
+    configured = PC_PTR32_IMPLICIT(GSresGetResource(ctx, model4));
+    GSmodelSetShadowFlags(PC_PTR(configured), 2);
+    GSmodelSetShadowLight(configured, lbl_8047A690);
+    GSmodelSetShadowSurface(PC_PTR(configured), 1, &lbl_8047A694);
+
+    cameraPlayAnime(ctx, 0x0B871800, 0, 0);
+    waitFrames = 1;
+    if (fn_800D37CC() == 0x32) {
+        waitFrames = (u32)lbl_8047C1D0;
+        if (waitFrames < 1) {
+            waitFrames = 1;
+        }
+    }
+    for (elapsed = 0; elapsed < waitFrames;) {
+        _threadSwitch();
+        elapsed += GSgetFrameStep();
+    }
+
+    animation0 = std112_modelGetResourceID(PC_PTR(0x0B841004));
+    animation1 = std112_modelGetResourceID(PC_PTR(0x0B841000));
+    animation2 = std112_modelGetResourceID(PC_PTR(0x0B841001));
+    animation3 = std112_modelGetResourceID(PC_PTR(0x0B841002));
+    animation4 = std112_modelGetResourceID(PC_PTR(0x0B841003));
+    std070_characterAttachToCharacter(ctx, model0, ctx, animation0, 0);
+    std070_characterAttachToCharacter(ctx, model1, ctx, animation1, 0);
+    std070_characterAttachToCharacter(ctx, model2, ctx, animation2, 0);
+    std070_characterAttachToCharacter(ctx, model3, ctx, animation3, 0);
+    std070_characterAttachToCharacter(ctx, model4, ctx, animation4, 0);
+    std115_mapObjectPlayAnimation(model0, 1, 0, 1);
+    std115_mapObjectPlayAnimation(model1, 1, 0, 1);
+    std115_mapObjectPlayAnimation(model2, 1, 0, 1);
+    std115_mapObjectPlayAnimation(model3, 2, 0, 1);
+    std115_mapObjectPlayAnimation(model4, 2, 0, 1);
+    cameraWaitSyncAnime(1);
+    floorRequestChange(ROOM_S2_OUT_1);
+    floorSetFadeScript(0, 0);
+}
+
+/* 0x800929BC | size: 0x170 */
+void demoScene01(u32 ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSresGetResource(u32 ctx, u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowTextureSize(u32 w, u32 h);
+#endif
+    extern void std116_mapObjectStopAnimation(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelLinkToGSparticleBank(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetGSparticleLinkAttachMode(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void std115_mapObjectPlayAnimation(u32 id, u32 slot, u32 x, u32 y);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void scriptWaitSyncMotion(u32 id, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 fn_800D37CC(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void _threadSwitch(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSgetFrameStep(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std112_modelGetResourceID(u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSmodelSetShadowFlags(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowLight(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowSurface(u32 handle, u32 val, u32 *param);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void cameraPlayAnime(u32 ctx, u32 id, u32 a, u32 b);
+#endif
+    extern void std070_characterAttachToCharacter(u32 ctx, u32 modelHandle, u32 ctx2, u32 handle, u32 flags);
+    extern void cameraWaitSyncAnime(s32 sync);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorRequestChange(u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorSetFadeScript(u32 a, u32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gsParticleKill(void *texture, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std093_getCurrentGroupID(void);
+#endif
+
+    u32 elapsed;
+    u32 waitFrames;
+    u32 cameraElapsed;
+    u32 cameraWaitFrames;
+    GSmodel *material;
+
+    lbl_8047A690 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x0B631602));
+    lbl_8047A694 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x0B631002));
+    GSmodelSetShadowTextureSize(0x280, 0x1E0);
+    std115_mapObjectPlayAnimation(0x0B631000, 0, 0, 0);
+    waitFrames = 1;
+    if (fn_800D37CC() == 0x32) {
+        waitFrames = (u32)lbl_8047C1D0;
+        if (waitFrames < 1) {
+            waitFrames = 1;
+        }
+    }
+    for (elapsed = 0; elapsed < waitFrames; ) {
+        _threadSwitch();
+        elapsed += GSgetFrameStep();
+    }
+
+    std116_mapObjectStopAnimation(0x0B631000);
+
+    material = (GSmodel *)PC_PTR(GSresGetResource(ctx, 0x0B631000));
+    gsParticleKill(material->linkedGSparticleBank, 1);
+    material->linkedGSparticleBank = NULL;
+
+    cameraPlayAnime(std093_getCurrentGroupID(), 0x0B661800, 0, 0);
+    cameraWaitFrames = 1;
+    if (fn_800D37CC() == 0x32) {
+        cameraWaitFrames = (u32)lbl_8047C1D0;
+        if (cameraWaitFrames < 1) {
+            cameraWaitFrames = 1;
+        }
+    }
+    for (cameraElapsed = 0; cameraElapsed < cameraWaitFrames; ) {
+        _threadSwitch();
+        cameraElapsed += GSgetFrameStep();
+    }
+
+    cameraWaitSyncAnime(1);
+    floorRequestChange(ROOM_S2_BOSSROOM_1);
+    floorSetFadeScript(0, 0);
+}
+
+/* 0x80092B2C | size: 0x164 */
+void demoScene00(u32 ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSresGetResource(u32 ctx, u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowTextureSize(u32 w, u32 h);
+#endif
+    extern void std116_mapObjectStopAnimation(u32 id);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelLinkToGSparticleBank(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetGSparticleLinkAttachMode(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void std115_mapObjectPlayAnimation(u32 id, u32 slot, u32 x, u32 y);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void scriptWaitSyncMotion(u32 id, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 fn_800D37CC(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void _threadSwitch(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSgetFrameStep(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std112_modelGetResourceID(u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSmodelSetShadowFlags(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowLight(u32 handle, u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowSurface(u32 handle, u32 val, u32 *param);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void cameraPlayAnime(u32 ctx, u32 id, u32 a, u32 b);
+#endif
+    extern void std070_characterAttachToCharacter(u32 ctx, u32 modelHandle, u32 ctx2, u32 handle, u32 flags);
+    extern void cameraWaitSyncAnime(s32 sync);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorRequestChange(u32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorSetFadeScript(u32 a, u32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gsParticleKill(void *texture, u32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std093_getCurrentGroupID(void);
+#endif
+
+    u32 elapsed;
+    u32 shadowTarget;
+    u32 waitFrames;
+    u32 model;
+    u32 anim;
+
+    lbl_8047A690 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x0B631602));
+    lbl_8047A694 = PC_PTR32_IMPLICIT(GSresGetResource(ctx, 0x0B631002));
+    GSmodelSetShadowTextureSize(0x280, 0x1E0);
+
+    model = std112_modelGetResourceID(PC_PTR(0x0B721000));
+    std115_mapObjectPlayAnimation(model, 6, 0, 1);
+
+    shadowTarget = PC_PTR32_IMPLICIT(GSresGetResource(ctx, model));
+    GSmodelSetShadowFlags(PC_PTR(shadowTarget), 2);
+    GSmodelSetShadowLight(shadowTarget, lbl_8047A690);
+    GSmodelSetShadowSurface(PC_PTR(shadowTarget), 1, &lbl_8047A694);
+
+    cameraPlayAnime(std093_getCurrentGroupID(), 0x0B651800, 0, 0);
+    waitFrames = 1;
+    if (fn_800D37CC() == 0x32) {
+        waitFrames = (u32)lbl_8047C1D0;
+        if (waitFrames < 1) {
+            waitFrames = 1;
+        }
+    }
+    for (elapsed = 0; elapsed < waitFrames; ) {
+        _threadSwitch();
+        elapsed += GSgetFrameStep();
+    }
+
+    anim = std112_modelGetResourceID(PC_PTR(0x0B731000));
+    std070_characterAttachToCharacter(ctx, model, ctx, anim, 0);
+
+    cameraWaitSyncAnime(1);
+    floorRequestChange(ROOM_S2_OUT_1);
+    floorSetFadeScript(0, 0);
+}
+
+/* 0x80092C90 | size: 0x1A8 */
+s32 gbaCommStartSendPokemon(s32 channel, void* arg1, void* arg2)
+{
+    extern u32 GSmemAlloc(u32 size, u32 align);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* GSmemLock(u32 handle);
+#endif
+    extern void OSInitMutex(void* work);
+    extern void OSInitCond(void* callback);
+    extern s32 _gbaCommThread(void* arg);
+    extern void fn_80093B04(u32 a, u32 b);
+    extern s32 fn_80089048(void* out, void* arg1, void* arg2);
+    extern void OSCreateThread(void* thread, void* entry, void* arg,
+                               void* stack, u32 stackSize, s32 priority,
+                               u16 attributes);
+    extern void OSResumeThread(void* thread);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* memset(void* dst, int value, u32 size);
+#endif
+
+    u32 slot;
+    u32 handle;
+    u8* allocated;
+    u8* work;
+    s32 started;
+    s32 requestStarted;
+    u8* requestWork;
+
+    if (channel < 0 || channel > 3) {
+        started = 0;
+    } else {
+        slot = (u32)channel << 2;
+        if (GBA_WORK_GET(slot) != NULL) {
+            started = 1;
+        } else {
+            handle = GSmemAlloc(0x44A0, 0x20);
+            if ((handle & 0xFFFF) == 0) {
+                __assert(lbl_8026F5A8, 0x1DD, &lbl_8047C1E8);
+            }
+            allocated = GSmemLock(handle);
+            memset(allocated, 0, 0x4490);
+            GBA_WORK_SET(slot, allocated);
+
+            work = GBA_WORK_GET(slot);
+            *(u32*)(work + GBA_STATE_PHASE) = 0;
+            *(s32*)(work + GBA_STATE_PORT) = channel;
+            fn_800716C8(channel, work + GBA_DATA_OFFSET, fn_80093B04);
+            OSInitMutex(work);
+            OSInitCond(work + 0x18);
+            OSCreateThread(work + GBA_DATA_OFFSET, _gbaCommThread, work,
+                           work + GBA_STATE_PORT, 0x4000,
+                           GBA_THREAD_PRIORITY, 0);
+            OSResumeThread(work + GBA_DATA_OFFSET);
+            started = 1;
+        }
+    }
+
+    if (started == 0) {
+        return 0;
+    }
+
+    requestWork = GBA_WORK_GET((u32)channel << 2);
+    requestStarted = 0;
+    OSLockMutex(requestWork);
+    if (*(s32*)(requestWork + GBA_STATE_PHASE) == 0) {
+        requestStarted = fn_80089048(requestWork + 0x4344, arg1, arg2);
+        if (requestStarted != 0) {
+            *(s32*)(requestWork + GBA_STATE_PHASE) = 12;
+            *(u32*)(requestWork + GBA_STATE_TIMEOUT) = 0x3000C;
+        }
+    }
+    OSUnlockMutex(requestWork);
+    OSSetThreadPriority(requestWork + GBA_DATA_OFFSET, GBA_THREAD_PRIORITY);
+    if (requestStarted != 0) {
+        OSSignalCond(requestWork + 0x18);
+    }
+    return requestStarted;
+}
+
+/* 0x80092E38 | size: 0x190 */
+s32 gbaCommStartTransferA(s32 channel, void* requestValue)
+{
+    extern u32 GSmemAlloc(u32 size, u32 align);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* GSmemLock(u32 handle);
+#endif
+    extern void OSInitMutex(void* work);
+    extern void OSInitCond(void* callback);
+    extern s32 _gbaCommThread(void* arg);
+    extern void fn_80093B04(u32 a, u32 b);
+    extern void OSCreateThread(void* thread, void* entry, void* arg,
+                               void* stack, u32 stackSize, s32 priority,
+                               u16 attributes);
+    extern void OSResumeThread(void* thread);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* memset(void* dst, int value, u32 size);
+#endif
+
+    u32 slot;
+    u32 handle;
+    u8* allocated;
+    u8* work;
+    s32 started;
+    s32 requestStarted;
+    u8* requestWork;
+
+    if (channel < 0 || channel > 3) {
+        started = 0;
+    } else {
+        slot = (u32)channel << 2;
+        if (GBA_WORK_GET(slot) != NULL) {
+            started = 1;
+        } else {
+            handle = GSmemAlloc(0x44A0, 0x20);
+            if ((handle & 0xFFFF) == 0) {
+                __assert(lbl_8026F5A8, 0x1DD, &lbl_8047C1E8);
+            }
+            allocated = GSmemLock(handle);
+            memset(allocated, 0, 0x4490);
+            GBA_WORK_SET(slot, allocated);
+
+            work = GBA_WORK_GET(slot);
+            *(u32*)(work + GBA_STATE_PHASE) = 0;
+            *(s32*)(work + GBA_STATE_PORT) = channel;
+            fn_800716C8(channel, work + GBA_DATA_OFFSET, fn_80093B04);
+            OSInitMutex(work);
+            OSInitCond(work + 0x18);
+            OSCreateThread(work + GBA_DATA_OFFSET, _gbaCommThread, work,
+                           work + GBA_STATE_PORT, 0x4000,
+                           GBA_THREAD_PRIORITY, 0);
+            OSResumeThread(work + GBA_DATA_OFFSET);
+            started = 1;
+        }
+    }
+
+    if (started == 0) {
+        return 0;
+    }
+
+    requestWork = GBA_WORK_GET((u32)channel << 2);
+    requestStarted = 0;
+    OSLockMutex(requestWork);
+    if (*(s32*)(requestWork + GBA_STATE_PHASE) == 0) {
+        *(s32*)(requestWork + GBA_STATE_PHASE) = 11;
+        *(u32*)(requestWork + GBA_STATE_TIMEOUT) = 0x3000B;
+        requestStarted = 1;
+        *(void**)(requestWork + 0x4344) = requestValue;
+    }
+    OSUnlockMutex(requestWork);
+    OSSetThreadPriority(requestWork + GBA_DATA_OFFSET, GBA_THREAD_PRIORITY);
+    if (requestStarted != 0) {
+        OSSignalCond(requestWork + 0x18);
+    }
+    return requestStarted;
+}

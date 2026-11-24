@@ -1,0 +1,131 @@
+<rml>
+<head>
+	<title>[settings.page]</title>
+	<link type="text/rcss" href="settings.rcss"/>
+</head>
+<!-- The in-game Settings overlay, after the project's mockups 13 (dark) and 13a (light): docs/design/mockups/. The rows of the
+     current tab are written into #list by pc_settings_overlay.cpp.
+     *Updated 2026-11-13:* every word is a "[key]" from ui/lang/<code>.txt, in the player's language (pc_text.h; snatcherLeo:
+     "make it translateable, and we'll ensure that moving forward, it's always like this"). Controller and keyboard key
+     names printed on the hardware (Z, START, L, R, A, B, Y, Esc) stay as they are. -->
+<body id="body" class="dark">
+	<div id="dim"></div>
+	<!-- the hub's gear while Settings is open over the hub, in the same place: a second click goes back (snatcherLeo,
+	     2026-11-11: "if you click that icon again, it's the same thing as "Back""); hidden in game -->
+	<span id="hubgear">⚙</span>
+	<div id="paused"><span class="bars">❚❚</span> [settings.paused]</div>
+	<!-- the old opening hint (before v2's notice); kept hidden by settings.rcss, its words on keys all the same -->
+	<div id="hint">
+		<div id="h1"><span class="z">Z</span> + <span class="start">START</span> [settings.oldhint.opens]</div>
+		<div id="h2">
+			[settings.oldhint.keyboard] <span class="key">Esc</span><span class="sep"></span>
+			Xbox <span class="key">⧉</span> View<span class="sep"></span>
+			PlayStation <span class="key wide"> </span> / <span class="key"> </span><span class="sep"></span>
+			Steam Deck <span class="key">…</span>
+		</div>
+		<div id="h3">[settings.oldhint.only]</div>
+	</div>
+	<div id="panel">
+		<!-- the in-game side panel (snatcherLeo, 2026-11-11, option B): "PAUSED" over the panel's title (MENU, or the open
+		     category with a back arrow); its button hints at the bottom (#phint); hidden on the hub's full page -->
+		<div id="ptop">[settings.paused]</div>
+		<!-- v2 (snatcherLeo, 2026-11-12, "Yes, build v2"; mockups 8-11): the panel's head (the O, or a back arrow inside a
+		     category; the title; the game), its two buttons and the focused row's help, all written by the code -->
+		<div id="phead"></div>
+		<div id="pbtns"></div>
+		<div id="phelp"></div>
+		<div id="ph1">
+			<span id="settings">[settings.heading]</span>
+			<span id="gs"><span class="d"></span> [hub.game.colosseum]</span>
+		</div>
+		<div id="tabs">
+			<span class="key lr">L</span>
+			<div id="rail">
+				<span class="tab" id="tab-0">[settings.tab.general]</span>
+				<span class="tab" id="tab-1">[settings.tab.appearance]</span>
+				<span class="tab" id="tab-2">[settings.tab.graphics]</span>
+				<!-- Enhancements moved up under Graphics (snatcherLeo, 2026-11-16: "yeah move Enhancements up"); each tab keeps
+				     its id (tab-5 is still Enhancements), only the order changed (pc_settings_overlay.cpp kTabOrder) -->
+				<span class="tab" id="tab-5">[settings.tab.enhancements]</span>
+				<span class="tab" id="tab-3">[settings.tab.audio]</span>
+				<span class="tab" id="tab-4">[settings.tab.controls]</span>
+				<!-- About, last, as in Studio (snatcherLeo, 2026-11-23): the version, updates, Go back, the logs folder -->
+				<span class="tab" id="tab-6">[settings.tab.about]</span>
+			</div>
+			<span class="key lr">R</span>
+		</div>
+		<!-- the full-page look in the hub (snatcherLeo, 2026-11-11, "A, full page"): the current category's name over its rows;
+		     hidden in the in-game pop-up, where the tabs show it -->
+		<div id="mh"></div>
+		<div id="list"></div>
+		<div id="live"></div>
+		<div id="foot">
+			<div id="resume" class="btn">[settings.resume] <span class="ab">A</span></div>
+			<div id="quit" class="btn">[settings.quit]</div>
+			<div id="report-btn" class="btn">[hub.link.report] <span class="yb">Y</span></div>
+			<div id="fh"><span class="bb">B</span> [settings.resume_short] <span class="key">L</span> <span class="key">R</span> [settings.tabs]</div>
+		</div>
+		<div id="phint"></div>
+		<!-- the full Settings window in game: Quit to hub above BACK (snatcherLeo, 2026-11-15, mockup A); hidden on the hub's page -->
+		<div id="fquit" class="btn"></div>
+	</div>
+	<!-- its question, a dialog over the dimmed window (mockup R2): written by the code -->
+	<div id="fqdim"></div>
+	<div id="fqdlg"></div>
+	<!-- General › "What it turns off" (UI id accurate.what_off; 2.12, snatcherLeo 2026-11-16): GameCube-accurate mode's list,
+	     a window over the page or the panel; written by the code (the same rows as the hub's Saves page) -->
+	<div id="whatdim"></div>
+	<div id="whatdlg"></div>
+	<!-- the first-run hint (v2, mockup 10): how to open the menu, shown a few seconds the first time the game starts;
+	     it replaces the banner that used to sit over the game whenever the menu was open -->
+	<div id="toast"></div>
+	<!-- Report a problem, after mockup 08 (docs/design/mockups/08-report-a-problem.webp) -->
+	<div id="report">
+		<div id="rh"><span class="flag">⚑</span> [report.heading]</div>
+		<div id="rl"><span class="strong">[report.what]</span> [report.optional]</div>
+		<div id="notebox">
+			<textarea id="note" rows="4" cols="56"></textarea>
+			<div id="ph">[report.example_game]</div>
+		</div>
+		<div id="auto">
+			<div id="autot">[report.included]</div>
+			<div id="chips">
+				<span class="chip">▶ [report.chip.recording]</span><span class="chip">▤ [report.chip.save]</span><span class="chip">≡ [report.chip.log]</span><span class="chip">▣ [report.chip.picture]</span><span class="chip">◆ [report.chip.pc]</span>
+			</div>
+			<div id="autos">[report.where]</div>
+		</div>
+		<!-- after Save, as Studio's panel and the hub's do (snatcherLeo, 2026-11-23): what happened, the zip's name and size, a
+		     warning past about 10 MB; Explorer only from Open folder. UI ids: rsaved, rsavedmsg, rfile, rfilename,
+		     rfilesize, rbig, ropen, rdone -->
+		<div id="rsaved">
+			<div id="rsavedmsg"></div>
+			<div id="rfile"><span id="rfilesize"></span><span id="rfilename"></span></div>
+			<div id="rbig"></div>
+		</div>
+		<div id="rfoot">
+			<div id="cancel" class="btn">[common.cancel] <span class="bb">B</span></div>
+			<div id="savebtn" class="btn">[report.save] <span class="ab">A</span></div>
+			<div id="ropen" class="btn">[report.open_folder] <span class="yb">Y</span></div>
+			<div id="rdone" class="btn">[report.done] <span class="ab">A</span></div>
+		</div>
+	</div>
+	<!-- the menu bar over the game (mockup 46): File and Help, the open menu, About OrrePort -->
+	<div id="mbar"></div>
+	<div id="mdrop"></div>
+	<div id="msub"></div>
+	<div id="about"></div>
+	<!-- a fullscreen switch: a quick dip to black over the wrongly sized frames (pc_settings_overlay.cpp cover_frame) -->
+	<div id="cover"></div>
+	<!-- Quit to hub: the window fades out before OrrePort starts again on the hub (pc_settings_overlay.cpp) -->
+	<div id="fade"><span id="fadetext">[settings.returning]</span></div>
+	<!-- the GameCube adapter's setup running (snatcherLeo, 2026-11-13: "have a loading screen as it is installing", "have a
+	     progress bar too"): over the whole window, the step and a progress bar, until the setup program ends
+	     (pc_settings_overlay.cpp, body.busy) -->
+	<div id="busy"><div id="busybox">
+		<div id="busyt">[settings.adapter.busy]</div>
+		<div id="busystep"></div>
+		<div id="busytrack"><div id="busybar"></div></div>
+		<div id="busys">[settings.adapter.busy_sub]</div>
+	</div></div>
+</body>
+</rml>

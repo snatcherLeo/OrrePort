@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- A one-colour download arrow for About's update button (2026-11-23; snatcherLeo and Studio: the same small icon buttons in
+     both programs' About). White, filled paths only (port/src/pc_svg.cpp reads no strokes): an arrow onto a tray, both
+     2 units thick like folder.svg's outline. Tinted at draw time. Drawn by Main; no outside art. -->
+<path fill="#FFFFFF" d="M11 3 H13 V11.2 L16.3 7.9 L17.7 9.3 L12 15 L6.3 9.3 L7.7 7.9 L11 11.2 Z"/>
+<path fill="#FFFFFF" d="M4 15.5 H6 V18 H18 V15.5 H20 V20 H4 Z"/>
+</svg>

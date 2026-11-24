@@ -1,0 +1,30 @@
+{
+  "_note": "the reference playthrough, after Mt. Battle's battle 1 on the main build (Final\\Run3-Play, save eacfeec1; snatcherLeo, 2026-11-11: 'make everyone level 100 ... ensure we can use this team for all of Battle Mode stuff'). Each of the six party members to Lv 100: EXP set to the level's start, stats from the formula with its own IVs, EVs and nature, full HP; moves, PP, nickname, purified state and everything else unchanged (moves follow once snatcherLeo picks them; Espeon and Gengar keep theirs). ev_lag_ok: a stored stat may trail the formula by 0-3 points (EVs gained since the last level-up). Six Lv 100 = a level total of 600, exactly Battle Mode rule 2's cap (battle-mode.md). The same edit carries run3_mtbattle_to95.json's flags (areas 1-9 cleared, AREA 10 at four wins, next #95 Crisom).",
+  "template_slot": 2,
+  "_template_note": "the stat-formula check runs on Tyranitar (party 2, no EVs yet); Gengar (party 0) trails the formula by 1 Speed point (EV lag), which stops the check there",
+  "modify_pokemon": [
+    {"species": 94, "level": 100, "ev_lag_ok": true, "_note": "GENGAR"},
+    {"species": 196, "level": 100, "ev_lag_ok": true, "_note": "ESPEON"},
+    {"species": 248, "level": 100, "ev_lag_ok": true, "_note": "TYRANITAR (purified)"},
+    {"species": 245, "level": 100, "ev_lag_ok": true, "_note": "SUICUNE (purified)"},
+    {"species": 243, "level": 100, "ev_lag_ok": true, "_note": "RAIKOU (purified)"},
+    {"species": 400, "level": 100, "ev_lag_ok": true, "_note": "METAGROSS (purified)"}
+  ],
+  "set_flags": [
+    {"id": 2222, "value": 0},
+    {"id": 2612, "value": 1}, {"id": 2614, "value": 1}, {"id": 2616, "value": 1}, {"id": 2618, "value": 1},
+    {"id": 2620, "value": 1}, {"id": 2622, "value": 1}, {"id": 2624, "value": 1}, {"id": 2626, "value": 1},
+    {"id": 2628, "value": 1},
+    {"id": 2613, "value": 0}, {"id": 2615, "value": 0}, {"id": 2617, "value": 0}, {"id": 2619, "value": 0},
+    {"id": 2621, "value": 0}, {"id": 2623, "value": 0}, {"id": 2625, "value": 0}, {"id": 2627, "value": 0},
+    {"id": 2720, "value": 0},
+    {"id": 2611, "value": 1},
+    {"id": 2876, "value": 0},
+    {"id": 2629, "value": 9},
+    {"id": 2673, "value": 4},
+    {"id": 3564, "value": 0},
+    {"id": 2500, "value": 0},
+    {"id": 3578, "value": 0},
+    {"id": 3552, "value": 0}
+  ]
+}

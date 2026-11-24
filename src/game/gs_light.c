@@ -1,0 +1,1114 @@
+/**
+ * @file gs_light.c
+ * @brief GS render engine segment -- split from gs_render.c.
+ *
+ * XD source unit: game/pxdvs/GSAPI/GSlight/GSlight.cpp
+ * Address range: 0x800DC560 - 0x800DD270 (24 functions)
+ *
+ * 20 anchors, ALL in XD GSlight.cpp. 19/20 monotonic (0x800EDF2C..0x800EEBF0); sole inversion is GSlightSetupLights (XD 0x800EDC74): XD refactored it to TU head while Colosseum keeps it last - a pure intra-TU reorder, whitelist it rather than split. Leading fn_800DC560(0x178)/fn_800DC6D8(0x19C) ~ XD statics _lightPostUpdate(0x134)/_lightPreUpdate(0x88)+GSlightDeleteCurrentAll(0x24).
+ *
+ * Split from src/game/gs_render.c (physical XD source-unit split).
+ * The dead #ifdef PCPORT reference block (never defined in configure.py,
+ * same situation as gs_gfx.c) was stripped during the split.
+ */
+
+#include "dolphin/types.h"
+
+/* ===== External SDK / engine functions ===== */
+extern void  GSlogWrite(const char*, ...);             /* OSReport / GSlog */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memcpy(void* dst, const void* src, u32 n);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memset(void* dst, int val, u32 size);
+#endif
+
+/* External functions referenced from asm wrappers */
+extern void DCFlushRange(void* addr, u32 size);
+extern u64 OSGetTime(void);
+extern void GSgfxSetViewportJitter(s32, f32, f32, f32, f32, f32, f32);
+extern void gfxRecordCommand(u32, ...);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void gfxBegin(u16);
+#endif
+extern void gfxSetupChannelsTev(u32);
+
+/* GSmem */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16   _toolentryAlloc__FUl(u32 size);                    /* GSmemAllocRaw */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* GSmemLock(u16 handle);                  /* GSmemGetPtr */
+#endif
+
+/* SDK GX functions */
+extern void  VIGetNextField(void);                        /* GXSetViewport */
+extern void  GXSetViewportJitter(void);                        /* GXSetProjection */
+extern void  GXSetViewport(void);                        /* GXLoadPosMtxImm */
+extern void  GXInvalidateTexAll(void);                        /* GXInvalidateTexAll */
+
+/* ===== String constants (rodata) ===== */
+extern const char lbl_80270440[]; /* "GSgfx: invalid matrix index" */
+extern const char lbl_80270460[]; /* "GSgfx: matrix stack underflow!" */
+extern const char lbl_80270480[]; /* "GSgfx: matrix stack overflow!" */
+extern const char lbl_802704A0[]; /* "0123456789ABCDEF" */
+extern const char lbl_80270528[]; /* "GSmaterialSetPEdescr: Warning..." */
+extern const char lbl_8027056C[]; /* "GSmaterialCreate: Run out of materials..." */
+extern const char lbl_802705C0[]; /* "GSmaterial MObj" */
+extern const char lbl_802705D0[]; /* "GSmaterial: Unsupported texture format..." */
+extern const char lbl_80270610[]; /* "GSmaterial: Error creating environment map..." */
+
+/* ===== BSS / global state ===== */
+
+
+
+/* ===== Combined forward-decls (duplicated across split segments) ===== */
+
+/* No-op functions (1) */
+/* Address: 0x800DC874 | Size: 0x4 */
+/* Forward declarations for self-referencing asm blocks */
+extern void gfxFlushPendingVertex(void);
+extern void _gfxEmitTexCoord1x8(u32 idx);
+extern void _gfxEmitTexCoord1x16(u32 idx);
+extern void _gfxEmitTexCoord2u8(u32 idx);
+extern void _gfxEmitTexCoord2s16(u32 idx);
+extern void _gfxEmitTexCoord2u16(u32 idx);
+extern void _gfxEmitTexCoord2f32(u32 idx);
+extern void _gfxEmitColor1x8(u32 idx);
+extern void _gfxEmitColor1x16(u32 idx);
+extern void _gfxEmitColor1u16(u32 idx);
+extern void _gfxEmitColor1u32(u32 idx);
+extern void _gfxEmitColor3u8(u32 idx);
+extern void _gfxEmitColor4u8(u32 idx);
+extern void _gfxEmitNormal1x8(void);
+extern void _gfxEmitNormal1x16(void);
+extern void _gfxEmitNormal3s8(void);
+extern void _gfxEmitNormal3s16(void);
+extern void _gfxEmitNormal3f32(void);
+extern void _gfxEmitPos1x8(void);
+extern void _gfxEmitPos1x16(void);
+extern void _gfxEmitPos2s8(void);
+extern void _gfxEmitPos2u8(void);
+extern void _gfxEmitPos2s16(void);
+extern void _gfxEmitPos2u16(void);
+extern void _gfxEmitPos2f32(void);
+extern void _gfxEmitPos3s8(void);
+extern void _gfxEmitPos3u8(void);
+extern void _gfxEmitPos3s16(void);
+extern void _gfxEmitPos3u16(void);
+extern void gfxVtxDescClear(u8*);
+extern void gfxVtxDescSetAttr(u8*, u32, u32, u32, u32, u8, u32, u8);
+extern void fn_800D7940(u32, u16);
+extern void gfxLoadVtxDesc(u32);
+extern void fn_800DB098(void);
+extern void fn_800DB758(u16);
+extern void lightGetFrameCount__FP9_HSD_AObj(u8*);
+extern void GSlogVPrintf(void);
+extern void GSlogFormat(void);
+extern void fn_800E09E8(void*, void*, u32);
+extern u8 GSmemDumpMap(u32, u32);
+extern u32 _matGSmatObjMakeTExp(void*, void*, void*, void*, void*);
+extern void _matGSmatEnableEnvMapExt(u8*);
+extern s32 _matGSmatObjLoad(u8*);
+extern void GSmtxConcat(void*, void*, void*);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_800E02C4(void*);
+#endif
+extern void GSmtxRotateZ(void*, f32);
+extern void GSmtxRotateY(void*, f32);
+extern void GSmtxRotateX(void*, f32);
+extern void fn_800E03E8(void*, f32, f32, f32);
+extern void fn_800E0628(void*, void*);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_800E064C(void*);
+#endif
+extern void GSmtx44Perspective(u8*);
+extern void GSmtx44Ortho(void*, f32, f32, f32, f32, f32, f32);
+extern void fn_800E0C78(void);
+extern void GSmathInitCosTable(void);
+
+
+/* ===== Combined externs (duplicated across all gs_render.c split segments;
+ * de-duplicated by identifier from the whole original TU so any
+ * cross-segment call/reference resolves regardless of which segment
+ * the callee's real definition ended up in). ===== */
+extern u8 lbl_8047AA91;
+extern void GXSetPointSize(u32, u32);
+extern f32 lbl_8047CA30;
+extern f32 lbl_8047CA34;
+extern f32 lbl_8047CA38;
+extern void GXSetLineWidth(u32, u32);
+extern void _gfxEmitMtxIdx(void);
+extern void _gfxEmitPos3f32(void);
+extern void GXBegin(u32, u32, u16);
+
+
+extern void fn_800D6A80(u16, s32, u32*, u32*);
+extern u8 lbl_804007E8[];
+extern void GXSetVtxAttrFmt(u32, u32, u32, u32, u8);
+extern void GXClearVtxDesc(void);
+extern void GXSetVtxDesc(u32, u32);
+#ifdef TARGET_PC /* PC: the port's 3-argument GXSetArray (port/src/pc_gx_arrays.c); Aurora's GXSetArray takes 5 */
+#define GXSetArray fn_800B84E0
+#endif
+extern void GXSetArray(u32, u32, u8);
+
+
+
+
+extern u32 lbl_8047AAB0;
+extern u32 lbl_8047AAAC;
+
+extern u32 lbl_8047AAB4;
+extern u16 lbl_8047AAA8;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 GScameraGetActiveCamera(void);
+#endif
+extern u32 GScameraGetMatrixPtr(void);
+extern u32 GScameraGetInvMatrixPtr(void);
+extern u32 GScameraGetProjMatrixPtr(void);
+extern void GXLoadPosMtxImm(u32, u32);
+extern void GXLoadNrmMtxImm(u32, u32);
+extern void GXSetCurrentMtx(u32);
+extern u8 lbl_8047AAC8;
+
+
+extern u8 lbl_80400948[];
+
+
+extern u16 lbl_8047AAB8;
+extern void GXSetTexCoordGen2(u32, u32, u32, u32, u32, u32);
+extern void GXLoadTexMtxImm(void*, u32, u32);
+
+
+
+
+extern void GXInitTexObjWrapMode();
+extern void GXInitTexObjLOD();
+extern void GXLoadTlut();
+extern void GXLoadTexObj();
+
+extern u32 lbl_8047CA40;
+
+
+
+extern void GXSetTevDirect(u32);
+extern void GXSetNumIndStages(u32);
+extern void GXSetNumChans();
+extern void GXSetChanCtrl();
+extern void GXSetNumTexGens();
+extern void GXSetNumTevStages();
+extern void GXSetIndTexOrder();
+extern void GXSetIndTexCoordScale();
+extern void GXSetIndTexMtx();
+extern void GXSetTevOrder();
+extern void GXSetTevColorOp();
+extern void GXSetTevAlphaOp();
+extern void GXSetTevColorIn();
+extern void GXSetTevAlphaIn();
+extern void GXSetTevKColorSel();
+extern void GXSetTevKAlphaSel();
+extern void GXSetTevIndirect();
+extern void fn_800BBC7C();
+extern void fn_800BBCE0();
+extern void fn_800BBE8C();
+extern void fn_800BBF98();
+extern void fn_800BBFDC();
+extern void GXSetTevKColor();
+extern void GXSetTevSwapModeTable();
+extern void GXSetProjection(void*, u32);
+extern f32 lbl_8047CA50;
+extern f32 lbl_8047CA54;
+extern void GScameraSetViewport(void*, u16, u16, u16, u16);
+
+
+extern u32 lbl_8047CA58;
+extern void GXSetScissor(u32, u32, u32, u32);
+extern void GScameraSetScissor(u32, u16, u16, u16, u16);
+extern void HSD_FogSet(u32);
+extern u32 lbl_8047AA8C;
+extern void GXSetClipMode(u32);
+extern void GXSetCullMode(u32);
+
+extern void GXSetDither(u32);
+extern void GXSetAlphaCompare(u32, u8, u32, u32, u8);
+
+
+extern void GXSetZMode(u32, u32, u32);
+extern void GXSetZCompLoc(u32);
+
+extern void GXSetDstAlpha(u32);
+extern void GXSetBlendMode(u32, u32, u32, u32);
+
+
+
+extern void jumptable_803152B8();
+extern void jumptable_80315340();
+extern void jumptable_80315320();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_800E24B0(u16);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSmemFree(u16);
+#endif
+extern void GXCallDisplayList(u32, u32);
+extern void fn_800E2AF8(u16);
+extern u16 GSmemAlloc(u32, u32);
+extern u32 lbl_8047AAD8;
+
+extern void jumptable_80315364();
+extern u32 GStextureUnlockImage(void*);
+#include "game/gs_gfx_backfb.h" /* the capture slot table, typed (A, 2026-10-15) */
+extern u8 lbl_8047AAE0;
+extern void GStextureGetFormat(void);
+extern void GStextureSetWrap(void);
+extern void GStextureSetFilter(void);
+extern void* GStextureLockImage(void*, u32);
+extern void GStextureConvertFromHW(void*, u32);
+extern void HSD_LObjReqAnimAll(void*, f32);
+extern void HSD_LObjAnimAll(void*);
+extern u32 _lightStructList;
+
+extern f32 lbl_8047CA70;
+extern u32 lbl_8047CA74;
+extern f32 lbl_8047CA78;
+extern u32 _lightStructCount;
+extern void HSD_LObjSetPosition();
+extern void HSD_LObjSetInterest();
+extern void HSD_LObjRemoveAnimAll(void*);
+extern void HSD_LObjAddAnimAll(void*, void*);
+extern void HSD_ForeachAnim(void*, u32, u32, void*, u32, ...);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 fn_800D37CC(void);
+#endif
+extern void HSD_AObjSetRate(void);
+extern f32 lbl_8047AAF4;
+extern f32 lbl_8047CA88;
+extern void GSlightSetAnimIndex(u8*, u32);
+extern void HSD_LObjGetPosition(void*, void*);
+extern void HSD_LObjGetInterest(void*, void*);
+extern void HSD_LObjSetColor(u32, u8*);
+extern void HSD_LObjClearFlags(u32, u32);
+extern void HSD_LObjSetFlags(u32, u32);
+extern u32 HSD_LObjLoadDesc(void*);
+extern u32 lbl_8047CA8C;
+extern u16 lbl_8047AAE8;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void __assert(u8*, u32, u8*);
+#endif
+extern u8 lbl_8047CA90;
+extern u8 lbl_8047CA98;
+typedef struct GSlightLObj {
+    u8 padding[0xc];
+    struct GSlightLObj* next;
+} GSlightLObj;
+extern void HSD_LObjDeleteCurrentAll(void*);
+extern void HSD_LObjAddCurrentAll(GSlightLObj*);
+extern void HSD_LObjSetup(void*);
+extern u32 lbl_8047AAF8;
+extern u32 lbl_8047AB08;
+extern u32 lbl_8047AAFA;
+extern u32 lbl_8047AAFC;
+extern void OSTicksToCalendarTime(void);
+extern void logVsnprintf_float(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 strlen(const char* s);
+#endif
+extern u32 lbl_8047AB11;
+extern u8 lbl_80400F30[];
+extern u8 lbl_802704B4[];
+extern u8 lbl_80400F44[];
+extern u32 lbl_8047AB0C;
+extern u32 lbl_8047AB00;
+extern u32 lbl_8047AB04;
+extern u8 lbl_80401044[];
+extern u8 lbl_80401058[];
+extern u32 lbl_8047AB10;
+extern void jumptable_80315388();
+extern void __va_arg();
+extern u8 lbl_80401168[];
+extern u8 lbl_80401178[];
+
+extern u8 lbl_8047CAA0[];
+extern u8 lbl_8047CAA8[];
+extern void GXDrawDone(u32);
+extern void HSD_ImageDescFree(u32);
+extern void* HSD_ImageDescAlloc(void);
+extern u16 GStextureGetXsize(void*);
+extern u16 GStextureGetYsize(void*);
+extern void* GStextureGetGXformat(void*, u32);
+extern u8 GStextureGetMiplevels(void*);
+extern f32 lbl_8047CAC8;
+extern void HSD_MObjSetAlpha(u32, ...);
+extern f64 lbl_8047CAD0;
+extern f32 lbl_8047CACC;
+extern void HSD_TObjRemove(void*);
+extern void HSD_MObjCompileTev(void*);
+extern u32 HSD_MObjGetFlags(void*);
+extern void HSD_MObjClearFlags(void*, u32);
+extern void HSD_MObjSetFlags(void*, void*);
+extern u32 lbl_8047AB20;
+
+extern void HSD_MObjSetDefaultClass(void*);
+extern u16 lbl_8047AB18;
+
+extern void hsdInitClassInfo(void*, void*, void*, void*, u32, u32);
+extern u8 hsdMObj[];
+extern void HSD_TExpGetType();
+extern void fn_801B6DC0();
+extern void HSD_TExpCnst();
+extern void HSD_TExpTev();
+extern void HSD_TExpColorOp();
+extern void HSD_TExpColorIn();
+extern void HSD_TExpAlphaOp();
+extern void HSD_TExpAlphaIn();
+extern void HSD_ImageDescRemove(void);
+extern void HSD_TObjLoadDesc(void);
+extern void HSD_MObjGetTObj(void);
+extern void HSD_MObjAddTObjNext(void);
+extern void HSD_MObjAddTObj(void);
+
+extern void PSMTXMultVec(void*, void*, void*);
+extern void PSVECCrossProduct(void*, void*, void*);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void PSVECDotProduct(void);
+#endif
+extern void PSVECSquareDistance(void);
+extern void PSVECDistance(void);
+extern void PSVECNormalize(void*, void*);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void PSVECMag(void);
+#endif
+extern void PSVECScale(void*, void*, f32);
+extern const f32 lbl_8047CAD8;
+extern void PSVECSubtract(void*, void*, void*);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void PSVECAdd(void*, void*, void*);
+#endif
+extern f32 lbl_8047CADC;
+extern void C_MTXLookAt(void);
+extern void PSMTXTranspose(void*, void*);
+extern void PSMTXInverse(void*, void*);
+extern void PSMTXConcat(void*, void*, void*);
+extern void PSMTXScaleApply(void*, void*);
+extern void PSMTXRotRad(void*, u32);
+extern void PSMTXTransApply(void*, void*, f32, f32, f32);
+extern void PSMTXQuat(void);
+
+extern void C_MTXPerspective(void);
+extern void C_MTXOrtho(void);
+extern void C_QUATSlerp(void*, void*, void*);
+extern void EulerToQuat(void*, void*);
+extern void C_QUATRotAxisRad(void);
+extern void PSQUATMultiply(void*, void*, void*);
+extern u32 lbl_8047CAE4;
+extern u32 lbl_8047CAE0;
+extern u32 lbl_8047CAE8;
+extern f32 lbl_8047CAF0;
+extern f32 lbl_8047CAF4;
+
+extern u32 lbl_8047CAF8;
+
+extern u32 lbl_8047CAFC;
+extern f32 HSD_Randf(void);
+extern f32 lbl_8047CB10;
+extern u32 HSD_Rand(void);
+extern u32 lbl_80478C94;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern f64 fmod(f64 x, f64 y);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 __cvt_fp2unsigned(f32 x);
+#endif
+extern f32 lbl_8047CB20;
+extern f32 lbl_8047CB1C;
+extern f32 lbl_8047CB24;
+extern f64 lbl_8047CB28;
+extern f32 lbl_8047CB18;
+extern f32 lbl_8047CB34;
+extern f32 lbl_8047CB30;
+extern f32 lbl_804011B8[];
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern f64 cos(f32);
+#endif
+extern f32 lbl_8047CB38;
+extern f64 lbl_8047CB40;
+
+
+
+
+
+
+
+extern u32 lbl_8047AB4C;
+extern u32 lbl_8047AB48;
+extern u32 lbl_8047AB60;
+extern u32 lbl_8047AB5C;
+extern u32 lbl_8047AB58;
+extern u32 lbl_8047AB54;
+extern u32 lbl_8047AB50;
+extern u32 lbl_8047CB50;
+extern u32 lbl_8047CB48;
+extern u32 lbl_8047AB3C;
+
+#if !defined(PR410_GS_LIGHT_SPLIT) || defined(PR410_GS_LIGHT_PREFIX)
+
+#if !defined(PR410_GS_LIGHT_BACKFB_EXACT) && !defined(PR410_GS_LIGHT_BACKFB_SUFFIX)
+#if 0
+asm void fn_800DC874(void) {
+#include "src/game/gs_render_fn_800DC874.inc"
+}
+#else
+void fn_800DC874(void) {}
+#endif
+#endif
+
+extern u8 lbl_8047AAE0;
+#if !defined(PR410_GS_LIGHT_BACKFB_SUFFIX)
+#if 0
+asm void GSgfxBackFBDoFrame(void) {
+#include "src/game/gs_render_fn_800DC560.inc"
+}
+#else
+/* One capture slot: GSbackFBCapture in game/gs_gfx_backfb.h (pointers, so larger on the PC). */
+typedef GSbackFBCapture GSbackFBFrameCapture;
+
+
+
+
+
+
+
+/* Same four-slot lookup as the adjacent back-FB capture API. */
+static inline GSbackFBFrameCapture* GSbackFBFindFrameCapture(void* texture)
+{
+    GSbackFBFrameCapture* capture;
+    u32 i;
+
+    capture = (GSbackFBFrameCapture*)lbl_80400EE0;
+    for (i = 0; i < 4; i++, capture++) {
+        if (capture->active == 1 && capture->texture == texture) {
+            return capture;
+        }
+    }
+    return NULL;
+}
+
+/* The captures copy the EFB at the start of the next frame (from GSgfxRenderLayer, before the display copy), while it still
+ * holds the finished frame. The PC does the same since its frame boundary is the display copy (2026-10-17, A). The
+ * 2026-10-16 PC copy at each frame's end (GSgfxBackFBCopyPC) is gone: it left the battle-start swirl's warp black. */
+void GSgfxBackFBDoFrame(void) {
+    GSbackFBFrameCapture* capture;
+    GSbackFBFrameCapture* found;
+    u32 i;
+    u32 j;
+
+    if (lbl_8047AAE0 == 0) {
+        return;
+    }
+
+    capture = (GSbackFBFrameCapture*)lbl_80400EE0;
+    for (i = 0; i < 4; i++, capture++) {
+        if (capture->active != 1) {
+            continue;
+        }
+
+        GStextureConvertFromHW(capture->texture, 0);
+        if (capture->callback != NULL &&
+            capture->callback(capture->texture, capture->frame, capture->userData) == 0) {
+            found = GSbackFBFindFrameCapture(capture->texture);
+            if (found != NULL) {
+                GStextureUnlockImage(found->texture);
+                found->active = 0;
+                lbl_8047AAE0 = 0;
+                for (j = 0; j < 4; j++) {
+                    if (((GSbackFBFrameCapture*)lbl_80400EE0)[j].active == 1) {
+                        lbl_8047AAE0 = 1;
+                        break;
+                    }
+                }
+            }
+        }
+        capture->frame++;
+    }
+}
+#endif
+#endif
+
+extern u32 _lightStructList;
+
+extern f32 lbl_8047CA70;
+extern u32 lbl_8047CA74;
+extern f32 lbl_8047CA78;
+extern u32 _lightStructCount;
+#if !defined(PR410_GS_LIGHT_BACKFB_EXACT)
+#if 0
+asm void fn_800DC6D8(void) {
+#include "src/game/gs_render_fn_800DC6D8.inc"
+}
+#else
+void GSlightUpdate(u32 delta) {
+    u32 offset;
+    u32 i;
+    u8* obj;
+    s32 animType;
+    f32 step;
+    f32 limit;
+    f32 end;
+    f32 frame;
+
+    offset = 0;
+    for (i = 0; i < _lightStructCount; offset += 0x74, i++) {
+        obj = (u8*)_lightStructList + offset;
+        if (obj[0] != 1 || obj[3] != 1) {
+            continue;
+        }
+
+        HSD_LObjReqAnimAll(*(void**)(obj + 0xc), *(f32*)(obj + 0x68));
+        HSD_LObjAnimAll(*(void**)(obj + 0xc));
+
+        step = *(f32*)(obj + 0x64) * (f32)delta;
+        limit = *(f32*)(obj + 0x6c) - lbl_8047CA70;
+        animType = *(s32*)(obj + 0x5c);
+        if ((s8)obj[0x71] == -1) {
+            *(f32*)(obj + 0x68) -= step;
+        } else if ((s8)obj[0x71] == 1) {
+            *(f32*)(obj + 0x68) += step;
+        }
+
+        switch (animType) {
+            case 0:
+                end = limit - *(f32*)&lbl_8047CA74;
+                frame = *(f32*)(obj + 0x68);
+                if (end <= frame) {
+                    obj[0x70] = 1;
+                    obj[0x71] = 0;
+                    *(f32*)(obj + 0x68) = end;
+                }
+                break;
+            case 1:
+                if (*(f32*)(obj + 0x68) >= limit) {
+                    *(f32*)(obj + 0x68) -= limit;
+                }
+                break;
+            case 2:
+                if (*(f32*)(obj + 0x68) >= limit) {
+                    *(s8*)(obj + 0x71) = -1;
+                } else if (*(f32*)(obj + 0x68) <= lbl_8047CA78) {
+                    obj[0x71] = 1;
+                }
+                break;
+        }
+    }
+}
+#endif
+#endif
+
+extern f32 lbl_8047CA78;
+extern f32 lbl_8047AAF4;
+extern f32 lbl_8047CA88;
+
+#if !defined(PR410_GS_LIGHT_BACKFB_EXACT) && !defined(PR410_GS_LIGHT_BACKFB_SUFFIX)
+static inline void GSlightSetAnimIndexInline(u8* obj, u32 frame)
+{
+    u32 data;
+    u32 frames;
+
+    if (!obj[2]) {
+        return;
+    }
+    HSD_LObjRemoveAnimAll(*(void**)(obj + 0xc));
+    if (frame > *(u32*)(obj + 0x58)) {
+        return;
+    }
+    *(u32*)(obj + 0x60) = frame;
+    data = *(u32*)(obj + 0x8);
+    frames = *(u32*)(data + 0x4);
+    HSD_LObjAddAnimAll(*(void**)(obj + 0xc),
+                       *(void**)(frames + *(u32*)(obj + 0x60) * 4));
+    HSD_LObjReqAnimAll(*(void**)(obj + 0xc), lbl_8047CA78);
+    lbl_8047AAF4 = lbl_8047CA78;
+    HSD_ForeachAnim(*(void**)(obj + 0xc), 7, 0xffff,
+                    (void*)lightGetFrameCount__FP9_HSD_AObj, 0);
+    *(f32*)(obj + 0x6c) = lbl_8047AAF4;
+}
+
+#if 0
+asm void GSlightPopState(void) {
+#include "src/game/gs_render_GSlightPopState.inc"
+}
+#else
+void GSlightPopState(u8* obj, u8* snapshot) {
+    f32 frame;
+    f32 speed;
+
+    snapshot[0] = obj[1];
+    HSD_LObjSetPosition(*(void**)(obj + 0xc), snapshot + 4);
+    HSD_LObjSetInterest(*(void**)(obj + 0xc), snapshot + 0x10);
+
+    GSlightSetAnimIndexInline(obj, *(u32*)(snapshot + 0x1c));
+    frame = *(f32*)(snapshot + 0x20);
+    if (obj[2]) {
+        *(f32*)(obj + 0x68) = frame;
+    }
+    speed = *(f32*)(snapshot + 0x24);
+    if (obj[2]) {
+        if (fn_800D37CC() == 0x32) {
+            speed *= lbl_8047CA88;
+        }
+        *(f32*)(obj + 0x64) = speed;
+        HSD_ForeachAnim(*(void**)(obj + 0xc), 7, 0xffff, (void*)HSD_AObjSetRate,
+                        1, *(f32*)(obj + 0x64));
+    }
+
+    *(u32*)(obj + 0x5c) = *(u32*)(snapshot + 0x28);
+    obj[0x70] = snapshot[2];
+    obj[0x71] = snapshot[3];
+    if (obj[3] != 0 && obj[2] != 0) {
+        obj[3] = 1;
+        obj[0x70] = 0;
+        obj[0x71] = 1;
+    }
+}
+#endif
+#endif
+
+#endif
+
+#if !defined(PR410_GS_LIGHT_SPLIT) || defined(PR410_GS_LIGHT_EXACT)
+
+#if 0
+asm void GSlightPushState(void) {
+#include "src/game/gs_render_fn_800DCA10.inc"
+}
+#else
+void GSlightPushState(u8* src, u8* dst) {
+    dst[0] = src[1];
+    dst[1] = src[3];
+    HSD_LObjGetPosition(*(void**)(src + 0xc), dst + 4);
+    HSD_LObjGetInterest(*(void**)(src + 0xc), dst + 0x10);
+    *(u32*)(dst + 0x1c) = *(u32*)(src + 0x60);
+    *(f32*)(dst + 0x20) = *(f32*)(src + 0x68);
+    *(f32*)(dst + 0x24) = *(f32*)(src + 0x64);
+    *(u32*)(dst + 0x28) = *(u32*)(src + 0x5c);
+    dst[2] = src[0x70];
+    dst[3] = src[0x71];
+}
+#endif
+
+#if 0
+asm void GSlightHasAnimationEnded(void) {
+#include "src/game/gs_render_GSlightHasAnimationEnded.inc"
+}
+#else
+u8 GSlightHasAnimationEnded(u8* obj) { return obj[0x70]; }
+#endif
+
+#if 0
+asm void GSlightStopAnimation(void) {
+#include "src/game/gs_render_GSlightStopAnimation.inc"
+}
+#else
+void GSlightStopAnimation(u8* obj) { obj[0x3] = 0; }
+#endif
+
+#if 0
+asm void GSlightStartAnimation(void) {
+#include "src/game/gs_render_GSlightStartAnimation.inc"
+}
+#else
+void GSlightStartAnimation(u8* obj) { if (!obj[0x2]) return; obj[0x3] = 1; obj[0x70] = 0; obj[0x71] = 1; }
+#endif
+
+#if 0
+asm void GSlightSetAnimType(void) {
+#include "src/game/gs_render_GSlightSetAnimType.inc"
+}
+#else
+void GSlightSetAnimType(u8* obj, u32 val) { *(u32*)((u8*)obj + 0x5c) = val; }
+#endif
+
+#if 0
+asm void GSlightSetAnimFrame(void) {
+#include "src/game/gs_render_fn_800DCADC.inc"
+}
+#else
+void GSlightSetAnimFrame(u8* obj, f32 val) { if (obj[0x2]) *(f32*)((u8*)obj + 0x68) = val; }
+#endif
+
+extern f32 lbl_8047CA88;
+#if 0
+asm void GSlightSetAnimRate(void) {
+#include "src/game/gs_render_GSlightSetAnimRate.inc"
+}
+#else
+void GSlightSetAnimRate(u8* obj, f32 speed) {
+    if (!obj[2]) return;
+    if (fn_800D37CC() == 0x32) {
+        speed *= lbl_8047CA88;
+    }
+    *(f32*)(obj + 0x64) = speed;
+    HSD_ForeachAnim((void*)*(u32*)(obj + 0xc), 7, 0xFFFF, (void*)HSD_AObjSetRate, 1, *(f32*)(obj + 0x64));
+}
+#endif
+
+extern f32 lbl_8047CA78;
+extern f32 lbl_8047AAF4;
+#if 0
+asm void GSlightSetAnimIndex(void) {
+#include "src/game/gs_render_GSlightSetAnimIndex.inc"
+}
+#else
+void GSlightSetAnimIndex(u8* obj, u32 frame) {
+    if (!obj[2]) return;
+    HSD_LObjRemoveAnimAll((void*)*(u32*)(obj + 0xc));
+    if (frame > *(u32*)(obj + 0x58)) return;
+    *(u32*)(obj + 0x60) = frame;
+    {
+        u32 data = *(u32*)(obj + 0x8);
+        u32 curFrame = *(u32*)(obj + 0x60);
+        u32 frames = *(u32*)(data + 0x4);
+        HSD_LObjAddAnimAll((void*)*(u32*)(obj + 0xc), (void*)*(u32*)(frames + curFrame * 4));
+    }
+    HSD_LObjReqAnimAll((void*)*(u32*)(obj + 0xc), lbl_8047CA78);
+    lbl_8047AAF4 = lbl_8047CA78;
+    HSD_ForeachAnim((void*)*(u32*)(obj + 0xc), 7, 0xFFFF, (void*)lightGetFrameCount__FP9_HSD_AObj, 0);
+    *(f32*)(obj + 0x6c) = lbl_8047AAF4;
+}
+#endif
+
+#if 0
+asm void GSlightCanAnimate(void) {
+#include "src/game/gs_render_GSlightCanAnimate.inc"
+}
+#else
+u8 GSlightCanAnimate(u8* obj) { return obj[0x2]; }
+#endif
+
+#if 0
+asm void GSlightSetActive(void) {
+#include "src/game/gs_render_GSlightSetActive.inc"
+}
+#else
+void GSlightSetActive(u8* obj, u8 val) { obj[0x1] = val; }
+#endif
+
+#endif
+
+#if !defined(PR410_GS_LIGHT_SPLIT) || defined(PR410_GS_LIGHT_SUFFIX)
+
+#if 0
+asm void GSlightSetTarget(void) {
+#include "src/game/gs_render_GSlightSetTarget.inc"
+}
+#else
+void GSlightSetTarget(u8* obj) { HSD_LObjSetInterest(*(u32*)((u8*)obj + 0xc)); }
+#endif
+
+#if 0
+asm void GSlightSetPosition(void) {
+#include "src/game/gs_render_GSlightSetPosition.inc"
+}
+#else
+void GSlightSetPosition(u8* obj) { HSD_LObjSetPosition(*(u32*)((u8*)obj + 0xc)); }
+#endif
+
+#if 0
+asm void GSlightSetColor(void) {
+#include "src/game/gs_render_GSlightSetColor.inc"
+}
+#else
+void GSlightSetColor(u8* obj, f32* rgb) {
+    u8 t[4];
+    u8 tmp[4];
+    t[0] = (u8)(s32)rgb[0];
+    t[1] = (u8)(s32)rgb[1];
+    t[2] = (u8)(s32)rgb[2];
+    *(u32*)tmp = *(u32*)t;
+    HSD_LObjSetColor(*(u32*)(obj + 0xc), tmp);
+}
+#endif
+
+#if 0
+asm void GSlightSetType(void) {
+#include "src/game/gs_render_GSlightSetType.inc"
+}
+#else
+void GSlightSetType(u8* obj, s32 mode) {
+    HSD_LObjClearFlags(*(u32*)(obj + 0xc), 3);
+    switch (mode) {
+        case 0:
+            HSD_LObjSetFlags(*(u32*)(obj + 0xc), 0);
+            break;
+        case 1:
+            HSD_LObjSetFlags(*(u32*)(obj + 0xc), 1);
+            break;
+        case 2:
+            HSD_LObjSetFlags(*(u32*)(obj + 0xc), 2);
+            break;
+        case 3:
+            HSD_LObjSetFlags(*(u32*)(obj + 0xc), 3);
+            break;
+    }
+    *(s32*)(obj + 4) = mode;
+}
+#endif
+
+/* WALL 95.6%: bne vs beq+b branch inversion at cmpw */
+#if 0
+asm void GSlightFree(void) {
+#include "src/game/gs_render_GSlightFree.inc"
+}
+#else
+void GSlightFree(u8* r3arg) {
+    u8* r31;
+    u8* r30;
+    u16 r4;
+    s32 r0;
+
+    r30 = r3arg;
+    r31 = *(u8**)(r3arg + 0xc);
+    if (r31 != NULL) {
+        r4 = *(u16*)(r31 + 0x4);
+        r0 = (r4 == (u16)-1);
+        switch (r0) {
+        case 0:
+            *(u16*)(r31 + 0x4) = r4 - 1;
+            r0 = (r4 == 0);
+            break;
+        }
+        if (r0 != 0) {
+            if (r31 != NULL) {
+                u32* vtbl;
+                vtbl = *(u32**)r31;
+                ((void(*)(u8*))vtbl[0x30/4])(r31);
+                vtbl = *(u32**)r31;
+                ((void(*)(u8*))vtbl[0x34/4])(r31);
+            }
+        }
+    }
+    *(u8*)(r30 + 0x1) = 0;
+    *(u8*)(r30 + 0x0) = 0;
+}
+#endif
+
+extern u32 _lightStructCount;
+extern u32 _lightStructList;
+extern f32 lbl_8047CA70;
+extern f32 lbl_8047CA78;
+extern f32 lbl_8047AAF4;
+#if 0
+asm void GSlightLoad(void) {
+#include "src/game/gs_render_GSlightLoad.inc"
+}
+#else
+u8* GSlightLoad(void* data) {
+    u32 remaining;
+    u8* obj;
+
+    obj = (u8*)_lightStructList;
+    remaining = _lightStructCount;
+    while (remaining != 0) {
+        if (obj[0] == 0) {
+            break;
+        }
+        obj += 0x74;
+        remaining--;
+    }
+    if (remaining == 0) {
+        obj = NULL;
+    }
+    if (obj == NULL) {
+        return 0;
+    }
+
+    *(void**)(obj + 0x8) = data;
+    *(u32*)(obj + 0xc) = HSD_LObjLoadDesc(**(void***)(obj + 0x8));
+    obj[0] = 1;
+    obj[1] = 0;
+    obj[3] = 0;
+
+    if (*(u32*)(*(u8**)(obj + 0x8) + 4) != 0) {
+        obj[2] = 1;
+        *(f32*)(obj + 0x64) = lbl_8047CA70;
+        *(u32*)(obj + 0x5c) = 1;
+        obj[0x70] = 0;
+
+        *(u32*)(obj + 0x58) = 0;
+        while (((u32**)(*(u8**)(obj + 0x8) + 4))[0]
+                   [*(u32*)(obj + 0x58)] != 0) {
+            (*(u32*)(obj + 0x58))++;
+        }
+        GSlightSetAnimIndex(obj, 0);
+    } else {
+        obj[2] = 0;
+    }
+
+    return obj;
+}
+#endif
+
+extern u32 _lightStructCount;
+extern u32 _lightStructList;
+extern f32 lbl_8047CA78;
+extern u32 lbl_8047CA8C;
+#if 0
+asm void GSlightCreate(void) {
+#include "src/game/gs_render_GSlightCreate.inc"
+}
+#else
+u8* GSlightCreate(void) {
+    f32 one;
+    f32 zero;
+    u32 remaining;
+    u8* obj;
+
+    obj = (u8*)_lightStructList;
+    remaining = _lightStructCount;
+    while (remaining != 0) {
+        if (obj[0] == 0) {
+            break;
+        }
+        obj += 0x74;
+        remaining--;
+    }
+    if (remaining == 0) {
+        obj = NULL;
+    }
+    if (obj == NULL) {
+        return 0;
+    }
+
+    zero = lbl_8047CA78;
+    one = *(f32*)&lbl_8047CA8C;
+    *(u32*)(obj + 0x10) = 0;
+    *(f32*)(obj + 0x14) = zero;
+    *(f32*)(obj + 0x18) = zero;
+    *(f32*)(obj + 0x1c) = zero;
+    *(u32*)(obj + 0x20) = 0;
+    *(u32*)(obj + 0x24) = 0;
+    *(f32*)(obj + 0x28) = zero;
+    *(f32*)(obj + 0x2c) = zero;
+    *(f32*)(obj + 0x30) = zero;
+    *(u32*)(obj + 0x34) = 0;
+    *(u32*)(obj + 0x38) = 0;
+    *(u32*)(obj + 0x3c) = 0;
+    *(u16*)(obj + 0x40) = 4;
+    *(u16*)(obj + 0x42) = 0;
+    obj[0x44] = 0x80;
+    obj[0x45] = 0x80;
+    obj[0x46] = 0x80;
+    obj[0x47] = 0;
+    *(u32*)(obj + 0x48) = (u32)(obj + 0x10);
+    *(u32*)(obj + 0x4c) = (u32)(obj + 0x24);
+    *(u32*)(obj + 0x50) = (u32)(obj + 0x54);
+    *(f32*)(obj + 0x54) = one;
+    *(u32*)(obj + 0xc) = HSD_LObjLoadDesc(obj + 0x38);
+    obj[0] = 1;
+    obj[1] = 0;
+    return obj;
+}
+#endif
+
+extern u32 _lightStructCount;
+extern u16 lbl_8047AAE8;
+extern u32 _lightStructList;
+#if 0
+asm void GSlightInit(void) {
+#include "src/game/gs_render_GSlightInit.inc"
+}
+#else
+void GSlightInit(u32 count) {
+    u16 handle;
+    _lightStructCount = count;
+    handle = _toolentryAlloc__FUl(count * 0x74);
+    lbl_8047AAE8 = handle;
+    if (handle) {
+        u32 off;
+        u32 i;
+        off = (u32)GSmemLock((u16)handle);
+        _lightStructList = off;
+        for (off = 0, i = 0; i < _lightStructCount; i++, off += 0x74) {
+            *(u8*)(_lightStructList + off) = 0;
+        }
+    }
+}
+#endif
+
+extern u8 lbl_8047CA90;
+extern u8 lbl_8047CA98;
+extern f32 lbl_8047CA70;
+extern f32 lbl_8047AAF4;
+#if 0
+asm void lightGetFrameCount__FP9_HSD_AObj(u8* obj) {
+#include "src/game/gs_render_lightGetFrameCount__FP9_HSD_AObj.inc"
+}
+#else
+void lightGetFrameCount__FP9_HSD_AObj(u8* obj) {
+    if (!obj) __assert(&lbl_8047CA90, 0xab, &lbl_8047CA98);
+    lbl_8047AAF4 = lbl_8047CA70 + *(f32*)(obj + 0xc);
+}
+#endif
+
+typedef struct GSlightEntry {
+    u8 allocated;
+    u8 active;
+    u8 padding[0xa];
+    GSlightLObj* lobj;
+    u8 remaining[0x64];
+} GSlightEntry;
+
+extern u32 _lightStructList;
+extern u32 _lightStructCount;
+
+static inline s32 GSlightFindFirstActive(GSlightEntry* light, u32 count)
+{
+    s32 index = 0;
+
+    while (count != 0) {
+        if (light->allocated == 1 && light->active != 0) {
+            return index;
+        }
+        light++;
+        index++;
+        count--;
+    }
+    return -1;
+}
+
+#if 0
+asm void fn_800DD174(void) {
+#include "src/game/gs_render_fn_800DD174.inc"
+}
+#else
+void GSlightSetupLights(void* arg) {
+    GSlightEntry* light;
+    GSlightEntry* tail;
+    s32 firstIndex;
+    u32 firstOffset;
+    u32 i;
+
+    HSD_LObjDeleteCurrentAll(0);
+
+    tail = (GSlightEntry*)_lightStructList;
+    firstIndex = GSlightFindFirstActive(tail, _lightStructCount);
+
+    if (firstIndex != -1) {
+        firstOffset = firstIndex * sizeof(GSlightEntry);
+        tail = (GSlightEntry*)((u8*)tail + firstOffset);
+        for (i = firstIndex + 1; i < _lightStructCount; i++) {
+            light = &((GSlightEntry*)_lightStructList)[i];
+            if (light->allocated == 1 && light->active != 0) {
+                tail->lobj->next = light->lobj;
+                tail = light;
+            }
+        }
+        tail->lobj->next = 0;
+        light = (GSlightEntry*)((u8*)_lightStructList + firstOffset);
+        HSD_LObjAddCurrentAll(light->lobj);
+    }
+    HSD_LObjSetup(arg);
+}
+
+#endif
+#endif

@@ -1,0 +1,20 @@
+{
+  "_why": "Story Mt. Battle, snatcherLeo's order of 2026-11-11: battle 1 played, then this edit to face #95 (Crisom, cloud 4's fifth trainer), then 95-100 and the clear played. Apply to a story save made at the base Pokemon Center's PC (room 75) after battle 1; then in game: the clerk, the challenge line, resume, AREA 10. Values from the D2_* scripts (colosseum-challenges.md, 'The story climb's progress values', 2026-11-11).",
+  "set_flags": [
+    {"id": 2222, "value": 0},
+    {"id": 2612, "value": 1}, {"id": 2614, "value": 1}, {"id": 2616, "value": 1}, {"id": 2618, "value": 1},
+    {"id": 2620, "value": 1}, {"id": 2622, "value": 1}, {"id": 2624, "value": 1}, {"id": 2626, "value": 1},
+    {"id": 2628, "value": 1},
+    {"id": 2613, "value": 0}, {"id": 2615, "value": 0}, {"id": 2617, "value": 0}, {"id": 2619, "value": 0},
+    {"id": 2621, "value": 0}, {"id": 2623, "value": 0}, {"id": 2625, "value": 0}, {"id": 2627, "value": 0},
+    {"id": 2720, "value": 0},
+    {"id": 2611, "value": 1},
+    {"id": 2876, "value": 0},
+    {"id": 2629, "value": 9},
+    {"id": 2673, "value": 4},
+    {"id": 3564, "value": 0},
+    {"id": 2500, "value": 0},
+    {"id": 3578, "value": 0},
+    {"id": 3552, "value": 0}
+  ]
+}

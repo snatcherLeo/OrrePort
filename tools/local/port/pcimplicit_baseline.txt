@@ -1,0 +1,9 @@
+# Known implicit function declarations in PC game code (pcimplicit.py): integer or unused results only.
+# file<TAB>function. Regenerate with --update after checking each new line's real return type.
+src/dolphin/thp/THPPlayer.c	DVDRead
+src/dolphin/thp/THPRead.c	DVDRead
+src/game/fight_range_exact_802128D0.c	battleCameraSelect
+src/game/fight_range_exact_80213A78.c	battleCameraSelect
+src/game/hero_move.c	OSReport
+src/game/main.c	OSGetResetButtonState
+src/game/pc_debug_game.c	VIGetRetraceCount

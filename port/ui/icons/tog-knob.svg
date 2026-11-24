@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- The settings switch's knob (2026-11-23, with tog-fill.svg): a circle of eight quadratic arcs; white, tinted at draw
+     time (settings.rcss .knob .kf). -->
+<path fill="#FFFFFF" d="M24 12 Q24 16.971 20.485 20.485 Q16.971 24 12 24 Q7.029 24 3.515 20.485 Q0 16.971 0 12 Q0 7.029 3.515 3.515 Q7.029 0 12 0 Q16.971 0 20.485 3.515 Q24 7.029 24 12 Z"/>
+</svg>

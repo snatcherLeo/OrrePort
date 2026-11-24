@@ -1,0 +1,790 @@
+/**
+ * @file fight_range_80238E30_exact.c
+ * @brief Exact pure-C fight-engine island, 0x80238E30 - 0x8023A308.
+ */
+#include "dolphin/types.h"
+#include "game/constants/pokemon_status.h"
+#include "game/constants/menu_keys.h"
+
+extern u8 lbl_80375CA8[];
+extern u32 ServerStatusFlag;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16 GSrand(void);
+#endif
+
+u8 fightTrainerAiGetPokemonZokusei(u32 ctx, void *param2, u16 target) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightFloorGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void *fightPokemonGetPokemonPtr(void *ctx);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u8 fightTrainerIsAllyFightTargetPtr(u32 fieldA, void *floor, u16 idx);
+#endif
+  u16 val;
+  u16 flag;
+  u16 field6E;
+  u16 temp;
+  fightTrainerGetStatus(0, fightTrainerGetStatus(PC_PTR(ctx), 0, 0x43, 0) & 0xFFFF, 0x2,
+                        0);
+  val = (u16)fightFloorGetStatus(0, 0, 0x14, 0);
+  flag = (u16)fightTrainerGetStatus(
+      0, fightTrainerGetStatus(PC_PTR(ctx), 0, 0x43, 0) & 0xFFFF, 0x2, 0);
+  field6E =
+      (u16)pokemonGetStatus(fightPokemonGetPokemonPtr(param2), 0, POKEMON_STATUS_SPECIES, 0);
+  if ((u8)fightTrainerGetStatus(0, flag, 0x2A, 0) == 1) {
+    if (!fightTrainerIsAllyFightTargetPtr(PC_PTR(ctx), param2, val)) {
+      temp = (u16)pokemonGetStatus(0, field6E, POKEMON_STATUS_SPECIES_TYPE, 0);
+    } else {
+      temp = (u16)pokemonGetStatus(0, field6E, POKEMON_STATUS_SPECIES_TYPE, 0);
+    }
+  } else {
+    temp = 9;
+  }
+  if (target == temp) {
+    goto found;
+  }
+  val = (u16)fightFloorGetStatus(0, 0, 0x14, 0);
+  flag = (u16)fightTrainerGetStatus(
+      0, fightTrainerGetStatus(PC_PTR(ctx), 0, 0x43, 0) & 0xFFFF, 0x2, 0);
+  field6E =
+      (u16)pokemonGetStatus(fightPokemonGetPokemonPtr(param2), 0, POKEMON_STATUS_SPECIES, 0);
+  if ((u8)fightTrainerGetStatus(0, flag, 0x2A, 0) == 1) {
+    if (!fightTrainerIsAllyFightTargetPtr(PC_PTR(ctx), param2, val)) {
+      temp = (u16)pokemonGetStatus(0, field6E, POKEMON_STATUS_SPECIES_TYPE, 1);
+    } else {
+      temp = (u16)pokemonGetStatus(0, field6E, POKEMON_STATUS_SPECIES_TYPE, 1);
+    }
+  } else {
+    temp = 9;
+  }
+  if (target != temp) {
+    goto not_found;
+  }
+found:
+  return 1;
+not_found:
+  return 0;
+}
+
+/* fightTrainerAiIsPokemonTokusei: TRUE when the Pokemon's ability is `param3`, only if the AI may know abilities
+ * (0x2B); the ability counterpart of fightTrainerAiGetPokemonZokusei. */
+/* NAME-T3 fn_80239058 */
+u8 fightTrainerAiIsPokemonTokusei(void *ctx, void *param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightFloorGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void *fightPokemonGetPokemonPtr(void *ctx);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 pokemonGetTokuseiDataId(void *param);
+#endif
+  u16 val;
+  u32 temp;
+  void *resolved;
+  fightTrainerGetStatus(0, fightTrainerGetStatus(ctx, 0, 0x43, 0) & 0xFFFF, 0x2,
+                        0);
+  if ((u16)param3 == 0) {
+    return 0;
+  }
+  fightFloorGetStatus(0, 0, 0x14, 0);
+  val = (u16)fightTrainerGetStatus(
+      0, fightTrainerGetStatus(ctx, 0, 0x43, 0) & 0xFFFF, 0x2, 0);
+  resolved = fightPokemonGetPokemonPtr(param2);
+  if ((u8)fightTrainerGetStatus(0, val, 0x2B, 0) == 1) {
+    temp = pokemonGetTokuseiDataId(resolved);
+  } else {
+    temp = 0;
+  }
+  if ((u16)param3 == (u16)temp) {
+    return 1;
+  }
+  return 0;
+}
+
+/* fightTrainerAiGetWazaRiskFlag: the move's risk flag (move data 27), only if the AI's flag 0x36 is set. */
+/* NAME-T3 fn_80239154 */
+u8 fightTrainerAiGetWazaRiskFlag(void *ctx, u32 param) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 wazaGetStatus();
+#endif
+  u16 val = (u16)fightTrainerGetStatus(
+      0, fightTrainerGetStatus(ctx, 0, 0x43, 0) & 0xFFFF, 0x2, 0);
+  if ((u8)fightTrainerGetStatus(0, val, 0x36, 0) == 1) {
+    return (u8)wazaGetStatus(0, param, 0x1B, 0);
+  }
+  return 0;
+}
+
+u8 fightAiGetWazaPp(void *ctx, u32 param) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 wazaGetStatus();
+#endif
+  fightTrainerGetStatus(0, fightTrainerGetStatus(ctx, 0, 0x43, 0) & 0xFFFF, 0x2,
+                        0);
+  return (u8)wazaGetStatus(0, param, 0x2, 0);
+}
+
+/* fightAiGetWazaRangeId: the move's target range (move data 5). */
+/* NAME-T3 fn_80239244 */
+u8 fightAiGetWazaRangeId(void *ctx, u32 param) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 wazaGetStatus();
+#endif
+  fightTrainerGetStatus(0, fightTrainerGetStatus(ctx, 0, 0x43, 0) & 0xFFFF, 0x2,
+                        0);
+  return (u8)wazaGetStatus(0, param, 0x5, 0);
+}
+
+char fightTrainerAiGetWazaAvgAdjusted(u32 r3, u32 r4) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern int wazaGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightIsWazaThunderInRain();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern s8 fn_80229BD8();
+#endif
+  u16 uVar2;
+  u8 cVar3;
+  u8 bVar4;
+  u8 bVar5;
+  u16 uVar1;
+  uVar2 = fightTrainerGetStatus(PC_PTR(r3), 0, 0x43, 0);
+  uVar1 = fightTrainerGetStatus(0, uVar2, 2, 0);
+  uVar2 = fightTrainerGetStatus(PC_PTR(r3), 0, 0x43, 0);
+  fightTrainerGetStatus(0, uVar2, 2, 0);
+  cVar3 = fightIsWazaThunderInRain(r4);
+  if (cVar3 == 1) {
+    bVar4 = 100;
+  } else {
+    cVar3 = fn_80229BD8(r4);
+    if (cVar3 == 1) {
+      bVar4 = 100;
+    } else {
+      bVar4 = wazaGetStatus(0, r4, 6, 0);
+    }
+  }
+  bVar5 = fightTrainerGetStatus(0, uVar1, 0x35, 0);
+  bVar5 = bVar4 >= bVar5;
+  return bVar5;
+}
+
+/* fightTrainerAiGetWazaAvg: the move's accuracy (move data 6), 100 for Thunder in rain or the fn_80229BD8 case. */
+/* NAME-T3 fn_802393A0 */
+u8 fightTrainerAiGetWazaAvg(void *ctx, u32 param) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u8 fightIsWazaThunderInRain();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u8 fn_80229BD8();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 wazaGetStatus();
+#endif
+  fightTrainerGetStatus(0, fightTrainerGetStatus(ctx, 0, 0x43, 0) & 0xFFFF, 0x2,
+                        0);
+  if (fightIsWazaThunderInRain(param) == 1) {
+    return 100;
+  }
+  if (fn_80229BD8(param) == 1) {
+    return 100;
+  }
+  return (u8)wazaGetStatus(0, param, 0x6, 0);
+}
+
+/* fightTrainerAiIsWazaTypeId: the AI's wrapper of wazaIsWazaTypeId. */
+/* NAME-T3 fn_8023943C */
+u8 fightTrainerAiIsWazaTypeId(int arg1, int arg2, int arg3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern int fightTrainerGetStatus();
+#endif
+  extern u8 wazaIsWazaTypeId();
+  u16 r = (u16)fightTrainerGetStatus(PC_PTR(arg1), 0, 0x43, 0);
+  fightTrainerGetStatus(0, r, 2, 0);
+  return wazaIsWazaTypeId(arg2, arg3);
+}
+
+/* fightAiGetWazaTypeId: one of the move's type ids (move data 26, index `flag`). */
+/* NAME-T3 fn_80239498 */
+u8 fightAiGetWazaTypeId(void *ctx, u32 param, u8 flag) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 wazaGetStatus();
+#endif
+  fightTrainerGetStatus(0, fightTrainerGetStatus(ctx, 0, 0x43, 0) & 0xFFFF, 0x2,
+                        0);
+  return (u8)wazaGetStatus(0, param, 0x1A, flag);
+}
+
+/* fightAiGetWazaIryoku: the move's power (move data 7). */
+/* NAME-T3 fn_80239500 */
+s16 fightAiGetWazaIryoku(void *ctx, u32 param) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 wazaGetStatus();
+#endif
+  fightTrainerGetStatus(0, fightTrainerGetStatus(ctx, 0, 0x43, 0) & 0xFFFF, 0x2,
+                        0);
+  return (s16)wazaGetStatus(0, param, 0x7, 0);
+}
+
+/* fightAiGetWazaAddFightKoukaAvg: the move's added-effect chance (move data 12). */
+/* NAME-T3 fn_80239564 */
+u8 fightAiGetWazaAddFightKoukaAvg(void *ctx, u32 param) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 wazaGetStatus();
+#endif
+  fightTrainerGetStatus(0, fightTrainerGetStatus(ctx, 0, 0x43, 0) & 0xFFFF, 0x2,
+                        0);
+  return (u8)wazaGetStatus(0, param, 0xc, 0);
+}
+
+u32 fightTrainerAiGetWazaTenkouValue(u32 trainer, u32 move, u32 target) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u8 fightFloorGetNowTenkouDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void fightFloorLoopValidFightOutPokemon();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void fightTrainerAiFindTokuseiCB();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightOutPokemonGetPokemonPtr();
+#endif
+  extern void pokemonGetMezamerupower();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 wazaGetStatus();
+#endif
+  u16 hiddenPower;
+  u32 callbackD[5];
+  u32 callback4D[5];
+  u16 trainerData;
+  struct {
+    u8 value;
+  } weather;
+  trainerData = (u16)fightTrainerGetStatus(PC_PTR(trainer), 0, 0x43, 0);
+  trainerData = (u16)fightTrainerGetStatus(0, trainerData, 2, 0);
+  weather.value = fightFloorGetNowTenkouDataId(0, 0);
+  callbackD[0] = 0xd;
+  callbackD[1] = 0;
+  callbackD[2] = 0;
+  callbackD[3] = 0;
+  callbackD[4] = trainer;
+  fightFloorLoopValidFightOutPokemon(0, fightTrainerAiFindTokuseiCB, callbackD, 0);
+  if (callbackD[1] != 0) {
+    weather.value = 0;
+  } else {
+    callback4D[0] = 0x4d;
+    callback4D[1] = 0;
+    callback4D[2] = 0;
+    callback4D[3] = 0;
+    callback4D[4] = trainer;
+    fightFloorLoopValidFightOutPokemon(0, fightTrainerAiFindTokuseiCB, callback4D, 0);
+    if (callback4D[1] != 0) {
+      weather.value = 0;
+    }
+  }
+  if ((u8)fightTrainerGetStatus(0, trainerData, 0x2a, 0) == 1) {
+    if ((u16)move == 0xa5 || (u16)move == 0x164 || (u16)move == 0xf8 ||
+        (u16)move == 0x161) {
+      return 9;
+    }
+    if ((u16)move == 0xed) {
+      pokemonGetMezamerupower(fightOutPokemonGetPokemonPtr(PC_PTR(target)), 0,
+                              &hiddenPower);
+      return hiddenPower;
+    }
+    if ((u16)move == 0x137) {
+      if (weather.value == 2) {
+        hiddenPower = 0xb;
+      } else if (weather.value == 3) {
+        hiddenPower = 5;
+      } else if (weather.value == 1) {
+        hiddenPower = 0xa;
+      } else if (weather.value == 4) {
+        hiddenPower = 0xf;
+      } else {
+        hiddenPower = 0;
+      }
+      return hiddenPower;
+    }
+    return (u16)wazaGetStatus(0, move, 3, 0);
+  }
+  return 9;
+}
+
+s32 fightTrainerAiGetValueAryMaxBanme(s32 *valueAry, u16 count, u8 useRandom) {
+  s32 banmeAry[16];
+  s32 max = -0xC8;
+  u16 tieCount = 0;
+  u16 i;
+  u16 idx;
+  for (i = 0; i < 16; i++) {
+    banmeAry[i] = -1;
+  }
+  for (i = 0; i < count; i++) {
+    if (max < valueAry[i]) {
+      max = valueAry[i];
+    }
+  }
+  for (i = 0; i < count; i++) {
+    if (max <= valueAry[i]) {
+      banmeAry[tieCount] = i;
+      tieCount++;
+    }
+    if (tieCount >= 16) {
+      break;
+    }
+  }
+  if (tieCount == 0) {
+    return -1;
+  }
+  if (tieCount == 1) {
+    idx = 0;
+  } else if (useRandom == 1) {
+    idx = GSrand() % tieCount;
+  } else {
+    idx = 0;
+  }
+  return banmeAry[idx];
+}
+
+int fightTrainerAiAddValueScaled(int r3, int r4, u32 r5, u32 r6) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern int fightTrainerGetStatus();
+#endif
+  int iVar1;
+  int result;
+  struct {
+    int value;
+  } factor;
+  struct {
+    int value;
+  } status;
+  status.value = fightTrainerGetStatus(0, r6, 0x3e, 0);
+  factor.value = (short)(((r4 & 0xff) * 100) / 0xff) + -0x32;
+  iVar1 = (int)(short)((factor.value * status.value) / 0x32);
+  result = r3;
+  if (iVar1 > 0) {
+    result = r3 + iVar1;
+    if (result > 200) {
+      result = 200;
+    } else {
+      result = r3 + iVar1;
+    }
+  } else {
+    if (iVar1 < 0) {
+      result = r3 + iVar1;
+      if (result < -200) {
+        result = -200;
+      }
+    }
+  }
+  return result;
+}
+
+u32 fn_80239984(int r3, void *r4, u32 r5) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern int fightTrainerGetStatus();
+#endif
+  int iVar1;
+  int result;
+  iVar1 = fightTrainerGetStatus(0, r5, 0x3e, 0);
+  result = r3;
+  if (iVar1 > 0) {
+    result = r3 + iVar1;
+    if (result > 200) {
+      result = 200;
+    } else {
+      result = r3 + iVar1;
+    }
+  } else {
+    if (iVar1 < 0) {
+      result = r3 + iVar1;
+      if (result < -200) {
+        result = -200;
+      }
+    }
+  }
+  return result;
+}
+
+/* RULE-EXCEPTION(user-approved): local compiler-control pragma (push; optimization_level 2; opt_common_subs off) needed for the byte match of the code it covers - see docs/RULE_EXCEPTIONS.md */
+#pragma push
+#pragma optimization_level 2
+#pragma opt_common_subs off
+s32 fightTrainerAiAddValue(s32 value, s32 delta) {
+  if (delta > 0) {
+    if (value + delta > 200) {
+      return 200;
+    }
+    value += delta;
+    return value;
+  } else {
+    if (delta >= 0) {
+      return value;
+    }
+    if (value + delta < -200) {
+      return -200;
+    }
+    value += delta;
+    return value;
+  }
+}
+/* RULE-EXCEPTION(user-approved): restores the unit settings after the tagged local block above — see docs/RULE_EXCEPTIONS.md */
+#pragma pop
+
+u32 fightTrainerAiAddValueLog(u32 r3, u32 r4, u32 r5, u32 r6, u32 r7, u32 r8, u32 r9, u32 r10,
+                u8 param_9) {
+  extern u8 dbgMenuFightGetFightTrainerAiFlowDispFlag(void);
+  extern void* GSmsgGetGSchar(u32 key);
+  extern void menuGetKeyInfo(struct MenuKeyInfo* out, s32 port);
+  /* RULE-EXCEPTION(user-approved): caller-side prototypes with u32 id/slot parameters where the definitions take u16 (wazaGetStatus dataId, itemGetStatus id, fightTrainerGetStatus slot); retail passes the raw u32 arguments (mr r4,r25/r26/r27, no clrlwi) - see docs/RULE_EXCEPTIONS.md */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 wazaGetStatus(void* ptr, u32 dataId, u16 status, u32 index);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern s32 itemGetStatus(u8* record, u32 id, u16 field, u16 arg);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void* fightTrainerGetStatus(void* ctx, u32 slot, u32 field, u32 idx);
+#endif
+  extern void msgctrlSetValue(u32 id, u32 value);
+  extern void* fightTrainerGetNamePtr(void* context);
+  extern void fightMenuCloseMsg(void);
+  extern u32 fightMenuOpenMsg(u32 msgId);
+  extern u32 pokemonGetStatus(u8* obj, u32 id, u32 selector, u32 d);
+  int iVar6;
+  u32 iVar1;
+  u32 iVar2;
+  int iVar3;
+  int factor;
+  u32 uVar4;
+  u8 cVar5;
+  u16 local_58[14];
+  iVar6 = param_9;
+  iVar1 = (u32)fightTrainerGetStatus(0, r10, 0x40, 0);
+  iVar2 = (u32)fightTrainerGetStatus(0, r10, 0x41, 0);
+  iVar3 = (int)fightTrainerGetStatus(0, r10, 0x3e, 0);
+  factor = (short)((iVar6 * 100) / 0xff) + -0x32;
+  iVar3 = (int)(short)((factor * iVar3) / 0x32);
+  iVar6 = 0;
+  if (iVar3 > 0) {
+    if (iVar3 > 200) {
+      iVar6 = 200;
+    } else {
+      iVar6 = iVar3;
+    }
+  } else {
+    if (iVar3 < 0) {
+      if (iVar3 < -200) {
+        iVar6 = -200;
+      } else {
+        iVar6 = iVar3;
+      }
+    }
+  }
+  if (iVar1 != 0) {
+    msgctrlSetValue(0xd, PC_PTR32(GSmsgGetGSchar(iVar1)));
+  }
+  if (iVar2 != 0) {
+    msgctrlSetValue(0xe, PC_PTR32(GSmsgGetGSchar(iVar2)));
+  }
+  if (r4 != 0) {
+    msgctrlSetValue(0x13, PC_PTR32(fightTrainerGetNamePtr((void*)r4)));
+  }
+  if (r5 != 0) {
+    msgctrlSetValue(0x14, (int)pokemonGetStatus((u8*)PC_PTR(r5), 0, POKEMON_STATUS_NICKNAME, 0));
+  }
+  if (r6 != 0) {
+    msgctrlSetValue(0x23, PC_PTR32(fightTrainerGetNamePtr((void*)r6)));
+  }
+  if (r7 != 0) {
+    msgctrlSetValue(0x15, (int)pokemonGetStatus((u8*)PC_PTR(r7), 0, POKEMON_STATUS_NICKNAME, 0));
+  }
+  if ((r8 & 0xffff) != 0) {
+    msgctrlSetValue(0x28, PC_PTR32(GSmsgGetGSchar(wazaGetStatus(0, r8, 1, 0))));
+  }
+  if ((r9 & 0xffff) != 0) {
+    msgctrlSetValue(0x29, PC_PTR32(GSmsgGetGSchar(itemGetStatus(0, r9, 1, 0))));
+  }
+  if ((r10 & 0xffff) != 0) {
+    msgctrlSetValue(0x41, PC_PTR32(GSmsgGetGSchar((u32)fightTrainerGetStatus(0, r10, 0x3f, 0))));
+  }
+  msgctrlSetValue(0x2f, iVar6);
+  cVar5 = dbgMenuFightGetFightTrainerAiFlowDispFlag();
+  if (cVar5 == 1) {
+    menuGetKeyInfo((struct MenuKeyInfo*)local_58, 1);
+    if ((local_58[0] & MENU_KEY_START) != 0) {
+      return 0;
+    }
+    cVar5 = fightMenuOpenMsg(r3);
+    if (cVar5 == 1) {
+      fightMenuCloseMsg();
+      return 0;
+    }
+  }
+  return 0;
+}
+
+u8 fn_80239CCC(u32 ctx, u32 p2, u32 p3, u32 p4, u32 p5, u32 p6, u32 p7, u32 p8,
+               s32 p9) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 GSmsgGetGSchar(u32 key);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void msgctrlSetValue();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetNamePtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 wazaGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 itemGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void menuGetKeyInfo();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 dbgMenuFightGetFightTrainerAiFlowDispFlag();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightMenuOpenMsg();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void fightMenuCloseMsg();
+#endif
+  u32 v40;
+  u32 v41;
+  u8 buf[0x20];
+  v40 = fightTrainerGetStatus(0, p8, 0x40, 0);
+  v41 = fightTrainerGetStatus(0, p8, 0x41, 0);
+  if (v40)
+    msgctrlSetValue(0xD, PC_PTR32_IMPLICIT(GSmsgGetGSchar(v40)));
+  if (v41)
+    msgctrlSetValue(0xE, PC_PTR32_IMPLICIT(GSmsgGetGSchar(v41)));
+  if (p2)
+    msgctrlSetValue(0x13, PC_PTR32_IMPLICIT(fightTrainerGetNamePtr(p2)));
+  if (p3)
+    msgctrlSetValue(0x14, pokemonGetStatus(PC_PTR(p3), 0, POKEMON_STATUS_NICKNAME, 0));
+  if (p4)
+    msgctrlSetValue(0x23, PC_PTR32_IMPLICIT(fightTrainerGetNamePtr(p4)));
+  if (p5)
+    msgctrlSetValue(0x15, pokemonGetStatus(PC_PTR(p5), 0, POKEMON_STATUS_NICKNAME, 0));
+  if ((u16)p6)
+    msgctrlSetValue(0x28, PC_PTR32_IMPLICIT(GSmsgGetGSchar(wazaGetStatus(0, p6, 1, 0))));
+  if ((u16)p7)
+    msgctrlSetValue(0x29, PC_PTR32_IMPLICIT(GSmsgGetGSchar(itemGetStatus(0, p7, 1, 0))));
+  if ((u16)p8)
+    msgctrlSetValue(0x41,
+                    PC_PTR32_IMPLICIT(GSmsgGetGSchar(fightTrainerGetStatus(0, p8, 0x3f, 0))));
+  msgctrlSetValue(0x2F, p9);
+  if ((u8)dbgMenuFightGetFightTrainerAiFlowDispFlag() == 1) {
+    menuGetKeyInfo(buf, 1);
+    if ((*(u16 *)buf & MENU_KEY_START) == 0) {
+      goto do_check;
+    }
+    return 0;
+  do_check:
+    if ((u8)fightMenuOpenMsg(ctx) == 1) {
+      fightMenuCloseMsg();
+      return 0;
+    }
+  }
+  return 0;
+}
+
+u8 fn_80239EE8(u32 ctx, u32 p2, u32 p3, u32 p4, u32 p5, u32 p6, u32 p7,
+               u32 p8) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 GSmsgGetGSchar(u32 key);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void msgctrlSetValue();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetNamePtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 wazaGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 itemGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void menuGetKeyInfo();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 dbgMenuFightGetFightTrainerAiFlowDispFlag();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightMenuOpenMsg();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void fightMenuCloseMsg();
+#endif
+  u32 v3e;
+  u32 v40;
+  u32 v41;
+  u8 buf[0x20];
+  v40 = fightTrainerGetStatus(0, p8, 0x40, 0);
+  v41 = fightTrainerGetStatus(0, p8, 0x41, 0);
+  v3e = fightTrainerGetStatus(0, p8, 0x3e, 0);
+  if (v40)
+    msgctrlSetValue(0xD, PC_PTR32_IMPLICIT(GSmsgGetGSchar(v40)));
+  if (v41)
+    msgctrlSetValue(0xE, PC_PTR32_IMPLICIT(GSmsgGetGSchar(v41)));
+  if (p2)
+    msgctrlSetValue(0x13, PC_PTR32_IMPLICIT(fightTrainerGetNamePtr(p2)));
+  if (p3)
+    msgctrlSetValue(0x14, pokemonGetStatus(PC_PTR(p3), 0, POKEMON_STATUS_NICKNAME, 0));
+  if (p4)
+    msgctrlSetValue(0x23, PC_PTR32_IMPLICIT(fightTrainerGetNamePtr(p4)));
+  if (p5)
+    msgctrlSetValue(0x15, pokemonGetStatus(PC_PTR(p5), 0, POKEMON_STATUS_NICKNAME, 0));
+  if ((u16)p6)
+    msgctrlSetValue(0x28, PC_PTR32_IMPLICIT(GSmsgGetGSchar(wazaGetStatus(0, p6, 1, 0))));
+  if ((u16)p7)
+    msgctrlSetValue(0x29, PC_PTR32_IMPLICIT(GSmsgGetGSchar(itemGetStatus(0, p7, 1, 0))));
+  if ((u16)p8)
+    msgctrlSetValue(0x41,
+                    PC_PTR32_IMPLICIT(GSmsgGetGSchar(fightTrainerGetStatus(0, p8, 0x3f, 0))));
+  msgctrlSetValue(0x2F, v3e);
+  if ((u8)dbgMenuFightGetFightTrainerAiFlowDispFlag() == 1) {
+    menuGetKeyInfo(buf, 1);
+    if ((*(u16 *)buf & MENU_KEY_START) == 0) {
+      goto do_check;
+    }
+    return 0;
+  do_check:
+    if ((u8)fightMenuOpenMsg(ctx) == 1) {
+      fightMenuCloseMsg();
+      return 0;
+    }
+  }
+  return 0;
+}
+
+u8 fightTrainerAiLogText(u32 ctx, u32 p2, u32 p3, u32 p4, u32 p5, u32 p6, u32 p7, u32 p8,
+               u16 p9, u16 p10, u32 p11) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 GSmsgGetGSchar(u32 key);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void msgctrlSetValue();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetNamePtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 wazaGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 itemGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightTrainerGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void menuGetKeyInfo();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 dbgMenuFightGetFightTrainerAiFlowDispFlag();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern u32 fightMenuOpenMsg();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+  extern void fightMenuCloseMsg();
+#endif
+  u8 buf[0x20];
+  if (p2)
+    msgctrlSetValue(0xD, PC_PTR32_IMPLICIT(GSmsgGetGSchar(p2)));
+  if (p3)
+    msgctrlSetValue(0xE, PC_PTR32_IMPLICIT(GSmsgGetGSchar(p3)));
+  if (p4)
+    msgctrlSetValue(0x13, PC_PTR32_IMPLICIT(fightTrainerGetNamePtr(p4)));
+  if (p5)
+    msgctrlSetValue(0x14, pokemonGetStatus(PC_PTR(p5), 0, POKEMON_STATUS_NICKNAME, 0));
+  if (p6)
+    msgctrlSetValue(0x23, PC_PTR32_IMPLICIT(fightTrainerGetNamePtr(p6)));
+  if (p7)
+    msgctrlSetValue(0x15, pokemonGetStatus(PC_PTR(p7), 0, POKEMON_STATUS_NICKNAME, 0));
+  if ((u16)p8)
+    msgctrlSetValue(0x28, PC_PTR32_IMPLICIT(GSmsgGetGSchar(wazaGetStatus(0, p8, 1, 0))));
+  if (p9)
+    msgctrlSetValue(0x29, PC_PTR32_IMPLICIT(GSmsgGetGSchar(itemGetStatus(0, p9, 1, 0))));
+  if (p10)
+    msgctrlSetValue(0x41,
+                    PC_PTR32_IMPLICIT(GSmsgGetGSchar(fightTrainerGetStatus(0, p10, 0x3f, 0))));
+  msgctrlSetValue(0x2F, p11);
+  if ((u8)dbgMenuFightGetFightTrainerAiFlowDispFlag() == 1) {
+    menuGetKeyInfo(buf, 1);
+    if ((*(u16 *)buf & MENU_KEY_START) == 0) {
+      goto do_check;
+    }
+    return 0;
+  do_check:
+    if ((u8)fightMenuOpenMsg(ctx) == 1) {
+      fightMenuCloseMsg();
+      return 0;
+    }
+  }
+  return 0;
+}

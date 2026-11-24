@@ -1,0 +1,4 @@
+# P25 (sitting 036_20261023_2104): logged resyncs for the second pass (2026-10-30; match ledger, P25 rows).
+# No hand edits, no Wes placements: settings only, to the end on the first run (p2_P25a):
+#   P14's settings (resyncs/P14_024.txt) + ORRE_ROLL_SEEDS for its one battle (442; capture replay_2, checked: 159
+#   events, 1,552 flag changes identical).

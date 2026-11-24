@@ -1,0 +1,7 @@
+# P18 (sitting 029_20261023_0121): logged resyncs for the second pass (2026-10-30; match ledger, P18 rows).
+# No hand edits, no Wes placements, no per-sitting seeds: settings only, to the end on the first run (p2_P18a):
+#   P14's settings (resyncs/P14_024.txt) + ORRE_ROLL_SEEDS for its battles (roll_resync_spec.py --all-battles on
+#   replay_2, one PLAYREC_RNGCALL capture 4530-10262,34792-36740,42782-49969, checked: 368 events and 941 flag changes
+#   identical; seeds for 2 of the 3 battles, the first, 321, has no battle-roll draws the resync covers).
+#   *Corrected 2026-10-30 night:* more likely 321's window (4530-10262) ended at a menu-room entry inside the battle
+#   (P19's lesson); it replayed as on the console unseeded. For a rerun, end each window after the battle's last message.

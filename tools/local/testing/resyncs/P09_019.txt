@@ -1,0 +1,110 @@
+# P09 (sitting 019_20261022_0025): logged resyncs for the second pass (2026-10-28; match ledger, P09 rows).
+#
+# 1. Wes placed where the console stopped him before battle 146's trainer spots him, in the menu room's visit right
+#    after battle 144 (console entry 30, recorder room id 0x38F while he walks in town). The PC's walk ends about one
+#    unit off ((235.19, -258.79) against (235.87, -257.86)) and the trainer's sight check fires 85 frames later.
+#    Values from replay_1/pos.csv at visit +848; absolute PC frame from the reference run (visit start + 849).
+#    *Updated 2026-10-28 night:* for pads made with --window-frameat --windows-rooms 0x38F,0x391 the reference run is
+#    p2_P09fa2 (the visit starts at its frame 47986); the earlier pads used p2_P09rs2 (47980, so @48829).
+#    Apply with: pad_resync.py <run>/sitting.pad P09_019.txt --log <p2_P09fa2>/run.log
+@48835 npc 0 235.8661 0 -257.8641  # console visit +848: Wes stops here
+#
+# 2. A hand edit of the pad (not a spec line), the stick moved one frame later before the Y-menu's 20th opening (pad
+#    lines after "@0x20069+0~30:A", "+27:-", "+36:B", "+46:-": the 21 one-frame stick steps each take the previous
+#    step's stick value; button states unchanged). The menu's key repeat (15 refreshes, then every 5) runs from the
+#    stick's first crossing; on the console the menu becomes ready 35 frames after it, on the PC 36, so the repeat
+#    edge that moves the console's cursor on the ready frame fell one frame before ready on the PC and the cursor
+#    ended one entry higher (the P★DA instead of the pocket menu).
+#
+# 3. A hand edit of the pad, the PC box's held Right pressed two frames earlier, the release frame unchanged (pad
+#    lines "+11:RIGHT", "+6:-", "+8:RIGHT", "+52:-", "+4:DOWN" in the box visit before battle 148 (room 0x391,
+#    console frame 120008): "+8:RIGHT" -> "+6:RIGHT" and "+52:-" -> "+54:-"). On the second opening of the box grid
+#    (window 0x93) the console's held Right repeats 26, 32, ... 50 frames after the press and moves the cursor
+#    0 -> 5; on the PC the repeats came 28-30 frames after it, the fifth fell on the release frame and the cursor
+#    stopped at 4, so the next Down picked another slot and the PC withdrew species 150 where the console withdrew
+#    species 200 (battle 148 then led with the wrong Pokémon). Same class as item 2.
+#    *Corrected 2026-10-29:* this shift didn't fix it (p2_P09rs6: the repeats moved two frames later, not earlier);
+#    the cause is the frame lengths and the grid's ready frame, not the press.
+#
+# *Updated 2026-10-29:* items 2 and 3 are superseded by the menu-cursor resync: pads made with
+# `replay_check.py --window-frameat --cursor-sync all` set the PC's open menu cursors to the console's before every A
+# press, which fixes the box visit (p2_P09cs2: the PC takes back 200 and 162 as the console does) without hand edits.
+# Such pads take only item 1 (its frame re-based on their reference run: p2_P09wf1 / p2_P09cs2 place it after the
+# same press, pad line "+2:A+SX=136+SY=173" of that visit).
+#
+# 4. (2026-10-29 afternoon) The disc read that reloads the field after the long menu-room visit before battle
+#    148 (trace row 809 of replay_1/dvd.csv, console frames 138605-138623) ends 31 retraces earlier on the PC:
+#    ORRE_DVD_READ_FIX=809:-31 (an --extra-env). The disc model ends each recorded read at its recorded end on the
+#    console's clock (offset from the visit's first read); in that 5,300-frame visit the PC ran 31 frames early
+#    against that clock, so it waited for the read and the Y-menu (window 0x41) reopened 21 frames late; the B that
+#    closes it on the console then fell before it was ready, a stick press moved the cursor and the A opened menu room
+#    0x392. With the fix (p2_P09df1): battles 9-14 as on the console, to room entry 68 (was 53).
+#
+# 5. (the same afternoon) Pads made with --windows-rooms 0x38F --windows-rooms-unroomed: presses also timed from the
+#    windows the probe logs with room -1 inside a menu-room visit (the Y-menu that reopens after the party screen,
+#    before the field is back). After battle 158 the PC's Y-menu reopened 45 frames later than the console's (13 of
+#    them the next field read, 32 the field's reload after it), so the A meant for it came 2 frames before it was
+#    ready (p2_P09df1's stop). Item 1 is placed after the same pad line as above (the transplant tool doesn't fit
+#    these pads, which differ by more than added frameat / cursor lines).
+#
+# 6. (the same evening, with the recorder "reentered" fix merged: p2_P09df3 to room entry 73) Wes placed where the
+#    console's stands when the Y-menu opens after the second PC-box visit following battle 158 (menu room 0x38F,
+#    console frame 213931; the PC's visit starts at its frame 214543 in the reference run p2_P09df3, pad = p2_P09df2's).
+#    The PC's walk from the box reached x 6.9 where the console's stopped at x -3.6 (10 units further before the
+#    menu opened); after the menu the console's Wes slides along y 728 to the exit into room 0x20, the PC's takes
+#    another path and never reaches it. Values from replay_1/pos.csv. Apply with --log <p2_P09df3>/run.log.
+#    *Corrected the same evening:* placed at the visit's start the command is refused (the field's people are not
+#    loaded inside a menu room, p2_P09df4); placed when the Y-menu has closed and the field is back instead (console
+#    +471, where his Wes still stands until +500).
+@215015 npc 0 -3.6200 0 745.0245  # console 0x38F +471
+#    With it (p2_P09df5): battles 1-16 as on the console (the recording names only 15: the rematch with 158 after
+#    the loss has no "battle" event, a recorder gap) and the run to room entry 91 of 96 (was 73).
+#
+# 7. (the same evening) A hand edit of the pad: in the bag visit after Miror B.'s battle (164), the A that closes
+#    submenu 0x11 (the item's "use" step before the party list opens) pressed one frame after the window's anchor
+#    instead of one frame before it. Pad lines "+6:A", "+0:!cursor 0x59:0:3", "@0x20011+0~31:A", "+0:!frameat 446",
+#    "+6:-" become "+6:-", "+0:!cursor 0x59:0:3", "@0x20011+0~31:-", "+0:!frameat 446", "+1:A", "+5:-" (the release
+#    on its old frame). On the console the A goes down on the window's second frame (ready) and closes it, then the
+#    party list opens (+567); on the PC it went down a frame before the window opened, counted as held, the submenu
+#    stayed open and the visit went back to the item list (p2_P09df5's split at entry 88, story flags differing).
+#    *Updated 2026-10-30:* not enough alone: the TM test (TM49 on Umbreon, "already knows Snatch") took another TM on
+#    the PC (message 0x4243 "wants to learn" against the console's 0x4244, verified with ORRE_MSG_WINDOW=0x10 and the
+#    console's PLAYREC_MSGWINDOW=0x10; the TM pockets identical on both sides, the new tms logs). Cause: in the bag's
+#    top list (window 0x59) a Right press read in a 6-refresh frame moved the cursor 28 frames late and every later
+#    move ran one behind. Bridged with --press-frameat 0x38F:37 (the frame lengths re-anchored at each press of that
+#    visit only); with it the TM test goes the console's way and the run reaches room 0x14 (p2_P09vf1).
+#
+# 8. (2026-10-30) Wes placed where the console's stands in room 0x14 after the scene there (console entry +2650, frame
+#    269573; the PC's visit starts at its frame 267370 in the reference run p2_P09vf1). The PC's Wes stood 1.4 units off
+#    ((-29.2, 11.7) against (-30.6, 11.6)) and then got stuck at (-36.2, -0.8) on the way to room 0x15 (likely a person
+#    in his path, the P02 class). Values from replay_1/pos.csv. Apply with --log <p2_P09vf1>/run.log.
+@270020 npc 0 -30.6226 -1.9318 11.6032  # console 0x14 +2650
+#    With it (p2_P09vf2): rooms 0x15, 0x14 and 0xF as on the console, to room entry 93 of 96 (was 90).
+#
+# 9. (2026-10-30 night) Wes placed where the console's stands in room 0xF 8 frames before he stops to talk (console
+#    visit +1285 of 0xF's last visit, replay_1/pos.csv frame 273570; the PC's visit starts at its frame 272759 in the
+#    reference run p2_P09vf2). The console's Wes stops at (12.37, 71.55) and the A press there opens a message window
+#    (events: msgwin type 3 at visit +1302); the PC's walk was about 17 units further along ((29.1, 69.2) at the
+#    press), no window opened, and the rest of the visit's stick moves took him to (94.2, 167.4), where he stood until
+#    the run stopped waiting for room 0x10 (the walk drift of items 1 and 6; cause likely frame lengths, not checked). The npc line lands after pad
+#    step 24796, two steps before that A press. Apply with --log <p2_P09vf2>/run.log.
+@274044 npc 0 11.7787 0 70.5913  # console 0xF +1285
+#    With it (p2_P09vf3): the talk opens (message window type 3), but 78 frames late, on the second A press, and the
+#    window never closes; the run still stops before room 0x10.
+#
+# 10. (the same night) The person Wes talks to in room 0xF is a wanderer (people slot 4, state 4, group 45), about 8
+#    units from him on the console when he stops (Dolphin's npc capture of the visit, replay_12: PLAYREC_NPC=0xF,-1,
+#    1800,2). Its walks made to follow the console's route, as P02's (npc_resync_spec.py replay_12/npc.csv 0xF:2
+#    --shift -32 --absolute 272759 --slots 4 --to 1400; shift from Wes's x = -133.83 at console visit frame 253 and PC
+#    visit frame 221 in p2_P09vf3). Apply with --log <p2_P09vf3>/run.log, on top of item 9.
+@272853 npc 4 3.710639 0 69.97639 -10.95034 0 68.7804 0 -1.652193 4 2  # capture frame 126, walks
+@272902 npc 4 -10.95034 0 68.7804 -10.95034 0 68.7804 5.973892 -1.652193 4 0  # capture frame 175, stops
+@273264 npc 4 -10.8379 0 69.35005 -9.365879 0 76.80833 0 0.1948636 4 2  # capture frame 537, walks
+@273292 npc 4 -9.365879 0 76.80833 -9.365879 0 76.80833 3.674088 0.1948636 4 0  # capture frame 565, stops
+@273516 npc 4 -9.10315 0 76.29052 1.601511 0 55.193 0 2.672051 4 2  # capture frame 789, walks
+@273600 npc 4 1.601511 0 55.193 1.601511 0 55.193 5.383286 2.672051 4 0  # capture frame 873, stops
+@273926 npc 4 2.081342 0 55.51997 18.65817 0 66.81599 0 0.9726396 4 2  # capture frame 1199, walks
+@273998 npc 4 18.86906 0 66.88612 18.65817 0 66.81599 6.958267 0.9726396 4 0  # capture frame 1271, stops
+#    With it (p2_P09vf5): all 96 room entries, story flags the same at every entry, to the end. (The PC's npc log in
+#    p2_P09vf4, ORRE_NPC_LOG=F,273800-274300, had the wanderer at (17.6, 76.3) when Wes pressed A, against the
+#    console's (18.9, 66.9).)

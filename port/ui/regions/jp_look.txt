@@ -1,0 +1,67 @@
+# The Japanese release's look: OrrePort's one table of regional differences (3.5 steps 2 and 3, 2026-11-19).
+#
+# Why a table: snatcherLeo decided (2026-11-17) that with the language set to Japanese and the player's Japanese disc added,
+# the game takes the Japanese release's own look, all of its non-word differences together, with no switch of their own.
+# "The swap list kept as data" (the plan's "Showing players what changes"): this one file is read by the swap code
+# (port/src/pc_region_look.cpp, which hands the rows to pc_word_pictures.cpp and pc_lang_files.cpp), by the hub's
+# "What changes" list (its words: the keys in ui/lang/en.txt), and later by OrrePort Studio's "region variants".
+# Nothing here comes from a disc: names and descriptions only. The pictures and models themselves are read from the
+# player's own Japanese disc while the game runs, never shipped.
+#
+# One row per asset, the columns separated by "|":
+#   id         a stable name for the row (the UI Editor, mods and the log refer to it; never change one)
+#   kind       picture or model
+#   entry      the archive entry's name, the same on the US and Japanese discs (verified for every row, 2026-11-19)
+#   archives   where the US game takes it from (archive names without ".fsys", comma-separated; main.dol = embedded in
+#              the program); the Japanese copy is read from the same entry name on the Japanese disc
+#   region     the release whose look it is (JP)
+#   condition  when it applies: lang=ja (the game's language) and disc=GC6J01 (the player's Japanese disc is added).
+#              The only condition the code knows today; a row with another one is skipped (logged)
+#   what       the ui/lang key of the words saying what it shows in that release (the hub's "What changes" list).
+#              *Changed 2026-11-21 (snatcherLeo: "we can just condense the Rui changes ... 'Rui wears her Japanese outfit' is
+#              perfect for all of these"):* rows may share a key; the list shows each key's line once, so the five Rui
+#              rows read "Rui wears her Japanese outfit." and the three Somek rows "Somek has his moustache."
+#   how        how OrrePort swaps it:
+#                sprite  the game draws it in pieces from its sprite table: the piece's record gets the Japanese
+#                        picture's id and the picture is read from the disc when first drawn (the word pictures' path)
+#                entry   the game looks the picture up by its id in code (no sprite record names it), or it is a 3D
+#                        model: the archive is served with that one entry taken from the Japanese disc (the language
+#                        files' path). The archive's own entry record then carries the Japanese entry's sizes, so the
+#                        game sizes its buffers for it (models of another size included). Every model row is "entry"
+#                none    not swapped yet (the note says why)
+#   note       anything else (shown in the log; "colour depth only": the same artwork stored with more colours)
+#
+# The facts behind each row (verified 2026-11-19 by read-only studies of both discs; docs/engine/regions.md "The seven
+# non-word Japanese pictures"): every entry keeps its name and resource id on both discs; the Japanese copies of one
+# entry in several archives are identical. ORRE_NO_REGION_LOOK=1 turns every swap of this table off (a test switch).
+
+# id                | kind    | entry          | archives                                                | region | condition           | what                               | how    | note
+jp.logo_nintendo    | picture | logo_nintendo  | main.dol, nintendo_logo                                 | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.logo_nintendo     | sprite | sprite record 0x1B9 (menu 0x85, the boot screen); read from the disc's nintendo_logo archive, an identical copy of the program's own
+jp.t_vs_c4          | picture | t_vs_c4        | title                                                   | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.rui_outfit        | sprite | sprite record 0x33C (the title and main menu)
+jp.chara_bigl074    | picture | chara_bigl074  | chara_big                                               | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.somek_moustache   | entry  | Somek's VS portrait (the toolbattle_menu module's portrait table, key 59 = his battle model's index); no Battle Mode opponent uses his model, so likely never on screen in normal play
+jp.menu004          | picture | menu004        | common                                                  | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.menu004           | entry  | looked up by id (fn_8001DACC, 0x00EF1200); another format in Japan (grey-only, twice the bytes)
+jp.menu_024         | picture | menu_024       | pcbox_pocket_menu, pocket_menu, pokemonchange_menu, waza_menu | JP | lang=ja disc=GC6J01 | hub.lang.jp_look.menu_024          | sprite | colour depth only
+jp.menu_025         | picture | menu_025       | pda_menu                                                | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.menu_025          | sprite | colour depth only
+jp.menu_040         | picture | menu_040       | field_common                                            | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.menu_040          | sprite | colour depth only
+jp.hizuki_a1        | model   | hizuki_a1      | pkx_hizuki_a1, M1_out                                   | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.rui_outfit        | entry  | battle model; the same size unpacked (208,800 bytes in pkx_hizuki_a1, 205,167 in M1_out), other bytes
+jp.hizuki_b1        | model   | hizuki_b1      | field_common                                            | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.rui_outfit        | entry  | field follower model; the Japanese copy is 172 bytes smaller unpacked (the entry record carries its size)
+jp.hizuki_b2        | model   | hizuki_b2      | M1_out                                                  | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.rui_outfit        | entry  | scene model; the Japanese copy is 21,856 bytes larger unpacked (the entry record carries its size)
+jp.bike_hizuki      | model   | bike_hizuki    | world_map                                               | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.rui_outfit        | entry  | world map bike model; the Japanese copy is 1,256 bytes larger unpacked (the entry record carries its size)
+# Somek, the Mt. Battle master (added 2026-11-20, snatcherLeo: "Mt. Battle man's Japanese picture and model (overworld and
+# in-battle) we'll have accessible in the JPN version"). In Japan he has a moustache; the US release removed it from
+# his portrait (chara_bigl074 above) and from both models, where it is its own small mesh (the textures are identical
+# on both discs). The US disc's people_archive still holds the Japanese scene model, unused, the same bytes on both
+# discs, so it needs no row.
+jp.niku_m_a2        | model   | niku_m_a2      | pkx_niku_m_a2                                           | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.somek_moustache   | entry  | Somek's battle model (trainer 317, battle 319); the Japanese copy is 576 bytes larger unpacked (the entry record carries its size)
+jp.niku_m_b2        | model   | niku_m_b2      | D2_crater_colo                                          | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.somek_moustache   | entry  | Somek standing in Mt. Battle's crater (room 0x5F); the Japanese copy is 2,196 bytes larger unpacked (the entry record carries its size)
+# The Teacher and Jynx (added 2026-11-20, snatcherLeo: "We can include teacher trainer difference ... Jynx ... we could in JPN
+# version"; docs/engine/regions.md "Smaller differences on the Japanese disc"). The US release lengthened the Teacher
+# trainers' skirt (about half again as long; geometry only, the textures identical) in both of her models, and gave
+# Jynx a lighter purple face (one tiny colour texture; also one arm motion and resting values nothing shows). The US
+# disc's people_archive still holds the Japanese sensei_b1, unused, the same bytes on both discs, so it needs no row.
+# Not swapped, by snatcherLeo's choice: the item sparkle (kirari; "we'll keep the US version") and the title-screen demo video
+# (stays US). Jumpluff (pkx_watacco) stays US too (snatcherLeo, 2026-11-20, after comparison pictures: "keep the US one,
+# across both. Maybe the US ones are the upgrade").
+jp.sensei_b1        | model   | sensei_b1      | D2_cloud_1, D2_cloud_2, D2_cloud_4, D2_magma_1, D2_magma_2, D2_magma_3, D2_valley_1, D2_valley_2, D2_valley_3, M1_gym_1F | JP | lang=ja disc=GC6J01 | hub.lang.jp_look.sensei_b1 | entry | the Teacher's field model (NPC info 27): nine Mt. Battle areas and Phenac's Pre Gym, every archive that holds it (verified on both discs); the Japanese copy is 584 bytes smaller unpacked (the entry record carries its size)
+jp.sensei_a1        | model   | sensei_a1      | pkx_sensei_a1                                           | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.sensei_a1         | entry  | the Teacher's battle model (trainer-model index 40: 21 trainers, 8 in the story); the Japanese PKX is 96 bytes larger unpacked (the entry record carries its size)
+jp.rougela          | model   | rougela        | pkx_rougela                                             | JP     | lang=ja disc=GC6J01 | hub.lang.jp_look.rougela           | entry  | Jynx's battle model (no trainer has one: a player's own Jynx); the Japanese PKX is 384 bytes larger unpacked (the entry record carries its size)

@@ -1,0 +1,1385 @@
+/**
+ * @file evolution.c
+ * @brief game/pxdvs/app/evolution/evolution.cpp -- split from colosseum_battle.c (the
+ *        Colosseum battle-flow/AI bucket, 0x802405C0-0x80265EC4),
+ *        address range 0x802600E4-0x80261388, 7 fns.
+ *
+ * XD source unit: game/pxdvs/app/evolution/evolution.cpp
+ * Physically split out of the pre/post-battle mega-file by address
+ * (functions located and bucketed by name via config/GC6E01/symbols.txt,
+ * since this TU uses plain named C bodies with no address-comment
+ * markers).
+ */
+
+#include "game/colosseum.h"
+#include "game/trainer.h"
+#include "game/pokemon.h"
+#include "game/constants/pokemon_status.h"
+
+/* =========================================================================
+ * Duplicated declarations (verbatim from the original colosseum_battle.c
+ * preamble, present in every split segment so each TU keeps the same
+ * external visibility it had before the split)
+ * ========================================================================= */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32   pokemonSetStatus();
+#endif
+
+/* Battle system functions */
+extern void battleCameraSelect();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 wazaSequencePokemonCreate(u16 index, u32 rnd, u32 variant);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void wazaSequenceSysStartWaza(u32 sequence, u16 moveID, s32 variant);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 wazaSequenceSysIsPlayingWaza(u32 sequence, u16 moveID, s32 variant);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void wazaSequenceSysStopWaza(u32 sequence, u16 moveID, s32 variant);
+#endif
+
+/* Sound functions */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void soundStop();     /* Stop sound */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void std104_soundSetBackgroundMusic();     /* Fade out music */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void std105_soundPlayEffect();     /* Start BGM */
+#endif
+
+/* SDA2 float constants used by asm wrappers */
+extern f32 lbl_8047E678;
+extern f32 lbl_8047E67C;
+
+/* SDA1 globals used by asm wrappers */
+extern u32 lbl_8047B668;
+extern u32 lbl_8047B66C;
+extern u32 lbl_8047B670;
+
+/* Data labels used by asm wrappers */
+extern u8  lbl_8039A6B8[];
+extern u8  lbl_8039A6A8[];
+extern int lbl_804782BC[];
+extern u8  lbl_804782E0[];
+extern u8  lbl_804783E0[];
+
+/* Forward declarations for functions used as addresses in asm wrappers */
+void ShortCommandProc(int r3);
+void ReadProc(int r3);
+void WriteProc(int r3);
+void __GBASyncCallback(int r3);
+u32  __GBASync(int r3);
+u32  __GBATransfer(int r3, u32 r4, u32 r5, u32 r6);
+
+/* Forward declarations for asm wrapper bl targets (use () form for compat) */
+extern void DSPInit();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void set__5GSvecFfff();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern int  _fadeEffectGetRandom__FUl();
+#endif
+extern u32  pokemonBiosGetCatchTrainerRnd();
+extern u32  pokemonBiosGetRnd();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16  pokemonBiosGetPokemonDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32  savedataGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern int  fadeCheck();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fadeSet(f32 duration, u32 mode);
+#endif
+extern int  wazaSequenceSysRelease();
+extern int  wazaSequenceSysInitWithoutParticles();
+extern void OSRegisterResetFunction();
+extern void OSInitAlarm();
+extern void OSInitThreadQueue();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memcpy();
+#endif
+
+/* Forward declarations for converted functions */
+int evolutionWazaLearn(u8 *r3, u32 r4, u8 *r5, int r6, void *r7, u32 r8);
+int fightTrainerAiWazaValueKuroikiri(void* ctx, u32 param1, u32 param2, u32 param3);
+void fightTrainerAiWazaValueHimitunotikara(void* ctx, u32 param1, u32 param2, u32 param3);
+s32 fightTrainerAiSelectIrekaeDasuFightPokemon(void* ctx, u32 param1, u32 param2, u32 param3);
+u32 fightTrainerAiWazaHit045(void* trainerCtx, u32 trainerSlot, u32 resultSlot, u32 resultType);
+u32 fightMenuFightTrainerGcHeroOpenMenu(void* ctx, u32 param1, u32 param2);
+
+typedef struct EvoWazaSeq {
+    u16 id;
+    int kind;
+} EvoWazaSeq;
+
+extern EvoWazaSeq lbl_8027A488[];
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 wazaSequenceOwnerLoadWaza();
+#endif
+
+/* Species index for the evolution model: 0xFFFF when the Pokemon or its
+ * species-0x66 entry is empty. Its early-return value is a merged-away copy
+ * during the model lookups, one more neighbour for the evolutionStart
+ * parameters that puts r6/r8 in retail's r28/r27. */
+/* RULE-EXCEPTION(user-approved): single-use inline helper (evolutionStart's model species lookup) - see docs/RULE_EXCEPTIONS.md */
+static inline u16 evolutionGetModelNo(u32 pkm)
+{
+  u16 no;
+
+  no = (int)pokemonGetStatus(PC_PTR(pkm),0,POKEMON_STATUS_SPECIES,0);
+  if (no == 0) {
+    return 0xffff;
+  }
+  no = (int)pokemonGetStatus(0,no,POKEMON_STATUS_MODEL_ID,0);
+  if (no == 0) {
+    return 0xffff;
+  }
+  return no;
+}
+
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+static inline u32 evolutionCreateModel(u32 pkm, int kind)
+{
+  u16 no;
+  u32 shiny;
+  EvoWazaSeq *seq;
+  u32 rnd;
+  int i;
+  u32 model;
+
+  no = (int)pokemonGetStatus(PC_PTR(pkm),0,POKEMON_STATUS_SPECIES,0);
+  if (no == 0) {
+    no = 0xffff;
+  }
+  else {
+    no = (int)pokemonGetStatus(0,no,POKEMON_STATUS_MODEL_ID,0);
+    if (no == 0) {
+      no = 0xffff;
+    }
+  }
+  if (no == 0xffff) {
+    return 0;
+  }
+  rnd = pokemonBiosGetRnd(pkm);
+  shiny = (int)pokemonGetStatus(PC_PTR(pkm),0,POKEMON_STATUS_IS_SHINY,0);
+  shiny = (-shiny | shiny) >> 0x1f;
+  model = PC_PTR32_IMPLICIT(wazaSequencePokemonCreate(no,rnd,shiny));
+  if (model == 0) {
+    return 0;
+  }
+  i = 0;
+  seq = lbl_8027A488;
+  do {
+    if (seq->kind == kind && wazaSequenceOwnerLoadWaza(PC_PTR(model),seq->id,4,0) == 0) {
+      break;
+    }
+    i++;
+    seq++;
+  } while (i < 5);
+  if (i < 5) {
+    return 0;
+  }
+  return model;
+}
+#else
+static inline u32 evolutionCreateModel(u32 pkm, int kind)
+{
+  u16 no;
+  u32 shiny;
+  EvoWazaSeq *seq;
+  u32 rnd;
+  int i;
+  u32 model;
+
+  no = evolutionGetModelNo(pkm);
+  if (no == 0xffff) {
+    return 0;
+  }
+  rnd = pokemonBiosGetRnd(pkm);
+  shiny = (int)pokemonGetStatus(PC_PTR(pkm),0,POKEMON_STATUS_IS_SHINY,0);
+  shiny = (-shiny | shiny) >> 0x1f;
+  model = PC_PTR32_IMPLICIT(wazaSequencePokemonCreate(no,rnd,shiny));
+  if (model == 0) {
+    return 0;
+  }
+  i = 0;
+  seq = lbl_8027A488;
+  do {
+    if (seq->kind == kind && wazaSequenceOwnerLoadWaza(PC_PTR(model),seq->id,4,0) == 0) {
+      break;
+    }
+    i++;
+    seq++;
+  } while (i < 5);
+  if (i < 5) {
+    return 0;
+  }
+  return model;
+}
+#endif
+
+#if !defined(EVOLUTION_80260EBC_ONLY) && !defined(EVOLUTION_80260910_ONLY)
+struct GSSceneVec3;
+struct GSRenderCamera;
+extern s32 winMsgOpenField(u32 message, u32 wait, u8 pause);
+extern void winMsgCloseField(u32 wait);
+extern s32 std011_dialogDisplayYesNoMenu(void);
+extern u16 pokemonBiosGetPokemonWazaDataId(void* ctx, u32 p1);
+extern void* pokemonBiosGetNicknamePtr(void* ptr);
+extern void msgctrlSetValue(u32 id, u32 value);
+extern u32 std130_soundUnk_801653cc(u32 id, void* buffer, u32 size);
+extern u32 wazaSequenceOwnerGetModel(void* obj);
+extern void wazaSequenceOwnerSetVisibility(void* effect, u32 visible);
+extern void cameraSetFov(f32 fov);
+extern void wazaSequenceSysUpdate(void);
+extern void _threadSwitch(void);
+extern void GSscene_GetCameraDirectionVector(struct GSSceneVec3* direction);
+extern void GSscene_GetCameraRotationVector(struct GSSceneVec3* rotation);
+extern void GSscene_GetCameraPositionVector(struct GSSceneVec3* position);
+extern void GSscene_GetCameraViewVector(struct GSSceneVec3* view);
+extern void GSscene_SetCameraDirectionVector(struct GSSceneVec3* direction);
+extern void GSscene_SetCameraRotationVector(struct GSSceneVec3* rotation);
+extern void GSscene_SetCameraPositionVector(struct GSSceneVec3* position);
+extern void GSscene_SetCameraViewVector(struct GSSceneVec3* view);
+extern struct GSRenderCamera* GScameraGetActiveCamera(void);
+extern void GScameraGetPerspective(struct GSRenderCamera* camera, f32* fov, f32* aspect,
+                                   f32* near, f32* far);
+extern u32 GSscene_SetMode(u32 mode);
+/* Address: 0x802600E4 | Size: 0x378 | Ghidra import */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s8 menuSubOpenYesNo();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern int winMsgClose();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern int winMsgOpen();
+#endif
+
+static inline int evolutionAskYesNo(int r6, u32 msg)
+{
+  int sel;
+
+  if (r6 == 0) {
+    winMsgOpenField(msg,1,0);
+  }
+  else {
+    winMsgOpen(2,msg,1,0);
+  }
+  if (r6 == 0) {
+    sel = (s8)std011_dialogDisplayYesNoMenu();
+  }
+  else {
+    sel = menuSubOpenYesNo(0,0xffffffff,0xffffffff,0);
+  }
+  if (r6 == 0) {
+    winMsgCloseField(1);
+  }
+  else {
+    winMsgClose(1);
+  }
+  switch (sel) {
+  case 0:
+    return 0;
+  case 1:
+    return 1;
+  default:
+    return 2;
+  }
+}
+
+int
+evolutionWazaLearn(u8 *r3,u32 r4,u8 *r5,int r6,void *r7,
+            u32 r8)
+
+{
+  int slot;
+  u32 uVar2;
+  u32 waza;
+  u16 sVar3;
+  u32 uVar4;
+
+  slot = 0;
+  do {
+    sVar3 = pokemonBiosGetPokemonWazaDataId(r3,slot & 0xffff);
+    if (sVar3 == 0) break;
+    slot = slot + 1;
+  } while (slot < 4);
+  if (slot < 4) goto LAB_0025d3c4;
+
+  uVar2 = PC_PTR32(pokemonBiosGetNicknamePtr(r3));
+  msgctrlSetValue(0x32,uVar2);
+  waza = r4 & 0xffff;
+  msgctrlSetValue(0x39,waza);
+  do {
+    if (evolutionAskYesNo(r6,0x4243) == 0) {
+      if (r7 != (void *)0x0) {
+        slot = ((s8 (*)())r7)(r3,r4,r8);
+      }
+      else {
+        slot = 0;
+      }
+      if (0 <= slot) goto LAB_waza_set;
+    }
+    msgctrlSetValue(0x32,uVar2);
+    msgctrlSetValue(0x39,waza);
+  } while (evolutionAskYesNo(r6,0x4242) != 0);
+  if (r6 == 0) {
+    winMsgOpenField(0x4241,1,0);
+  }
+  else {
+    winMsgOpen(2,0x4241,1,0);
+  }
+  if (r6 == 0) {
+    winMsgCloseField(1);
+  }
+  else {
+    winMsgClose(1);
+  }
+  return 0;
+
+LAB_waza_set:
+  uVar2 = PC_PTR32(pokemonBiosGetNicknamePtr(r3));
+  msgctrlSetValue(0x32,uVar2);
+  msgctrlSetValue(0x5d,0x468);
+  uVar4 = pokemonBiosGetPokemonWazaDataId(r3,slot & 0xffff);
+  msgctrlSetValue(0x39,uVar4);
+  if (r6 == 0) {
+    winMsgOpenField(0x4248,1,0);
+  }
+  else {
+    winMsgOpen(2,0x4248,1,0);
+  }
+LAB_0025d3c4:
+  std130_soundUnk_801653cc(0x4ca,0,0xff);
+  uVar2 = PC_PTR32(pokemonBiosGetNicknamePtr(r3));
+  msgctrlSetValue(0x32,uVar2);
+  msgctrlSetValue(0x39,r4 & 0xffff);
+  if (r6 == 0) {
+    winMsgOpenField(0x423d,1,0);
+  }
+  else {
+    winMsgOpen(2,0x423d,1,0);
+  }
+  if (r6 == 0) {
+    winMsgCloseField(1);
+  }
+  else {
+    winMsgClose(1);
+  }
+  *r5 = (char)slot;
+  return 1;
+}
+
+/* Address: 0x8026045C | Size: 0x27C | Ghidra import */
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+int cbWazaForget(u32 r3,u32 r4,int r5)
+
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int menuPokemonStatusOpenWazaForget();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GScameraGetPerspective();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GScameraGetActiveCamera();
+#endif
+    extern int GSmodelSetAnimType();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int fn_801766A8();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSscene_GetCameraRotationVector();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSscene_SetCameraRotationVector();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSscene_GetCameraDirectionVector();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSscene_SetCameraDirectionVector();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSscene_GetCameraPositionVector();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSscene_SetCameraPositionVector();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSscene_GetCameraViewVector();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSscene_SetCameraViewVector();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSscene_SetMode();
+#endif
+    extern int wazaSequenceSysRelease();
+    extern int wazaSequenceSysInitWithoutParticles();
+    extern const f32 lbl_8047E6C0;
+
+  u32 uVar1;
+  u32 *savedRotationPtr;
+  u32 *savedPositionPtr;
+  u32 *savedViewPtr;
+  int iVar2;
+  u32 iVar7;
+  u32 savedView[4];
+  u32 savedPosition[3];
+  u32 savedRotation[3];
+  u32 savedDirection[3];
+  u32 view[3];
+  u32 position[3];
+  u32 rotation[3];
+  u32 direction[3];
+  u8 auStack_8c [4];
+  u8 auStack_90 [4];
+  u8 auStack_94 [4];
+  float local_98;
+  
+  fadeSetDurationFirst(lbl_8047E6C0,3);
+  fadeCheck(1);
+  GSscene_GetCameraDirectionVector(direction);
+  GSscene_GetCameraRotationVector(rotation);
+  GSscene_GetCameraPositionVector(position);
+  GSscene_GetCameraViewVector(view);
+  uVar1 = PC_PTR32_IMPLICIT(GScameraGetActiveCamera());
+  GScameraGetPerspective(PC_PTR(uVar1),&local_98,auStack_94,auStack_90,auStack_8c);
+  savedDirection[0] = direction[0];
+  savedDirection[1] = direction[1];
+  savedDirection[2] = direction[2];
+  savedRotationPtr = savedRotation;
+  savedPositionPtr = savedPosition;
+  savedViewPtr = savedView;
+  savedRotation[0] = rotation[0];
+  savedRotation[1] = rotation[1];
+  savedRotation[2] = rotation[2];
+  savedPosition[0] = position[0];
+  savedPosition[1] = position[1];
+  savedPosition[2] = position[2];
+  savedView[0] = view[0];
+  savedView[1] = view[1];
+  savedView[2] = view[2];
+  ((volatile float *)savedView)[3] = local_98;
+  wazaSequenceSysRelease();
+  iVar2 = menuPokemonStatusOpenWazaForget(r3,r4);
+  if (iVar2 >= 4) {
+    iVar2 = -1;
+  }
+  wazaSequenceSysInitWithoutParticles(2);
+  iVar7 = evolutionCreateModel(r3,1);
+  if (iVar7 != 0) {
+    *(int *)PC_PTR((r5 + 4)) = iVar7;
+  }
+  uVar1 = wazaSequenceOwnerGetModel(PC_PTR(*(u32 *)PC_PTR((r5 + 4))));
+  GSmodelSetAnimType(uVar1,1);
+  wazaSequenceOwnerSetVisibility(PC_PTR(*(u32 *)PC_PTR((r5 + 4))),1);
+  GSscene_SetMode(2);
+  GSscene_SetCameraDirectionVector(savedDirection);
+  GSscene_SetCameraRotationVector(savedRotationPtr);
+  GSscene_SetCameraPositionVector(savedPositionPtr);
+  GSscene_SetCameraViewVector(savedViewPtr);
+  cameraSetFov((double)((volatile float *)savedView)[3]);
+  fadeSetDurationFirst(lbl_8047E6C0,2);
+  fadeCheck(1);
+  return (int)(signed char)iVar2;
+}
+#else
+int cbWazaForget(u32 r3,u32 r4,int r5)
+
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int menuPokemonStatusOpenWazaForget();
+#endif
+    extern int GSmodelSetAnimType();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int fn_801766A8();
+#endif
+    extern int wazaSequenceSysRelease();
+    extern int wazaSequenceSysInitWithoutParticles();
+    extern const f32 lbl_8047E6C0;
+
+  u32 uVar1;
+  u32 *savedRotationPtr;
+  u32 *savedPositionPtr;
+  u32 *savedViewPtr;
+  int iVar2;
+  u32 iVar7;
+  u32 savedView[4];
+  u32 savedPosition[3];
+  u32 savedRotation[3];
+  u32 savedDirection[3];
+  u32 view[3];
+  u32 position[3];
+  u32 rotation[3];
+  u32 direction[3];
+  u8 auStack_8c [4];
+  u8 auStack_90 [4];
+  u8 auStack_94 [4];
+  float local_98;
+  
+  fadeSetDurationFirst(lbl_8047E6C0,3);
+  fadeCheck(1);
+  GSscene_GetCameraDirectionVector((struct GSSceneVec3*)direction);
+  GSscene_GetCameraRotationVector((struct GSSceneVec3*)rotation);
+  GSscene_GetCameraPositionVector((struct GSSceneVec3*)position);
+  GSscene_GetCameraViewVector((struct GSSceneVec3*)view);
+  uVar1 = (u32)GScameraGetActiveCamera();
+  GScameraGetPerspective((struct GSRenderCamera*)uVar1,&local_98,(f32*)auStack_94,(f32*)auStack_90,(f32*)auStack_8c);
+  savedDirection[0] = direction[0];
+  savedDirection[1] = direction[1];
+  savedDirection[2] = direction[2];
+  savedRotationPtr = savedRotation;
+  savedPositionPtr = savedPosition;
+  savedViewPtr = savedView;
+  savedRotation[0] = rotation[0];
+  savedRotation[1] = rotation[1];
+  savedRotation[2] = rotation[2];
+  savedPosition[0] = position[0];
+  savedPosition[1] = position[1];
+  savedPosition[2] = position[2];
+  savedView[0] = view[0];
+  savedView[1] = view[1];
+  savedView[2] = view[2];
+  ((volatile float *)savedView)[3] = local_98;
+  wazaSequenceSysRelease();
+  iVar2 = menuPokemonStatusOpenWazaForget(r3,r4);
+  if (iVar2 >= 4) {
+    iVar2 = -1;
+  }
+  wazaSequenceSysInitWithoutParticles(2);
+  iVar7 = evolutionCreateModel(r3,1);
+  if (iVar7 != 0) {
+    *(int *)PC_PTR((r5 + 4)) = iVar7;
+  }
+  uVar1 = wazaSequenceOwnerGetModel((void*)*(u32 *)(r5 + 4));
+  GSmodelSetAnimType(uVar1,1);
+  wazaSequenceOwnerSetVisibility((void*)*(u32 *)(r5 + 4),1);
+  GSscene_SetMode(2);
+  GSscene_SetCameraDirectionVector((struct GSSceneVec3*)savedDirection);
+  GSscene_SetCameraRotationVector((struct GSSceneVec3*)savedRotationPtr);
+  GSscene_SetCameraPositionVector((struct GSSceneVec3*)savedPositionPtr);
+  GSscene_SetCameraViewVector((struct GSSceneVec3*)savedViewPtr);
+  cameraSetFov(((volatile float *)savedView)[3]);
+  fadeSet(lbl_8047E6C0,2);
+  fadeCheck(1);
+  return (int)(signed char)iVar2;
+}
+#endif
+
+/* Address: 0x802606D8 | Size: 0x238 | Ghidra import */
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+int doWazaSequence(u32 *r3,int r4,int r5,u32 r6)
+
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSgetFrameStep();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSinputButtonsChanged();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fn_800F7BC4();
+#endif
+    extern const f32 lbl_8047E6C0;
+  u32 *savedRotationPtr;
+  u32 *savedPositionPtr;
+  u32 *savedViewPtr;
+  u16 uVar1;
+  u32 uVar9;
+  int iVar8;
+  BOOL bVar2;
+  u8 cVar7;
+  int iVar3;
+  u32 uVar4;
+  u32 uVar5;
+  u32 uVar6;
+  u32 savedView[4];
+  u32 savedPosition[3];
+  u32 savedRotation[3];
+  u32 savedDirection[3];
+  u32 view[3];
+  u32 position[3];
+  u32 rotation[3];
+  u32 direction[3];
+  u8 auStack_9c [4];
+  u8 auStack_a0 [4];
+  u8 auStack_a4 [4];
+  float local_a8;
+  
+  iVar8 = 0;
+  bVar2 = 0;
+  if ((r4 < 0) || (r4 >= 5)) {
+    iVar8 = 0;
+  }
+  else {
+    uVar1 = lbl_8027A488[r4].id;
+    if (lbl_8027A488[r4].kind != 0) {
+      uVar9 = r3[1];
+    }
+    else {
+      uVar9 = *r3;
+    }
+    wazaSequenceSysStartWaza(PC_PTR(uVar9),uVar1,4);
+    savedRotationPtr = savedRotation;
+    savedPositionPtr = savedPosition;
+    savedViewPtr = savedView;
+    while (!bVar2) {
+      wazaSequenceSysUpdate();
+      if ((r6 & 10) != 0) {
+        uVar6 = 4;
+        if ((r6 & 2) != 0) {
+          uVar6 = 2;
+        }
+        fadeSetDurationFirst(lbl_8047E6C0,uVar6);
+        r6 = r6 & 0xfffffff5;
+      }
+      cVar7 = wazaSequenceSysIsPlayingWaza(PC_PTR(uVar9),uVar1,4);
+      if (cVar7 == '\0') break;
+      _threadSwitch();
+      GSscene_GetCameraDirectionVector(direction);
+      GSscene_GetCameraRotationVector(rotation);
+      GSscene_GetCameraPositionVector(position);
+      GSscene_GetCameraViewVector(view);
+      uVar6 = PC_PTR32_IMPLICIT(GScameraGetActiveCamera());
+      GScameraGetPerspective(PC_PTR(uVar6),&local_a8,auStack_a4,auStack_a0,auStack_9c);
+      savedDirection[0] = direction[0];
+      savedDirection[1] = direction[1];
+      savedDirection[2] = direction[2];
+      savedRotation[0] = rotation[0];
+      savedRotation[1] = rotation[1];
+      savedRotation[2] = rotation[2];
+      savedPosition[0] = position[0];
+      savedPosition[1] = position[1];
+      savedPosition[2] = position[2];
+      savedView[0] = view[0];
+      savedView[1] = view[1];
+      savedView[2] = view[2];
+      ((volatile float *)savedView)[3] = local_a8;
+      iVar3 = GSgetFrameStep();
+      iVar8 = iVar8 + iVar3;
+      if (r5 != 0) {
+        uVar4 = GSinputButtonsChanged(1);
+        uVar5 = fn_800F7BC4(1);
+        if ((uVar5 & uVar4 & 0x200) != 0) {
+          bVar2 = 1;
+        }
+      }
+    }
+    GSscene_SetMode(2);
+    GSscene_SetCameraDirectionVector(savedDirection);
+    GSscene_SetCameraRotationVector(savedRotationPtr);
+    GSscene_SetCameraPositionVector(savedPositionPtr);
+    GSscene_SetCameraViewVector(savedViewPtr);
+    cameraSetFov((double)((volatile float *)savedView)[3]);
+    if ((r6 & 0x14) != 0) {
+      uVar6 = 5;
+      if ((r6 & 4) != 0) {
+        uVar6 = 3;
+      }
+      fadeSetDurationFirst(lbl_8047E6C0,uVar6);
+      fadeCheck(1);
+    }
+    wazaSequenceSysStopWaza(PC_PTR(uVar9),uVar1,4);
+    if (bVar2 != 0) {
+      return iVar8;
+    }
+    iVar8 = -1;
+  }
+  return iVar8;
+}
+#else
+int doWazaSequence(u32 *r3,int r4,int r5,u32 r6)
+
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSgetFrameStep();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSinputButtonsChanged();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fn_800F7BC4();
+#endif
+    extern const f32 lbl_8047E6C0;
+  u32 *savedRotationPtr;
+  u32 *savedPositionPtr;
+  u32 *savedViewPtr;
+  u16 uVar1;
+  u32 uVar9;
+  int iVar8;
+  BOOL bVar2;
+  u8 cVar7;
+  int iVar3;
+  u32 uVar4;
+  u32 uVar5;
+  u32 uVar6;
+  u32 savedView[4];
+  u32 savedPosition[3];
+  u32 savedRotation[3];
+  u32 savedDirection[3];
+  u32 view[3];
+  u32 position[3];
+  u32 rotation[3];
+  u32 direction[3];
+  u8 auStack_9c [4];
+  u8 auStack_a0 [4];
+  u8 auStack_a4 [4];
+  float local_a8;
+  
+  iVar8 = 0;
+  bVar2 = 0;
+  if ((r4 < 0) || (r4 >= 5)) {
+    iVar8 = 0;
+  }
+  else {
+    uVar1 = lbl_8027A488[r4].id;
+    if (lbl_8027A488[r4].kind != 0) {
+      uVar9 = r3[1];
+    }
+    else {
+      uVar9 = *r3;
+    }
+    wazaSequenceSysStartWaza(PC_PTR(uVar9),uVar1,4);
+    savedRotationPtr = savedRotation;
+    savedPositionPtr = savedPosition;
+    savedViewPtr = savedView;
+    while (!bVar2) {
+      wazaSequenceSysUpdate();
+      if ((r6 & 10) != 0) {
+        uVar6 = 4;
+        if ((r6 & 2) != 0) {
+          uVar6 = 2;
+        }
+        fadeSetDurationFirst(lbl_8047E6C0,uVar6);
+        r6 = r6 & 0xfffffff5;
+      }
+      cVar7 = wazaSequenceSysIsPlayingWaza(PC_PTR(uVar9),uVar1,4);
+      if (cVar7 == '\0') break;
+      _threadSwitch();
+      GSscene_GetCameraDirectionVector((struct GSSceneVec3*)direction);
+      GSscene_GetCameraRotationVector((struct GSSceneVec3*)rotation);
+      GSscene_GetCameraPositionVector((struct GSSceneVec3*)position);
+      GSscene_GetCameraViewVector((struct GSSceneVec3*)view);
+      uVar6 = (u32)GScameraGetActiveCamera();
+      GScameraGetPerspective((struct GSRenderCamera*)uVar6,&local_a8,(f32*)auStack_a4,(f32*)auStack_a0,(f32*)auStack_9c);
+      savedDirection[0] = direction[0];
+      savedDirection[1] = direction[1];
+      savedDirection[2] = direction[2];
+      savedRotation[0] = rotation[0];
+      savedRotation[1] = rotation[1];
+      savedRotation[2] = rotation[2];
+      savedPosition[0] = position[0];
+      savedPosition[1] = position[1];
+      savedPosition[2] = position[2];
+      savedView[0] = view[0];
+      savedView[1] = view[1];
+      savedView[2] = view[2];
+      ((volatile float *)savedView)[3] = local_a8;
+      iVar3 = GSgetFrameStep();
+      iVar8 = iVar8 + iVar3;
+      if (r5 != 0) {
+        uVar4 = GSinputButtonsChanged(1);
+        uVar5 = fn_800F7BC4(1);
+        if ((uVar5 & uVar4 & 0x200) != 0) {
+          bVar2 = 1;
+        }
+      }
+    }
+    GSscene_SetMode(2);
+    GSscene_SetCameraDirectionVector((struct GSSceneVec3*)savedDirection);
+    GSscene_SetCameraRotationVector((struct GSSceneVec3*)savedRotationPtr);
+    GSscene_SetCameraPositionVector((struct GSSceneVec3*)savedPositionPtr);
+    GSscene_SetCameraViewVector((struct GSSceneVec3*)savedViewPtr);
+    cameraSetFov(((volatile float *)savedView)[3]);
+    if ((r6 & 0x14) != 0) {
+      uVar6 = 5;
+      if ((r6 & 4) != 0) {
+        uVar6 = 3;
+      }
+      fadeSetDurationFirst(lbl_8047E6C0,uVar6);
+      fadeCheck(1);
+    }
+    wazaSequenceSysStopWaza(PC_PTR(uVar9),uVar1,4);
+    if (bVar2 != 0) {
+      return iVar8;
+    }
+    iVar8 = -1;
+  }
+  return iVar8;
+}
+#endif
+
+#else
+/* EVOLUTION_80260EBC_ONLY (evolution_exact_80260EBC.c) links evolutionStart alone;
+ * EVOLUTION_80260910_ONLY (evolution_candidate_80260910.c) links evolutionDemo alone. */
+int cbWazaForget(u32 r3, u32 r4, int r5);
+int doWazaSequence(u32 *r3, int r4, int r5, u32 r6);
+#endif /* !EVOLUTION_80260EBC_ONLY */
+
+#if !defined(EVOLUTION_802600E4_ONLY)
+extern u32 std228_soundGetCurrentBackgroundMusic(void);
+extern u32 soundGetCurrentSubSound(void);
+extern u32 fn_801656D8(u32 id);
+extern void pokemonWazaCreate(u8* ptr, u32 slot, u32 waza);
+extern void soundStartSE(u32 id);
+extern s32 GSsndGetStatus(u32 id);
+extern void wazaSequenceSysUpdate(void);
+extern void _threadSwitch(void);
+extern void wazaSequenceOwnerSetVisibility(void* effect, u32 visible);
+extern void* pokemonBiosGetNicknamePtr(void* ptr);
+extern void msgctrlSetValue(u32 id, u32 value);
+extern s32 winMsgOpenField(u32 message, u32 wait, u8 pause);
+extern void winMsgCloseField(u32 wait);
+/* EVOLUTION_802600E4_ONLY (evolution_exact_802600E4.c) stops here: that unit
+ * links 0x802600E4-0x80260910 (evolutionWazaLearn, cbWazaForget,
+ * doWazaSequence) in retail order. */
+typedef struct EvoWork {
+    u32 model[2];
+    u32 seq;
+    u32 bgm;
+    u32 se;
+    u32 bgmVolume;
+    u32 seVolume;
+} EvoWork;
+
+static inline u8 evolutionSetModel(u32 pkm, int kind, u32 *out)
+{
+  u32 model;
+
+  model = evolutionCreateModel(pkm,kind);
+  if (model == 0) {
+    return 0;
+  }
+  *out = model;
+  return 1;
+}
+
+static inline BOOL evolutionSetModels(u32 *models, u32 before, u32 after)
+{
+  if (evolutionSetModel(before,0,&models[0]) && evolutionSetModel(after,1,&models[1])) {
+    return 1;
+  }
+  wazaSequenceSysRelease();
+  return 0;
+}
+
+static inline BOOL evolutionRun(EvoWork *work, u32 r5, u32 before, u32 after,
+                                u16 *wazaList, int wazaNum, u8 *slotList)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int pokemonBiosCopy();
+#endif
+    extern int scriptSoundStop();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int evolutionDemo();
+#endif
+    extern const f32 lbl_8047E6C0;
+  u32 bgmVolume;
+  u32 seVolume;
+  u32 bgm;
+  u32 se;
+  int i;
+  u16 waza;
+  int result;
+  u8 slot;
+  u8 pokemon[320];
+
+  bgm = std228_soundGetCurrentBackgroundMusic();
+  if (bgm != 0) {
+    bgmVolume = fn_801656D8(bgm);
+    std104_soundSetBackgroundMusic(1,0x32,0xff);
+  }
+  else {
+    bgmVolume = 0;
+  }
+  se = soundGetCurrentSubSound();
+  if (se != 0) {
+    seVolume = fn_801656D8(se);
+    scriptSoundStop(0x32);
+  }
+  else {
+    seVolume = 0;
+  }
+  work->bgm = bgm;
+  work->se = se;
+  work->bgmVolume = bgmVolume;
+  work->seVolume = seVolume;
+  result = evolutionDemo(work,r5,before,after);
+  if (work->bgm != 0) {
+    std104_soundSetBackgroundMusic(work->bgm,0x32,(u8)work->bgmVolume);
+  }
+  if (work->se != 0) {
+    std105_soundPlayEffect(work->se,0x32,(u8)work->seVolume);
+  }
+  if (result == 0) {
+    return FALSE;
+  }
+  pokemonBiosCopy(pokemon,PC_PTR(after));
+  for (i = 0; i < wazaNum; i++) {
+    waza = *wazaList;
+    if (evolutionWazaLearn(pokemon,waza,&slot,0,cbWazaForget,PC_PTR32(work)) != 0) {
+      /* Retail promotes slot and waza to int before the call. */
+      pokemonWazaCreate(pokemon,(s32)slot,(s32)waza);
+    }
+    else {
+      slot = 0xff;
+    }
+    wazaList++;
+    *slotList = slot;
+    slotList++;
+  }
+  fadeSetDurationFirst(lbl_8047E6C0,3);
+  fadeCheck(1);
+  return TRUE;
+}
+
+#if !defined(EVOLUTION_80260910_ONLY)
+/* Address: 0x80260EBC | Size: 0x414 | Ghidra import */
+u32
+evolutionStart(u32 r3,u32 r4,u32 r5,u16 *r6,
+            int r7,u8 *r8)
+
+{
+  BOOL ok;
+  EvoWork work;
+
+  wazaSequenceSysInitWithoutParticles(2);
+  work.model[0] = 0;
+  work.model[1] = 0;
+  if (!evolutionSetModels(work.model,r3,r4)) {
+    return 2;
+  }
+  ok = evolutionRun(&work,r5,r3,r4,r6,r7,r8);
+  wazaSequenceSysRelease();
+  if (ok) {
+    return 0;
+  }
+  return 1;
+}
+#endif /* !EVOLUTION_80260910_ONLY */
+
+#if !defined(EVOLUTION_80260EBC_ONLY)
+#if !defined(EVOLUTION_80260910_ONLY)
+/* Address: 0x8026132C | Size: 0x5C | Ghidra import */
+u32 evolutionOpen(u32 r3, u32 r4, u32 r5, u16 *r6, u32 r7, u8 *r8)
+{
+    extern u32 lbl_804787E0[];
+    extern void std098_mapWarpToMenuRoom(u32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorSetFadeScript(u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void _threadSwitch(void);
+#endif
+    u32 *base;
+
+    base = lbl_804787E0;
+    base[0] = r3;
+    base[1] = r4;
+    base[2] = r5;
+    base[3] = r7;
+    base[4] = PC_PTR32(r6);
+    base[5] = PC_PTR32(r8);
+    std098_mapWarpToMenuRoom(0x386);
+    floorSetFadeScript(0, 0);
+    _threadSwitch();
+    return base[6];
+}
+
+/* Address: 0x802612D0 | Size: 0x5C | Ghidra import */
+
+void evolution(void)
+{
+    extern u32 lbl_804787E0[];
+    extern u32 evolutionStart();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorBattleEndTerminateScripts();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorSetFadeScript();
+#endif
+    u32 *base = lbl_804787E0;
+    base[6] = evolutionStart(base[0], base[1], base[2], (u16*)PC_PTR(base[4]), base[3], (u8*)PC_PTR(base[5]));
+    floorBattleEndTerminateScripts();
+    floorSetFadeScript(0, 0);
+}
+#endif /* !EVOLUTION_80260910_ONLY */
+
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 pokemonCheckValid();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 pokemonDataBiosGetPtr(u16 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16 pokemonDataBiosGetVoice();
+#endif
+
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+static inline u32 evolutionGetPokemonData(u32 pkm)
+{
+  if (pkm == 0) {
+    return 0;
+  }
+  if (!pokemonCheckValid(PC_PTR(pkm))) {
+    return 0;
+  }
+  return PC_PTR32_IMPLICIT(pokemonDataBiosGetPtr(pokemonBiosGetPokemonDataId(pkm)));
+}
+#else
+static inline u32 evolutionGetPokemonData(u32 pkm)
+{
+  u32 data;
+
+  if (pkm == 0) {
+    return 0;
+  }
+  if (!pokemonCheckValid(PC_PTR(pkm))) {
+    return 0;
+  }
+  data = pokemonDataBiosGetPtr(pokemonBiosGetPokemonDataId(pkm));
+  return data;
+}
+#endif
+
+static inline u32 evolutionPlayVoice(u32 pkm)
+{
+  u32 data;
+  u32 voice;
+
+  data = evolutionGetPokemonData(pkm);
+  if (data == 0) {
+    voice = 0;
+  }
+  else {
+    voice = pokemonDataBiosGetVoice(PC_PTR(data));
+    soundStartSE(voice);
+  }
+  return voice;
+}
+
+static inline u32 evolutionGetSeqModel(EvoWork *work, int seq)
+{
+  if (lbl_8027A488[seq].kind != 0) {
+    return work->model[1];
+  }
+  return work->model[0];
+}
+
+typedef struct EvoSkipSeq {
+    u32 time;
+    int seq;
+} EvoSkipSeq;
+
+static inline void evolutionSeqStart(EvoWork *work, int seq)
+{
+  u16 id;
+
+  id = lbl_8027A488[seq].id;
+  wazaSequenceSysStartWaza(PC_PTR(evolutionGetSeqModel(work,seq)),id,4);
+  wazaSequenceSysUpdate();
+  work->seq = seq;
+}
+
+static inline BOOL evolutionSeqUpdate(EvoWork *work)
+{
+  u32 model;
+  u16 id;
+  u32 playing;
+  u32 seq;
+
+  seq = work->seq;
+  model = evolutionGetSeqModel(work,seq);
+  /* RULE-EXCEPTION(user-approved): codegen-only cast (int) on the u16 id load - see docs/RULE_EXCEPTIONS.md */
+  id = (int)lbl_8027A488[seq].id;
+  wazaSequenceSysUpdate();
+  playing = wazaSequenceSysIsPlayingWaza(PC_PTR(model),id,4);
+  return (-playing | playing) >> 31;
+}
+
+/* Address: 0x80260910 | Size: 0x5AC */
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+u32 evolutionDemo(EvoWork *work,int canSkip,u32 before,u32 after)
+{
+    extern EvoSkipSeq lbl_8027A4B0[];
+    extern const f32 lbl_8047E6B0;
+    extern const f32 lbl_8047E6B4;
+    extern const f32 lbl_8047E6C0;
+    extern const f32 lbl_8047E6C4;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSgetFrameStep();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSinputButtonsChanged();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fn_800F7BC4();
+#endif
+  u32 voice;
+  u32 nickname;
+  u16 dataId;
+  u32 trigger;
+  u32 held;
+  BOOL playing;
+  BOOL first;
+  int state;
+  u32 time;
+  BOOL skipped;
+  int wait;
+  int level;
+  f32 t;
+
+  wazaSequenceOwnerSetVisibility(PC_PTR(work->model[0]),1);
+  nickname = PC_PTR32_IMPLICIT(pokemonBiosGetNicknamePtr(before));
+  msgctrlSetValue(0x32,nickname);
+  winMsgOpenField(0x4401,1,0);
+  voice = evolutionPlayVoice(before);
+  evolutionSeqStart(work,0);
+  first = TRUE;
+  skipped = FALSE;
+  state = 0;
+  time = 0;
+  while (time < 0x23a) {
+    if (canSkip != 0 && time >= 0x78 && state >= 2) {
+      trigger = GSinputButtonsChanged(1);
+      held = fn_800F7BC4(1);
+      if ((held & trigger & 0x200) != 0) {
+        skipped = TRUE;
+        break;
+      }
+    }
+    playing = evolutionSeqUpdate(work);
+    if (!playing) {
+      break;
+    }
+    switch (state) {
+    case 0:
+      if (GSsndGetStatus(voice) != 2) {
+        std104_soundSetBackgroundMusic(0x3d3,0,0xff);
+        wait = 0;
+        state = 1;
+      }
+      break;
+    case 1:
+      if (GSsndGetStatus(0x3d3) != 2) {
+        wait += GSgetFrameStep();
+        if (wait >= 0x1e) {
+          std104_soundSetBackgroundMusic(0x3d4,0,0xff);
+          state = 2;
+        }
+      }
+      break;
+    }
+    if (first) {
+      fadeSetDurationFirst(lbl_8047E6C0,2);
+      first = FALSE;
+    }
+    _threadSwitch();
+    time += GSgetFrameStep();
+  }
+  fadeSetDurationFirst(lbl_8047E6C0,5);
+  while ((s8)fadeCheck(0) != 0) {
+    evolutionSeqUpdate(work);
+    _threadSwitch();
+  }
+  wazaSequenceSysStopWaza(PC_PTR(evolutionGetSeqModel(work,work->seq)),lbl_8027A488[work->seq].id,4);
+  t = lbl_8047E6B0;
+  while (t < lbl_8047E6B4) {
+    _threadSwitch();
+    t += (u32)GSgetFrameStep();
+  }
+  if (skipped) {
+    winMsgCloseField(1);
+    soundStop(0x3d4,0x32);
+    level = 0;
+    if (lbl_8027A4B0[0].time < time) {
+      level = 1;
+      if (lbl_8027A4B0[1].time < time) {
+        level = 2;
+      }
+    }
+    doWazaSequence((u32 *)work,lbl_8027A4B0[level].seq,0,8);
+    voice = evolutionPlayVoice(before);
+    while (GSsndGetStatus(voice) == 2) {
+      _threadSwitch();
+    }
+    msgctrlSetValue(0x32,PC_PTR32_IMPLICIT(pokemonBiosGetNicknamePtr(before)));
+    winMsgOpenField(0x43ff,1,0);
+    winMsgCloseField(1);
+    fadeSetDurationFirst(lbl_8047E6C0,3);
+    fadeCheck(1);
+    return 0;
+  }
+  wazaSequenceOwnerSetVisibility(PC_PTR(work->model[0]),0);
+  wazaSequenceOwnerSetVisibility(PC_PTR(work->model[1]),1);
+  doWazaSequence((u32 *)work,1,0,8);
+  winMsgCloseField(1);
+  soundStop(0x3d4,0x32);
+  voice = evolutionPlayVoice(after);
+  while (GSsndGetStatus(voice) == 2) {
+    _threadSwitch();
+  }
+  msgctrlSetValue(0x32,PC_PTR32_IMPLICIT(pokemonBiosGetNicknamePtr(before)));
+  dataId = pokemonBiosGetPokemonDataId(PC_PTR(after));
+  msgctrlSetValue(0x4e,dataId);
+  msgctrlSetValue(0x5d,0x3d2);
+  winMsgOpenField(0x4400,1,0);
+  winMsgCloseField(1);
+  t = lbl_8047E6B0;
+  while (t < lbl_8047E6C4) {
+    _threadSwitch();
+    t += (u32)GSgetFrameStep();
+  }
+  return 1;
+}
+#else
+u32 evolutionDemo(EvoWork *work,int canSkip,u32 before,u32 after)
+{
+    extern EvoSkipSeq lbl_8027A4B0[];
+    extern const f32 lbl_8047E6B0;
+    extern const f32 lbl_8047E6B4;
+    extern const f32 lbl_8047E6C0;
+    extern const f32 lbl_8047E6C4;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern int GSgetFrameStep();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSinputButtonsChanged();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fn_800F7BC4();
+#endif
+  u32 voice;
+  u32 nickname;
+  u16 dataId;
+  u32 trigger;
+  u32 held;
+  BOOL playing;
+  BOOL first;
+  u32 time;
+  BOOL skipped;
+  int state;
+  int wait;
+  int level;
+  f32 t;
+
+  wazaSequenceOwnerSetVisibility((void*)work->model[0],1);
+  nickname = (u32)pokemonBiosGetNicknamePtr((void*)before);
+  msgctrlSetValue(0x32,nickname);
+  winMsgOpenField(0x4401,1,0);
+  voice = evolutionPlayVoice(before);
+  evolutionSeqStart(work,0);
+  first = TRUE;
+  skipped = FALSE;
+  state = 0;
+  time = 0;
+  while (time < 0x23a) {
+    if (canSkip != 0 && time >= 0x78 && state >= 2) {
+      trigger = GSinputButtonsChanged(1);
+      held = fn_800F7BC4(1);
+      if ((held & trigger & 0x200) != 0) {
+        skipped = TRUE;
+        break;
+      }
+    }
+    playing = evolutionSeqUpdate(work);
+    if (!playing) {
+      break;
+    }
+    switch (state) {
+    case 0:
+      if (GSsndGetStatus(voice) != 2) {
+        std104_soundSetBackgroundMusic(0x3d3,0,0xff);
+        wait = 0;
+        state = 1;
+      }
+      break;
+    case 1:
+      if (GSsndGetStatus(0x3d3) != 2) {
+        wait += GSgetFrameStep();
+        if (wait >= 0x1e) {
+          std104_soundSetBackgroundMusic(0x3d4,0,0xff);
+          state = 2;
+        }
+      }
+      break;
+    }
+    if (first) {
+      fadeSetDurationFirst(lbl_8047E6C0,2);
+      first = FALSE;
+    }
+    _threadSwitch();
+    time += GSgetFrameStep();
+  }
+  fadeSetDurationFirst(lbl_8047E6C0,5);
+  while ((s8)fadeCheck(0) != 0) {
+    evolutionSeqUpdate(work);
+    _threadSwitch();
+  }
+  wazaSequenceSysStopWaza(PC_PTR(evolutionGetSeqModel(work,work->seq)),lbl_8027A488[work->seq].id,4);
+  t = lbl_8047E6B0;
+  while (t < lbl_8047E6B4) {
+    _threadSwitch();
+    t += (u32)GSgetFrameStep();
+  }
+  if (skipped) {
+    winMsgCloseField(1);
+    soundStop(0x3d4,0x32);
+    level = 0;
+    if (lbl_8027A4B0[0].time < time) {
+      level = 1;
+      if (lbl_8027A4B0[1].time < time) {
+        level = 2;
+      }
+    }
+    doWazaSequence((u32 *)work,lbl_8027A4B0[level].seq,0,8);
+    voice = evolutionPlayVoice(before);
+    while (GSsndGetStatus(voice) == 2) {
+      _threadSwitch();
+    }
+    msgctrlSetValue(0x32,(u32)pokemonBiosGetNicknamePtr((void*)before));
+    winMsgOpenField(0x43ff,1,0);
+    winMsgCloseField(1);
+    fadeSetDurationFirst(lbl_8047E6C0,3);
+    fadeCheck(1);
+    return 0;
+  }
+  wazaSequenceOwnerSetVisibility((void*)work->model[0],0);
+  wazaSequenceOwnerSetVisibility((void*)work->model[1],1);
+  doWazaSequence((u32 *)work,1,0,8);
+  winMsgCloseField(1);
+  soundStop(0x3d4,0x32);
+  voice = evolutionPlayVoice(after);
+  while (GSsndGetStatus(voice) == 2) {
+    _threadSwitch();
+  }
+  nickname = (u32)pokemonBiosGetNicknamePtr((void*)before);
+  msgctrlSetValue(0x32,nickname);
+  dataId = pokemonBiosGetPokemonDataId(after);
+  msgctrlSetValue(0x4e,dataId);
+  msgctrlSetValue(0x5d,0x3d2);
+  winMsgOpenField(0x4400,1,0);
+  winMsgCloseField(1);
+  t = lbl_8047E6B0;
+  while (t < lbl_8047E6C4) {
+    _threadSwitch();
+    t += (u32)GSgetFrameStep();
+  }
+  return 1;
+}
+#endif
+#endif /* !EVOLUTION_80260EBC_ONLY */
+#endif /* !EVOLUTION_802600E4_ONLY */

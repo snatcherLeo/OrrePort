@@ -1,0 +1,148 @@
+# P26 (sitting 037_20261023_2117): logged resyncs for the second pass (2026-10-30; match ledger, P26 rows).
+# Settings: P14's (resyncs/P14_024.txt) with --replay 3 (a fresh full-probe replay: replay_1 predated the menu / fade
+# probes) + ORRE_ROLL_SEEDS for its 11 battles (capture replay_2, checked: 864 events, 1,714 flag changes).
+#
+# *Added 2026-10-31:* items 1-12 below were made on pads built without the input probe (lessons.md). On the
+# input-probe replay replay_8 (same settings, --replay 8) the sitting plays TO ITS END (p2_P26af: all 96 room
+# entries, all 11 battles, end save's story flags identical) with only these four, applied in order, each with --log
+# of the run before it (written as comments so pad_resync.py on an old pad doesn't pick them up):
+#   A. @35521 npc 0 -104.5898 25.0740 -29.7971  # item 2 re-timed: room 0x2F entered at PC 34,571 here, +950
+#      (--log <p2_P26aa>/run.log). Item 1 (the gym teacher's Memo) is not needed: flag 1008 is set without it.
+#   B. @49200 npc 0 59.4444 0 226.3703  # room 0xF before room 0xCD's door: the PC's Wes stopped short at
+#      (54.28, 212.27); placed on the console's resting spot (console 49,023-49,053), where the stick only turns him
+#      (--log <p2_P26ab>/run.log). A first try on the console's mid-run point (56.2, 219.0) let the stick walk him
+#      10 units east (p2_P26ac).
+#   C. @170433 npc 0 -20.3400 0 -36.5400  # room 0x79's last visit, The Under's PC terminal: the PC's Wes ends at
+#      (-19.0, -37.4), the console's stops dead at (-20.34, -36.54) and its A opens the PC (room 0x391, the final
+#      save). A placement during the final push south (@170420, p2_P26ae) didn't help: the last small stick pushes
+#      slide the PC's Wes east and 0.85 further south (likely a collision difference at the terminal, not traced).
+#      Placed on the console's stop after the last real stick push (--log <p2_P26ad>/run.log).
+#   End save (savecmp): 70 bytes differ: bookkeeping 10 (2 in known fields, likely the play time), the party's
+#   friendship byte (record +0xB1) in slots 0, 2, 4, 5 (one to three steps; the walking-friendship class, as P04),
+#   PC box 56 (2 in known fields, +0x3442 / +0x3443; the rest outside any field the game reads).
+#
+# 1. (2026-10-30) Room 0x0B (Phenac's gym, M1_gym_1F) fifth visit: the first three talks match the console's to 2
+#    frames; then the console's Wes walks west and stops at (-89.8, -23.0) beside the teacher, and its A press opens the
+#    teacher's Strategy Memo scene (function 15: messages 0x4E74 ... 0x4E77, flags 1165 and 1008); the PC's walks ~4
+#    units further, turns, and the A press reads the notice board (message 0x3BBD), so flag 1008 is never set and the
+#    P★DA later hides the Memo (cursor 1 opens the mail). Wes placed on the console's line just before the stop
+#    (replay_3's pos.csv at console frame 14,437; PC = console + 439, from the third talk's window closing, console
+#    14,367 / PC 14,806). Apply with --log <p2_P26f>/run.log.
+@14876 npc 0 -88.5924 8.0025 -23.1429  # console gym visit 5, 7 frames before Wes stops by the teacher
+#    With it (p2_P26g): the teacher's scene plays (0x4E74 at PC 14,888), flag 1008 is set, the P★DA visit matches, and
+#    the flags are the same through room entry 20 (was 15).
+#
+# 2. (the same night) Room 0x2F (The Under's square), coming down from the lift: at ~+780 after entry the console's
+#    Wes walks straight north along x -15.8 and up the side ramp toward room 0x35; the PC's is pushed west at the
+#    ramp's foot (likely the wanderer, as port-gaps 41) and ends stuck at (-76, -118). Wes placed on the console's line
+#    at +815 (replay_3's pos.csv; entries at console 34,265 / PC 34,593 in p2_P26g, same offset from entry). Apply with
+#    --log <p2_P26g>/run.log on p2_P26g's pad (item 1).
+#    *Revised the same night* (p2_P26h): placed at +815 the PC's Wes stood still ~30 frames (likely the same NPC in
+#    the way) and his walk ran late and turned south too soon; moved to the upper level at +950 instead.
+@35543 npc 0 -104.5898 25.0740 -29.7971  # console 0x2F, +950 after entry, on the upper level heading west
+#    With it (p2_P26i, on p2_P26g's pad): entries 1-30 and battle 1 (107) as on the console, flags the same.
+#
+# 3. (the same night) Room 0x15, after its first talk (both sides; windows at console 46,614 / PC 46,779, 172 / 170
+#    frames): the console's Wes walks round to (-9.8, -22.75) and opens a second talk at 46,866 (then battle 2, 444);
+#    the PC's ends ~18 units off at (-13.9, -40.7) and no talk opens. Wes placed on the console's walk (replay_3's
+#    pos.csv at console 46,836; PC = console + 165, from the first talk's window). Apply with --log <p2_P26i>/run.log on
+#    p2_P26i's pad (items 1-2).
+#    *Revised the same night* (p2_P26j / p2_P26k, with Dolphin's npc capture replay_5, PLAYREC_NPC=0x15,-1,1200,1):
+#    every other person stands where the console's does; placed at 47,001 the PC's Wes ran ~10 frames ahead along the
+#    console's path and had already turned back when the A came (47,027), so no talk (message 0x4380 on the console).
+#    Placed instead at console 46,860 (PC 47,025), 2 frames before that A.
+#    *Second revision* (p2_P26l: at 47,025 Wes stopped 0.5 units off and still no talk): placed on the A's own frame
+#    at the console's position there; with it (p2_P26m) Secc's talk opens at 47,029 (console + 165 = 47,031) and the
+#    room's next talks (Marcia's Plusle question with its yes / no menu) match the console's to 2 frames.
+@47027 npc 0 -10.1197 0 -22.0225  # console 0x15 (46,862), the frame the A goes down for Secc's talk
+#
+# 4. (the same night) Leaving room 0x15 after Marcia's talk: the console's Wes walks north through (-2.5, -21.5) to the
+#    exit (room 0x14 at console 48,249); the PC's is stopped at (3.2, -33.3) from PC 48,320 (something in the way) and
+#    never leaves. Wes placed on the console's walk (replay_3's pos.csv at console 48,142; PC = console + 165). Apply
+#    with --log <p2_P26m>/run.log on p2_P26m's pad (items 1-3).
+@48307 npc 0 -2.4603 0 -21.5173  # console 0x15, walking north to the exit
+#    With it (p2_P26n): room entries 1-41 and battles 1-2 (107, 444) as on the console; battle 3 (105, Cipher Peon
+#    Nore: a fixed team, Beautifly / Forretress / Ninjask / Masquerain) parts at message 4: the console's Mewtwo's
+#    Psychic knocks out Ninjask (132 -> 0 HP) with no effectiveness line, the PC's hits a Pokémon at 86 HP and shows
+#    "It's super effective!". (*Corrected the same night:* the PC's "[battle] hp A B -> C" line's first number is not the
+#    species, so "other Pokémon" was a misreading.) Next: log both sides' leads and Wes's target choice in that turn.
+#    *Corrected again the same night:* that comparison took the wrong PC battle (the scratch aligner matched battle 1's
+#    send-out lines); the "[battle] hp" number IS the species (333 Vibrava, 231 Phanpy: battle 107's). Battle 105 itself
+#    starts the same on both sides (the same leads and HP).
+#
+# 5. (the same night) A hand edit of p2_P26n's pad (lines 11527-11528): battle 105's first command menu (menu 75) opens
+#    at battle +1,286 on both sides; the console's A selects Fight 2 frames later, the PC's A came at pad frame 62,314,
+#    before the menu was ready (counted as held), so the menu stayed open 174 frames, the later presses landed one menu
+#    off and the PC opened the party menu (room 0x38F where the console goes to 0x85). The A moved 7 frames later:
+#    "+176:A", "+15:-" become "+183:A", "+8:-". With it (p2_P26o): battles 1-3 as on the console, to room entry 43.
+#
+# 6. (the same night) Room 0x85 after the P★DA visit (entry 41; P★DA entered at console 67,493 / PC 67,656): the talk
+#    at +1,307 matches, then at ~+1,500 the console's Wes heads east to (80.6, -97.1) and on to room 0x84 (+1,646); the
+#    PC's turns south at (59.7, -97) (something in the way) and never reaches it. Wes placed on the console's walk at
+#    +1,530 (replay_3's pos.csv at console 69,023; PC = console + 163). Apply with --log <p2_P26o>/run.log on p2_P26o's
+#    pad (items 1-5).
+@69186 npc 0 80.6154 0 -97.1215  # console 0x85, +1,530 after the P★DA, heading east to room 0x84
+#    With it (p2_P26p): room entries 1-52 and battles 1-5 (107, 444, 105, 475, 480) as on the console.
+#
+# 7. (the same night) A hand edit of p2_P26p's pad (line 16584): after battle 480 in room 0xC9 the console's room id
+#    reads -1 until a "re-entry" into 0xC9 at console 94,074 (the post-battle message 0x5BDF and the next trainer's
+#    talk 0x5BDD are the same on both sides); the PC's room never changes, so the pad's "@0xc9+0:!seed 0x545FBA95"
+#    anchor waited forever. Mapped through the post-battle message (PC = console + 182) the console's anchor falls at
+#    the PC's step 16,582 (94,258), so the anchor became a plain step there: "@0xc9+0:!seed 0x545FBA95" becomes
+#    "+0:!seed 0x545FBA95". (A replay-tool gap, not the game's: the console's room id after this battle.)
+#    With it (p2_P26q): Wes's walk after battle 480 matches the console's to ~1 unit up to PC 94,140; then the console's
+#    next trainer spots Wes and talks (0x5BDD at console 94,012 = PC 94,194) and battle 479 follows; on the PC Wes stops
+#    at (-40.0, -77.3) and no talk opens. Open: likely that trainer's facing or position (a people capture of room 0xC9
+#    after battle 480 next, as item 3's).
+#
+# 8. (2026-10-31, just after midnight) That trainer (people slot 4, a walker) on the console walks north from
+#    (-43.9, -112.1) to (-40.6, -83.6) and stops beside Wes, who turns to it and talks; on the PC it stands at
+#    (-31.6, -92.0) and never walks there (Dolphin's npc capture replay_6, PLAYREC_NPC=0xC9,-1,9000,3; the PC's
+#    people log p2_P26s, ORRE_NPC_LOG=*). Its walk made to follow the console's: npc_resync_spec.py replay_6/npc.csv
+#    0xC9:3 --shift -3 --absolute 85524 --slots 4 --from 8300 --to 8700 (Wes's x and z match at PC = console + 182;
+#    the visit starts at console 85,339 / PC 85,524). Apply with --log <p2_P26q>/run.log on p2_P26q's pad (items 1-7).
+@94016 npc 4 -43.91225 0 -112.1021 -40.57122 0 -83.56215 0 0.1165347 4 2  # capture frame 8495, walks
+@94116 npc 4 -40.57122 0 -83.56215 -40.57122 0 -83.56215 4.604172 0.1165347 4 0  # capture frame 8595, stops
+#    With it (p2_P26t): battles 1-8 (to 476) as on the console, to room entry 61.
+#
+# 9. (the same night) A hand edit of p2_P26t's pad (line 18714), the same case as item 7 after a later battle in room
+#    0xC9: the console's re-entry into 0xC9 (console 118,216) falls at the PC's step 18,712 (118,385), so
+#    "@0xc9+0:!seed 0x2F6B710E" becomes "+0:!seed 0x2F6B710E".
+#    *Revised the same night:* the console's room id after battle 476 also reads 0x38F (snatcherLeo opens the pause menu and
+#    the party screen, matched on the PC to the frame) before that re-entry; with item 9 (p2_P26u) the PC walks the
+#    console's route afterwards but stops ~10 units short at (-76.9, 59.5), so the next trainer's talk (0x5C7D,
+#    console 117,946) and battle 529 never come.
+#
+# 10. (the same night) Wes placed on the console's walk there (replay_3's pos.csv at console 117,904; PC = console +
+#    176, from the post-battle message 0x5BE4 at console 117,191 / PC 117,367). Apply with --log <p2_P26u>/run.log on
+#    p2_P26u's pad (items 1-9).
+@118080 npc 0 -78.6714 0 66.8851  # console 0xC9, after the party menu, walking to battle 529's trainer
+#    With it (p2_P26v): the PC's Wes walks 5 units past the console's stop (-81.3, 69.5): the console's is stopped by a
+#    walker (people slot 12, battle 529's trainer, likely) standing at (-83.9, 77.1); on the PC that walker and two
+#    others (slots 10, 11) are elsewhere (Dolphin's npc capture replay_7, PLAYREC_NPC=0xC9,-1,9700,6; PC p2_P26w).
+#
+# 11. (2026-10-31) Those three walkers' walks made to follow the console's: npc_resync_spec.py replay_7/npc.csv 0xC9:6
+#    --shift -1 --absolute 108613 --slots 10,11,12 --from 9100 --to 9520 (visit 6 starts at console 108,436 / PC
+#    108,613; PC = console + 176 there). Apply with --log <p2_P26v>/run.log on p2_P26v's pad (items 1-10).
+@117740 npc 12 -62.89112 0 79.68495 -62.59458 0 79.68495 3.367935 0.01531224 4 0  # capture frame 9128, stops
+@117752 npc 10 -71.43925 0 53.38436 -86.66607 0 64.85255 0 -0.9252775 4 2  # capture frame 9140, walks
+@117774 npc 11 -85.89502 0 72.84776 -83.61884 0 58.51303 0 2.98412 4 2  # capture frame 9162, walks
+@117820 npc 10 -86.66607 0 64.85255 -86.66607 0 64.85255 3.273727 -0.9252775 4 0  # capture frame 9208, stops
+@117826 npc 11 -83.61884 0 58.51303 -83.61884 0 58.51303 6.894501 2.98412 4 0  # capture frame 9214, stops
+@117946 npc 12 -63.46743 0 79.61412 -83.92448 0 77.09982 0 -1.693089 4 2  # capture frame 9334, walks
+@118018 npc 12 -83.92448 0 77.09982 -83.92448 0 77.09982 5.385162 -1.693089 4 0  # capture frame 9406, stops
+@118020 npc 10 -86.09749 0 64.9703 -57.29019 0 70.93623 0 1.366585 4 2  # capture frame 9408, walks
+@118124 npc 10 -62.89112 0 70.94749 -57.29019 0 70.93623 5.809555 1.366585 4 0  # capture frame 9512, stops
+#    With it (p2_P26x): battles 1-9 (to 529) as on the console.
+#
+# 12. (the same night) After battle 529 (room id -1 on the console while Wes walks in room 0xC9), the console's Wes
+#    walks south to the door of room 0x85 (entered at console 131,513); the PC's takes the same shape of route ~250
+#    frames later (it waited elsewhere first) and stops at (-56.5, -6.1). Wes placed on the console's route
+#    (replay_3's pos.csv at console 131,340; PC = console + 254, from the pad's 0x85 anchor, console 131,513 / PC
+#    step 19,316 at 131,767). Apply with --log <p2_P26x>/run.log on p2_P26x's pad (items 1-11).
+#    *Revised the same night* (p2_P26y): placed at console 131,340 the PC's Wes was stopped again at z -51.8 (something
+#    in the way at about z -55), so placed further on, past it, at console 131,430.
+@131684 npc 0 -44.1321 0 -89.4266  # console 0xC9 after battle 529, walking south to room 0x85's door
+#    Open (p2_P26z): from there the PC's Wes turns west at z -104 and stops at (-60.5, -104.2), the console's goes on
+#    south to z -127 and up toward the door (y 14.6 at console 131,520). Likely another person in the way or the
+#    camera-relative stick after the jump; a people capture of visit 7 (from console 118,216) is next.

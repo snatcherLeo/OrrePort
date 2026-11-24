@@ -1,0 +1,51 @@
+// The launchers' resources (4.1, 2026-11-21): the manifest (orre_launcher.manifest says why) and the version details
+// Windows shows in the file's Properties. Compiled twice by tools/local/port/build_launcher.py, with -DORRE_STUDIO for
+// "OrrePort Studio.exe". Windows only.
+//
+// The icon (2026-11-21; snatcherLeo: "should these 2 app icons have... icons from the app? We could use the dark mode ones"):
+// Explorer, the Start menu and shortcuts take an exe's icon from its resources (the first ICON resource, lowest id),
+// so the SVG pictures the game and Studio draw at run time can't reach them; the launchers need a real .ico compiled in.
+// Both generated from port/ui/icons by tools/local/port/make_launcher_icon.py (the small glyph below 48 px, the full
+// icon from 48 px up, as the game's window icon). One colour per program (snatcherLeo, 2026-11-21: "OrrePort Studio should use
+// the sage O as in-app, but the OrrePort hub needs to use the dark red one that we have"): OrrePort.exe the rust O
+// (orreport-rust.ico), the art the game and hub window shows; "OrrePort Studio.exe" the sage O (orreport-sage.ico), as
+// Studio's dark-mode window (studio/win32/theme.cpp recolours the rust O to sage; identical to the sage files).
+// Linux and macOS have no .rc: they need PNGs with a .desktop file, and an .icns in the .app bundle (the script's notes).
+#include <winver.h>
+
+1 24 "orre_launcher.manifest"
+
+#ifdef ORRE_STUDIO
+#define ORRE_DESC "OrrePort Studio launcher: starts app\\orrestudio.exe"
+#define ORRE_FILE "OrrePort Studio.exe"
+#define ORRE_ICON "orreport-sage.ico"
+#else
+#define ORRE_DESC "OrrePort launcher: starts app\\orrecolo.exe"
+#define ORRE_FILE "OrrePort.exe"
+#define ORRE_ICON "orreport-rust.ico"
+#endif
+
+1 ICON ORRE_ICON
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_APP
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "FileDescription", ORRE_DESC
+      VALUE "ProductName", "OrrePort"
+      VALUE "FileVersion", "1.0"
+      VALUE "ProductVersion", "1.0"
+      VALUE "OriginalFilename", ORRE_FILE
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1200
+  END
+END

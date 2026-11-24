@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width="88" height="88">
+<!-- The outline round a disc on the disc art page's shelf (grey under the mouse, orange on the worn one). Drawn as a
+     picture so its edges are smoothed (snatcherLeo, 2026-11-13: "the outlines look kinda... pixel-y"): RmlUi draws a round
+     border as plain triangles with no smoothing, on every OS, so a thin circle showed its steps. A 3-unit ring (radius
+     42 to 39, the 84 dp disc's own edge) in an 88-unit square, the 2 units round it left clear so the outer edge's
+     smoothing isn't cut off by the picture's edge. Each circle is 16 quadratic pieces (off a true circle by under
+     0.02 %). White; hub.rcss tints it (image-color). Drawn by Main. -->
+<path fill="#FFFFFF" fill-rule="evenodd" d="M86.000 44.000 Q86.000 52.354 82.803 60.073 Q79.606 67.791 73.698 73.698 Q67.791 79.606 60.073 82.803 Q52.354 86.000 44.000 86.000 Q35.646 86.000 27.927 82.803 Q20.209 79.606 14.302 73.698 Q8.394 67.791 5.197 60.073 Q2.000 52.354 2.000 44.000 Q2.000 35.646 5.197 27.927 Q8.394 20.209 14.302 14.302 Q20.209 8.394 27.927 5.197 Q35.646 2.000 44.000 2.000 Q52.354 2.000 60.073 5.197 Q67.791 8.394 73.698 14.302 Q79.606 20.209 82.803 27.927 Q86.000 35.646 86.000 44.000 Z M83.000 44.000 Q83.000 51.758 80.031 58.925 Q77.063 66.092 71.577 71.577 Q66.092 77.063 58.925 80.031 Q51.758 83.000 44.000 83.000 Q36.242 83.000 29.075 80.031 Q21.908 77.063 16.423 71.577 Q10.937 66.092 7.969 58.925 Q5.000 51.758 5.000 44.000 Q5.000 36.242 7.969 29.075 Q10.937 21.908 16.423 16.423 Q21.908 10.937 29.075 7.969 Q36.242 5.000 44.000 5.000 Q51.758 5.000 58.925 7.969 Q66.092 10.937 71.577 16.423 Q77.063 21.908 80.031 29.075 Q83.000 36.242 83.000 44.000 Z"/>
+</svg>

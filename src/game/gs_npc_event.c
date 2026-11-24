@@ -1,0 +1,3098 @@
+/**
+ * @file gs_npc_event.c
+ * @brief GSnpcEvent -- NPC event callbacks and overworld sprite rendering.
+ *
+ * Address range: 0x80030170 - 0x80033278 (~30 functions)
+ *
+ * This module provides the NPC event callback functions that are invoked
+ * when specific NPC interactions trigger game events. It also handles
+ * NPC overworld model/sprite rendering during event sequences.
+ *
+ * The functions in this module are registered as callbacks in the event
+ * system and are called when the player interacts with specific NPCs
+ * or triggers location-based events.
+ *
+ * Key functions:
+ *   fn_80030170  GSnpcEvt_PopEventQueue      -- 0x38 bytes, dequeue next event
+ *   fn_800301A8  GSnpcEvt_NopA               -- 4 bytes, blr stub
+ *   fn_800301AC  GSnpcEvt_NopB               -- 4 bytes, blr stub
+ *   fn_800301B0  GSnpcEvt_ProcessTrainerSprite -- 0x120 bytes, trainer sprite display
+ *   fn_800302D0  GSnpcEvt_ProcessOverworldNPC -- 0xA0 bytes, overworld NPC event
+ *   fn_80030370  GSnpcEvt_SetModelA          -- 0xC bytes, set model ID 0x43E3
+ *   fn_8003037C  GSnpcEvt_SetModelB          -- 0xC bytes, set model ID 0x43E2
+ *   fn_80030388  GSnpcEvt_ProcessMirorB      -- 0xA0 bytes, Miror B. encounter event
+ *   fn_80030428  GSnpcEvt_ReturnZero         -- 4 bytes, li r3,0 + blr
+ *   fn_8003042C  GSnpcEvt_ShadowEncounterCB  -- 0x148 bytes, Shadow Pokemon event CB
+ *   fn_80030574  GSnpcEvt_ColosseumePreBattle -- 0x234 bytes, pre-battle setup
+ *   fn_800307A8  GSnpcEvt_StoryBattleCB      -- 0x12C bytes, story battle callback
+ *   fn_800308D4  GSnpcEvt_QuestCompleteCB    -- 0x170 bytes, quest completion handler
+ *   fn_80030A44  GSnpcEvt_ItemPickupCB       -- 0x1D0 bytes, overworld item pickup
+ *   fn_80030C14  GSnpcEvt_HiddenItemCB       -- 0x120 bytes, hidden item event
+ *   fn_80030D34  GSnpcEvt_TreasureChestCB    -- 0x1D8 bytes, treasure chest interaction
+ *   fn_80030F0C  GSnpcEvt_FinalChunk         -- remaining functions to 0x80033278
+ *
+ * fn_800301B0 (GSnpcEvt_ProcessTrainerSprite):
+ *   Handles the display of a trainer sprite during battle transitions.
+ *   Checks the NPC event type at offset +0x06 (lha) and dispatches:
+ *     0x10CE: Load trainer model from lbl_803A3230
+ *     0x10CF: Load trainer model from lbl_803A31E8
+ *   Then sets up the renderer:
+ *     - fn_800D88DC: Set render layer 3
+ *     - fn_800D888C: Set render layer 4
+ *     - fn_800D6A00: Set render mode 7
+ *     - fn_800D7820: Load model resource
+ *     - fn_800D85D4: Bind model to slot 0
+ *     - fn_800D67BC: Set blend mode 2
+ *     - gfxVtxPos2s16: Set position (x, y)
+ *     - gfxVtxColor4u8: Set color RGBA (255, 255, 255, 255)
+ *     - fn_800D59B8: Set scale (1.0, 1.0)
+ *     - fn_800D6728: Commit render state
+ *
+ * fn_800302D0 (GSnpcEvt_ProcessOverworldNPC):
+ *   Handles overworld NPC events based on the NPC's event type ID:
+ *     0x0FBC: Generic NPC dialog event
+ *     0x0FBD: Special NPC battle trigger
+ *   For battle triggers, looks up the trainer data from lbl_803A2688,
+ *   sets the battle parameter via msgctrlSetValue (param 0x4D), then
+ *   initiates a trainer model render via GSmsgPrintColor.
+ *
+ * fn_80030388 (GSnpcEvt_ProcessMirorB):
+ *   Same structure as fn_800302D0 but for Miror B. encounters:
+ *     0x10CA: Miror B. pre-battle
+ *     0x10CB: Miror B. post-battle
+ *   Uses model ID 0x4412 for the standard render and 0x4413 for
+ *   the alt render.
+ *
+ * SDA globals:
+ *   lbl_8047B9D4: Model scale factor (float, sdata2)
+ *   lbl_8047B9F0: Model Y offset (float, sdata2)
+ *   lbl_8047B834: Float constant for render setup (sdata2)
+ *   lbl_8047B850: Float constant for render setup (sdata2)
+ *
+ * BSS globals:
+ *   lbl_803A3230: Trainer model data A (loaded from FSYS)
+ *   lbl_803A31E8: Trainer model data B (loaded from FSYS)
+ *   lbl_803A2688: Party/trainer working data
+ *   lbl_80314F98: Default model resource pointer
+ */
+
+#include "dolphin/types.h"
+#include "game/constants/pokemon_status.h"
+
+/* =========================================================================
+ * External declarations
+ * ========================================================================= */
+
+/* Model/Rendering system */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  gfxSetFlags(s32 layer);              /* Set render layer */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  gfxClearFlags(s32 layer);              /* Set secondary layer */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  gfxSetPrimitive(s32 mode);               /* Set render mode */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  gfxSetVtxDesc(void* resource);          /* Load model resource */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  gfxLoadTexture(s32 slot, void* model);  /* Bind model to slot */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  gfxBegin(s32 blendMode);           /* Set blend mode */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  gfxVtxPos2s16(s32 x, s32 y);           /* Set position */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  gfxVtxColor4u8(s32 slot, s32 r, s32 g, s32 b, s32 a); /* Set color */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  gfxVtxTexCoord(s32 slot, f32 scaleX, f32 scaleY);     /* Set scale */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  gfxEnd(void);                    /* Commit render state */
+#endif
+
+/* NPC/interaction */
+extern void* menuModelRender(void* data);              /* Get model from data */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32   heroGetStatus(void* partyData, s32 slot, s32 p3);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  msgctrlSetValue(s32 paramId, s32 value);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  GSmsgPrintColor(s32, s32, u32, u16);
+#endif
+
+/* Event queue */
+/* The event queue is a simple array-based queue where fn_80030170 pops
+ * the next pending event. Events are enqueued by the scene system when
+ * NPC interactions or location triggers fire. */
+
+/* =========================================================================
+ * Function: GSnpcEvt_PopEventQueue
+ * Address:  0x80030170
+ * Size:     0x38
+ *
+ * Dequeues the next event from the event queue. Returns NULL if the
+ * queue is empty (field at +0x34 >= 0xD indicates end of queue).
+ * The queue is stored as an array of pointers at the start of the
+ * context structure, with a count/index at offset +0x34.
+ * ========================================================================= */
+
+/* =========================================================================
+ * Function: GSnpcEvt_ProcessTrainerSprite
+ * Address:  0x800301B0
+ * Size:     0x120
+ *
+ * Renders a trainer sprite/model during battle transition sequences.
+ * Dispatches on the event type ID from the NPC data structure.
+ * ========================================================================= */
+
+/* =========================================================================
+ * Function: GSnpcEvt_ProcessOverworldNPC
+ * Address:  0x800302D0
+ * Size:     0xA0
+ *
+ * Processes an overworld NPC event. Checks the NPC's event flags and
+ * model type to determine the appropriate rendering and behavior.
+ * ========================================================================= */
+
+/* =========================================================================
+ * Stubs for remaining GSnpcEvt functions (0x80031188-0x800330B8)
+ * ========================================================================= */
+
+#if !defined(GS_NPC_EVENT_ONLY_800324A0) && !defined(GS_NPC_EVENT_ONLY_800301B0) && !defined(GS_NPC_EVENT_ONLY_80032ED8) && !defined(GS_NPC_EVENT_ONLY_80031B4C) && !defined(GS_NPC_EVENT_ONLY_800327FC)
+/* 0x80031188 | 0xA0 */
+extern u8 lbl_803A2688[];
+#if 0
+asm void fn_80031188(void) {
+#include "src/game/gs_npc_event_fn_80031188.inc"
+}
+#else
+void fn_80031188(u8* r3, u8* r4) {
+    u32 flags = *(u32*)(r4 + 0x64);
+    s32 evtype = *(s16*)(r4 + 0x6);
+    u32 combined = (flags & 0xa1400000) | *(u8*)(r3 + 0x8b);
+    switch (evtype) {
+    case 0xF6B:
+        GSmsgPrintColor(0, 0, combined, 0x4412);
+        break;
+    case 0xF6A:
+        {
+            s32 val = heroGetStatus((void*)lbl_803A2688, 1, 0);
+            msgctrlSetValue(0x4D, val);
+            GSmsgPrintColor(0, 0, combined, 0x4413);
+        }
+        break;
+    }
+}
+#endif
+
+/* 0x80031228 | 0x1DC */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void pokemonBiosGetFuseiFlag(void);
+#endif
+extern void menuFaceDrawPokemon(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void winSpriteSetDisp(void*, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void pokemonCheckValid(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuCBRule_CheckPokemonEventFlag(void);
+#endif
+extern u8 lbl_80266E90[];
+#if 0
+asm void fn_80031228(void) {
+#include "src/game/gs_npc_event_fn_80031228.inc"
+}
+#else
+void fn_80031228(u8* arg0, u8* arg1) {
+    u8* table;
+    s32 kind;
+    s32 arg;
+    s32 i;
+    void* obj;
+
+    table = lbl_80266E90;
+    kind = 0;
+    arg = 0;
+    for (i = 0; i < 12; i++) {
+        if (*(s16*)(arg1 + 0x6) == *(u16*)(table + 0x2)) {
+            kind = *(u8*)(table + 0x0);
+            arg = *(u8*)(table + 0x1);
+        }
+        table += 0x12;
+    }
+
+    obj = 0;
+    if (kind == 1) {
+        obj = (void*)PC_PTR(heroGetStatus(0, 3, (u16)arg));
+    } else if (kind == 2) {
+        obj = (void*)PC_PTR(heroGetStatus(lbl_803A2688, 3, (u16)arg));
+    }
+
+    if (((u8 (*)(void*))pokemonBiosGetFuseiFlag)(obj) != 0) {
+        ((void (*)(u8*, u8*, void*))menuFaceDrawPokemon)(arg0, arg1, obj);
+        winSpriteSetDisp(arg1, 1);
+    } else if (((u8 (*)(void*))pokemonCheckValid)(obj) != 0 && ((u8 (*)(void))menuCBRule_CheckPokemonEventFlag)() == 1) {
+        ((void (*)(u8*, u8*, void*))menuFaceDrawPokemon)(arg0, arg1, obj);
+        winSpriteSetDisp(arg1, 1);
+    } else {
+        winSpriteSetDisp(arg1, 0);
+    }
+}
+#endif
+
+/* 0x80031404 | 0x244 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuSubGetPokemonSexForDisp(void);
+#endif
+extern void pokemonBiosGetTamagoFlag(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSmsgGetGSchar(void);
+#endif
+#if 0
+asm void fn_80031404(void) {
+#include "src/game/gs_npc_event_fn_80031404.inc"
+}
+#else
+void fn_80031404(u8* arg0, u8* arg1) {
+    u8* table;
+    u32 combined;
+    s32 kind;
+    s32 arg;
+    s32 i;
+    void* obj;
+    s32 msg;
+
+    combined = (*(u32*)(arg1 + 0x64) & ~0xFF) | *(u8*)(arg0 + 0x8B);
+    table = lbl_80266E90;
+    kind = 0;
+    arg = 0;
+    for (i = 0; i < 12; i++) {
+        if (*(s16*)(arg1 + 0x6) == *(u16*)(table + 0xC)) {
+            kind = *(u8*)(table + 0x0);
+            arg = *(u8*)(table + 0x1);
+        }
+        table += 0x12;
+    }
+
+    obj = 0;
+    switch (kind) {
+    case 1:
+        obj = (void*)PC_PTR(heroGetStatus(0, 3, (u16)arg));
+        break;
+    case 2:
+        obj = (void*)PC_PTR(heroGetStatus(lbl_803A2688, 3, (u16)arg));
+        break;
+    }
+
+    if (((u8 (*)(void*))pokemonCheckValid)(obj) != 0 &&
+        ((u8 (*)(void))menuCBRule_CheckPokemonEventFlag)() == 1) {
+        msg = ((u8 (*)(void*))menuSubGetPokemonSexForDisp)(obj);
+        switch (msg) {
+        case 0:
+            msg = 0xD67;
+            break;
+        case 1:
+            msg = 0xD68;
+            break;
+        default:
+            msg = 0;
+            break;
+        }
+        if (((u8 (*)(void*))pokemonBiosGetTamagoFlag)(obj) == 1) {
+            msg = 0;
+        }
+        if (msg != 0) {
+            msgctrlSetValue(0x37, ((s32 (*)(s32))GSmsgGetGSchar)(msg));
+            GSmsgPrintColor(2, 0, combined, 0xCF);
+            winSpriteSetDisp(arg1, 1);
+        } else {
+            winSpriteSetDisp(arg1, 0);
+        }
+    } else {
+        winSpriteSetDisp(arg1, 0);
+    }
+}
+#endif
+
+/* 0x80031648 | 0x290 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSmsgGetRect(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* pokemonBiosGetNicknamePtr(void* pokemon);
+#endif
+#if 0
+asm void fn_80031648(void) {
+#include "src/game/gs_npc_event_fn_80031648.inc"
+}
+#else
+void fn_80031648(u8* arg0, u8* arg1) {
+    u8* table;
+    s32 group;
+    s32 arg;
+    s32 i;
+    void* obj;
+    s32 x;
+    s32 width;
+
+    table = lbl_80266E90;
+    group = 0;
+    arg = 0;
+    for (i = 0; i < 12; i++) {
+        if (*(s16*)(arg1 + 0x6) == *(u16*)(table + 0xA)) {
+            group = *(u8*)(table + 0x0);
+            arg = *(u8*)(table + 0x1);
+        }
+        table += 0x12;
+    }
+
+    obj = 0;
+    if (group == 2) goto grp2;
+    if (group >= 2) goto grp_done;
+    if (group >= 1) goto grp1;
+    goto grp_done;
+grp1:
+    obj = (void*)PC_PTR(heroGetStatus(0, 3, (u16)arg));
+    goto grp_done;
+grp2:
+    obj = (void*)PC_PTR(heroGetStatus(lbl_803A2688, 3, (u16)arg));
+grp_done:
+    ;
+
+    if (((u8 (*)(void*))pokemonBiosGetFuseiFlag)(obj) != 0) {
+        msgctrlSetValue(0x37, ((s32 (*)(s32))GSmsgGetGSchar)(0x56C));
+    } else if (((u8 (*)(void*))pokemonCheckValid)(obj) != 0 &&
+               ((u8 (*)(void*))menuCBRule_CheckPokemonEventFlag)(obj) == 1) {
+        if (((u8 (*)(void*))pokemonBiosGetTamagoFlag)(obj) != 0) {
+            msgctrlSetValue(0x37, ((s32 (*)(s32))GSmsgGetGSchar)(0x56B));
+        } else {
+            msgctrlSetValue(0x37, ((s32 (*)(void*))pokemonBiosGetNicknamePtr)(obj));
+        }
+    } else {
+        winSpriteSetDisp(arg1, 0);
+        return;
+    }
+
+    width = (s16)(((u32 (*)(s32))GSmsgGetRect)(0xE7) >> 16);
+    x = (*(s16*)(arg1 + 0x54) / 2) - (width / 2);
+    GSmsgPrintColor((s16)x, 0, -1, 0xE7);
+    winSpriteSetDisp(arg1, 1);
+}
+#endif
+
+/* 0x800318D8 | 0x144 -- scan 12-entry table for matching species, dispatch to winSpriteSetDisp */
+extern u32 lbl_8047A424;
+extern u32 lbl_8047A420;
+extern u8  lbl_80266E90[];
+#if 0
+asm void fn_800318D8(void) {
+#include "src/game/gs_npc_event_fn_800318D8.inc"
+}
+#else
+void fn_800318D8(s32 _unused, u8* tgt) {
+    u8* p = lbl_80266E90;
+    s32 group = 0;
+    s32 sub   = 0;
+    s16 key   = *(s16*)(tgt + 6);
+    s32 i;
+    for (i = 0; i < 2; i++) {
+        s32 j;
+        for (j = 0; j < 6; j++) {
+            if ((s32)key == (s32)*(u16*)(p + 0xe)) {
+                group = p[0];
+                sub   = p[1];
+            }
+            p += 0x12;
+        }
+    }
+    if (group == 1 && (s32)lbl_8047A424 == sub) {
+        winSpriteSetDisp(tgt, 1);
+        return;
+    }
+    if (group == 2 && (s32)lbl_8047A420 == sub) {
+        winSpriteSetDisp(tgt, 1);
+        return;
+    }
+    winSpriteSetDisp(tgt, 0);
+}
+#endif
+
+/* 0x54 | fn_80031A1C | generic */
+/* fn_80031A1C - 0x80031A1C | size: 0x54 */
+extern u32 lbl_8047A42C;
+#if 0
+asm void fn_80031A1C(void) {
+#include "src/game/gs_npc_event_fn_80031A1C.inc"
+}
+#else
+void fn_80031A1C(void* r3, void* r4) {
+    s32 val = (s32)lbl_8047A42C;
+    switch (val) {
+    case 7:
+    case 2:
+        winSpriteSetDisp(r4, 1);
+        break;
+    default:
+        winSpriteSetDisp(r4, 0);
+        break;
+    }
+}
+#endif
+
+/* 0x50 | fn_80031A70 | generic */
+/* fn_80031A70 - 0x80031A70 | size: 0x50 */
+extern u32 lbl_8047A42C;
+#if 0
+asm void fn_80031A70(void) {
+#include "src/game/gs_npc_event_fn_80031A70.inc"
+}
+#else
+void fn_80031A70(void* r3, void* r4) {
+    s32 val = (s32)lbl_8047A42C;
+    switch (val) {
+    case 7:
+    case 8:
+    case 9:
+    case 10:
+    case 11:
+        winSpriteSetDisp(r4, 1);
+        break;
+    default:
+        winSpriteSetDisp(r4, 0);
+        break;
+    }
+}
+#endif
+
+/* 0x50 | fn_80031AC0 | generic */
+/* fn_80031AC0 - 0x80031AC0 | size: 0x50 */
+extern u32 lbl_8047A42C;
+#if 0
+asm void fn_80031AC0(void) {
+#include "src/game/gs_npc_event_fn_80031AC0.inc"
+}
+#else
+void fn_80031AC0(void* r3, void* r4) {
+    s32 val = (s32)lbl_8047A42C;
+    switch (val) {
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+        winSpriteSetDisp(r4, 1);
+        break;
+    default:
+        winSpriteSetDisp(r4, 0);
+        break;
+    }
+}
+#endif
+
+/* 0x80031B10 | 0x3C */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void _threadSwitch(void);
+#endif
+extern u32 fn_8010B560(void);
+extern void std113_mapObjectUnk_8018db68(u32);
+extern u32 lbl_8047A418;
+#if 0
+/* NAME-T3 fn_80031B10 */
+asm void gbaTradeExit(void) {
+#include "src/game/gs_npc_event_fn_80031B10.inc"
+}
+#else
+/* NAME-T3 fn_80031B10 */ /* exit callback of room 0x394 pokemonchange_menu (trading) */
+void gbaTradeExit(void) {
+    while ((u8)fn_8010B560() != 0) {
+        _threadSwitch();
+    }
+    std113_mapObjectUnk_8018db68(lbl_8047A418);
+}
+#endif
+
+#endif /* guard split */
+#if !defined(GS_NPC_EVENT_ONLY_800324A0) && !defined(GS_NPC_EVENT_ONLY_800301B0) && !defined(GS_NPC_EVENT_ONLY_80032ED8) && !defined(GS_NPC_EVENT_ONLY_800327FC)
+/* 0x80031B4C | 0x954 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void memcardAllocBuffer(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_800849B4(void);
+#endif
+extern void fn_8002FC58(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_801021F8(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void windowGetActiveID(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuOpenCustom(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void windowSearchID(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void windowSearchItemID(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void windowCheckCursor(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void windowGetValue(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuGetCursor(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuClose(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fadeSet(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fadeCheck(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSmodelSetVisibility(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuSetDisp(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_80097CD0(void);
+#endif
+extern void gbaTradeCheckExportItems(void);
+extern void fn_8002F284(void);
+extern void fn_8002EE74(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuSetEnablePort(void);
+#endif
+extern s32 menuGetLastError(void);
+extern s32 winMsgOpen(s8 type, u32 message, u32 wait, u8 pause);
+extern void gbaTradeCheckImportItems(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_8002E460(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuOpen(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuModelInit(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuPokemonModelRequest(void);
+#endif
+extern void winMsgClose(u32 wait);
+extern void stateFunctionExChangeMain(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuModelTerm(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void pokemonBiosSetFriend(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_8025FF9C(void);
+#endif
+extern void stateFunctionEvolution(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void stateFunctionSaveReport(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_8001E074(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void memcardFreeBuffer(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_801024E8(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_800FF52C(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void floorBattleEndTerminateScripts(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void floorGetPrevFloorID(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void floorLink(void);
+#endif
+extern void jumptable_802E4F90();
+extern u8 lbl_8047A409;
+extern u8 lbl_803A2518[];
+extern u8 lbl_804788B0;
+extern u8 lbl_80266F90[];
+extern u8 lbl_8047A40A;
+extern u32 lbl_8047A42C;
+#ifndef TARGET_PC /* PC: canonical declaration in pc/prototypes.h */
+extern f32 lbl_8047B9D0;
+#endif
+extern u32 lbl_8047A414;
+#ifndef TARGET_PC /* PC: canonical declaration in pc/prototypes.h */
+extern f32 lbl_8047B9D4;
+#endif
+extern u32 lbl_8047A428;
+extern u8 lbl_8047A410;
+extern u32 lbl_8047A424;
+extern u32 lbl_8047A420;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuSubOpenYesNo();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void memoDataSet();
+#endif
+#if 0
+asm void fn_80031B4C(void) {
+#include "src/game/gs_npc_event_fn_80031B4C.inc"
+}
+#else
+typedef struct NpcEventLinkRequest {
+    u32 words[4];
+} NpcEventLinkRequest;
+
+static inline void NpcEventShowMenuSprite(s32 menu, s32 id, s32 sprite)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowSearchItemID(u32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowSearchID(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void winSpriteSetDisp(void*, s32);
+#endif
+    u32 window = PC_PTR32_IMPLICIT(windowSearchID(menu));
+    u8* item = windowSearchItemID(PC_PTR(window), id);
+
+    if (window != 0 && item != NULL) {
+        winSpriteSetDisp(item, 1);
+        *(u32*)(item + 0x4C) = sprite;
+    }
+}
+
+static inline void NpcEventHideMenuSprite(s32 menu, s32 id)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowSearchItemID(u32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowSearchID(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void winSpriteSetDisp(void*, s32);
+#endif
+    u32 window = PC_PTR32_IMPLICIT(windowSearchID(menu));
+    u8* item = windowSearchItemID(PC_PTR(window), id);
+
+    if (window != 0 && item != NULL) {
+        *(u32*)(item + 0x4C) = 0;
+        winSpriteSetDisp(item, 0);
+    }
+}
+
+static inline s32 NpcEventRunChoiceMenu(s32 yes_sprite, s32 no_sprite)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 menuOpenCustom(s32, u32, void*, s32, s32, s32, ...);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetActiveID();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void windowCheckCursor(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 windowGetValue(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 menuGetCursor(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuClose();
+#endif
+    s32 open_arg;
+    s32 value;
+    s32 cursor;
+
+    open_arg = 1;
+    menuOpenCustom(0xE3, windowGetActiveID(), &open_arg, 0, 0, 0);
+    NpcEventShowMenuSprite(0xE3, 0x102A, yes_sprite);
+    NpcEventShowMenuSprite(0xE3, 0x1029, no_sprite);
+    windowCheckCursor(0xE3, 1);
+    value = windowGetValue(0xE3);
+    cursor = menuGetCursor(0xE3);
+    menuClose(0xE3);
+    if (value == -1) {
+        cursor = -1;
+    }
+    return cursor;
+}
+
+/* RULE-EXCEPTION(user-approved): single-use inline helper for gbaTradeRun case 3 (start menu choice); it sets retail's inline-local numbering and so the register colouring - see docs/RULE_EXCEPTIONS.md */
+static inline void NpcEventAskStart(void)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_801021F8(s32, s32);
+#endif
+
+    fn_801021F8(0xD9, 0);
+    switch (NpcEventRunChoiceMenu(0x43E4, 0x43E5)) {
+    case 1:
+        lbl_8047A42C = 5;
+        break;
+    case 0:
+        lbl_8047A42C = 6;
+        break;
+    case -1:
+        lbl_8047A42C = 2;
+        break;
+    }
+}
+
+/* RULE-EXCEPTION(user-approved): single-use inline helper for gbaTradeRun case 4 (quit menu choice); it sets retail's inline-local numbering and so the register colouring - see docs/RULE_EXCEPTIONS.md */
+static inline void NpcEventAskQuit(void)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_801021F8(s32, s32);
+#endif
+    s32 choice;
+
+    fn_801021F8(0xD9, 0);
+    NpcEventShowMenuSprite(0xD9, 0x10B2, 0x43DB);
+    choice = NpcEventRunChoiceMenu(0x43D4, 0x43D5);
+    NpcEventHideMenuSprite(0xD9, 0x10B2);
+    switch (choice) {
+    case 0:
+        lbl_8047A42C = 2;
+        break;
+    case 1:
+        lbl_8047A42C = 0;
+        break;
+    case -1:
+        lbl_8047A42C = 2;
+        break;
+    }
+}
+
+/* RULE-EXCEPTION(user-approved): single-use inline helper for gbaTradeRun case 10 (summary screen); it sets retail's inline-local numbering and so the register colouring - see docs/RULE_EXCEPTIONS.md */
+static inline void NpcEventShowSummary(s32 pokemon)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuSetEnablePort(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_80097CD0(s32, s32, s32);
+#endif
+    menuSetEnablePort(2);
+    fn_80097CD0(pokemon, 0, 0);
+    menuSetEnablePort(1);
+}
+
+/* RULE-EXCEPTION(user-approved): single-use inline helper for gbaTradeRun case 13 (trade preview); it sets retail's inline-local numbering and so the register colouring - see docs/RULE_EXCEPTIONS.md */
+static inline void NpcEventTradeShow(u8* base)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuOpen();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuModelInit(void*, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuPokemonModelRequest(void*, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 pokemonBiosGetNicknamePtr(s32 pokemon);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fadeCheck(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fadeSet(s32, f32);
+#endif
+    s32 name;
+    s32 nick1;
+    s32 nick2;
+    s32 pokemon1;
+    s32 pokemon2;
+
+    name = heroGetStatus(base + 0x170, 1, 0);
+    pokemon1 = heroGetStatus(NULL, 3, (u16)lbl_8047A424);
+    pokemon2 = heroGetStatus(base + 0x170, 3, (u16)lbl_8047A420);
+    menuOpen(0xDE, 0);
+    menuModelInit(base + 0xD18, 0xE8, 0x11C);
+    menuModelInit(base + 0xCD0, 0xE8, 0x11C);
+    menuPokemonModelRequest(base + 0xD18, PC_PTR(pokemon1));
+    menuPokemonModelRequest(base + 0xCD0, PC_PTR(pokemon2));
+    nick1 = PC_PTR32_IMPLICIT(pokemonBiosGetNicknamePtr(PC_PTR(pokemon1)));
+    nick2 = PC_PTR32_IMPLICIT(pokemonBiosGetNicknamePtr(PC_PTR(pokemon2)));
+    msgctrlSetValue(0x4D, name);
+    msgctrlSetValue(0x32, nick1);
+    msgctrlSetValue(0x33, nick2);
+    fadeSet(2, lbl_8047B9D0);
+    fadeCheck(1);
+    winMsgOpen(2, 0x43D6, 1, 0);
+    msgctrlSetValue(0x32, nick1);
+    msgctrlSetValue(0x33, nick2);
+    winMsgOpen(2, 0x43D8, 1, 0);
+    winMsgClose(1);
+}
+
+/* RULE-EXCEPTION(user-approved): single-use inline helper for gbaTradeRun case 16 (trade result); it sets retail's inline-local numbering and so the register colouring - see docs/RULE_EXCEPTIONS.md */
+static inline void NpcEventTradeDone(u8* base)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void pokemonBiosSetFriend(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 pokemonBiosGetNicknamePtr(s32 pokemon);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void memoDataSet(s32, s32);
+#endif
+    s32 pokemon1;
+    s32 name;
+    s32 pokemon2;
+    s32 nick1;
+    s32 nick2;
+
+    name = heroGetStatus(base + 0x170, 1, 0);
+    pokemon1 = heroGetStatus(NULL, 3, (u16)lbl_8047A424);
+    pokemon2 = heroGetStatus(base + 0x170, 3, (u16)lbl_8047A420);
+    pokemonBiosSetFriend(PC_PTR(pokemon1), 0x46);
+    pokemonBiosSetFriend(PC_PTR(pokemon2), 0x46);
+    memoDataSet(0, pokemon1);
+    nick1 = PC_PTR32_IMPLICIT(pokemonBiosGetNicknamePtr(PC_PTR(pokemon1)));
+    nick2 = PC_PTR32_IMPLICIT(pokemonBiosGetNicknamePtr(PC_PTR(pokemon2)));
+    msgctrlSetValue(0x4D, name);
+    msgctrlSetValue(0x32, nick1);
+    msgctrlSetValue(0x33, nick2);
+    winMsgOpen(2, 0x43DA, 1, 0);
+    winMsgClose(1);
+}
+
+#if !defined(GS_NPC_EVENT_ONLY_80031B4C)
+/* RULE-EXCEPTION(user-approved): the file's local peephole-control pragma for the whole-file compiles; the linked carve uses unit-level -opt nopeephole instead - see docs/RULE_EXCEPTIONS.md */
+#pragma push
+#pragma peephole off
+#endif
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+void gbaTradeRun(void) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_8001E074();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void stateFunctionSaveReport(s32);
+#endif
+    extern void stateFunctionEvolution(void);
+    extern void stateFunctionExChangeMain(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_8002E460(s32);
+#endif
+    extern void gbaTradeCheckImportItems(void);
+    extern void fn_8002EE74(void);
+    extern void fn_8002F284(void);
+    extern void gbaTradeCheckExportItems(void);
+    extern void fn_8002FC58(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 fn_800849B4(s32 mode, s32 command, void* input, void* output);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_80097CD0(s32, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetVisibility(u32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fn_800FF52C();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorBattleEndTerminateScripts();
+#endif
+    extern s32 menuGetLastError();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_801021F8(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuSetDisp(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 menuGetCursor(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_801024E8();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuClose();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuOpen();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 menuOpenCustom(s32, u32, void*, s32, s32, s32, ...);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuSetEnablePort(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 windowGetValue(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void windowCheckCursor(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetActiveID();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowSearchItemID(u32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowSearchID(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void winMsgClose();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void winMsgOpen();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void winSpriteSetDisp(void*, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuPokemonModelRequest(void*, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuModelTerm(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuModelInit(void*, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorLink();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 floorGetPrevFloorID();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void pokemonBiosSetFriend(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 pokemonBiosGetNicknamePtr(s32 pokemon);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void memoDataSet(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s8 menuSubOpenYesNo(s32, s32, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fadeCheck(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fadeSet(s32, f32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void memcardFreeBuffer(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 memcardAllocBuffer(void);
+#endif
+    u8* base;
+    s32 handle;
+    s32 work0;
+    s32 work1;
+    s32 work2;
+    s32 work3;
+
+    base = lbl_803A2518;
+    lbl_804788B0 = 1;
+    if (lbl_8047A409 != 1) {
+        handle = PC_PTR32_IMPLICIT(memcardAllocBuffer());
+        while ((s32)lbl_8047A42C > 0) {
+            switch ((s32)lbl_8047A42C) {
+            case 1: {
+                NpcEventLinkRequest request;
+
+                request = *(const NpcEventLinkRequest*)lbl_80266F90;
+                if (fn_800849B4(0, 1, &request, 0) < 0) {
+                    lbl_8047A40A = 0;
+                    lbl_8047A42C = 0;
+                } else {
+                    lbl_8047A42C = 2;
+                }
+                break;
+            }
+            case 2:
+                fn_8002FC58();
+                break;
+            case 3:
+                fn_801021F8(0xD9, 0);
+                work0 = NpcEventRunChoiceMenu(0x43E4, 0x43E5);
+                switch (work0) {
+                case 1:
+                    lbl_8047A42C = 5;
+                    break;
+                case 0:
+                    lbl_8047A42C = 6;
+                    break;
+                case -1:
+                    lbl_8047A42C = 2;
+                    break;
+                }
+                break;
+            case 4:
+                fn_801021F8(0xD9, 0);
+                NpcEventShowMenuSprite(0xD9, 0x10B2, 0x43DB);
+                work3 = NpcEventRunChoiceMenu(0x43D4, 0x43D5);
+                NpcEventHideMenuSprite(0xD9, 0x10B2);
+                switch (work3) {
+                case 0:
+                    lbl_8047A42C = 2;
+                    break;
+                case 1:
+                    lbl_8047A42C = 0;
+                    break;
+                case -1:
+                    lbl_8047A42C = 2;
+                    break;
+                }
+                break;
+            case 5:
+                fadeSet(3, lbl_8047B9D0);
+                fadeCheck(1);
+                GSmodelSetVisibility(PC_PTR(lbl_8047A414), 0);
+                menuSetDisp(0xD9, 0);
+                fadeSet(2, lbl_8047B9D4);
+                fadeCheck(1);
+                fn_80097CD0(heroGetStatus(NULL, 3, (u16)lbl_8047A428), 0, 0);
+                fadeSet(3, lbl_8047B9D4);
+                fadeCheck(1);
+                GSmodelSetVisibility(PC_PTR(lbl_8047A414), 1);
+                menuSetDisp(0xD9, 1);
+                fadeSet(2, lbl_8047B9D0);
+                fadeCheck(1);
+                lbl_8047A42C = 2;
+                break;
+            case 6:
+                gbaTradeCheckExportItems();
+                break;
+            case 7:
+                fn_8002F284();
+                break;
+            case 8:
+                fn_8002EE74();
+                break;
+            case 9:
+                lbl_8047A410 = 1;
+                lbl_8047A424 = -1;
+                lbl_8047A42C = 2;
+                break;
+            case 10: {
+
+                fadeSet(3, lbl_8047B9D0);
+                fadeCheck(1);
+                GSmodelSetVisibility(PC_PTR(lbl_8047A414), 0);
+                menuSetDisp(0xDC, 0);
+                menuSetDisp(0xD9, 0);
+                fadeSet(2, lbl_8047B9D4);
+                fadeCheck(1);
+                work3 = heroGetStatus(base + 0x170, 3, (u16)lbl_8047A428);
+                menuSetEnablePort(2);
+                fn_80097CD0(work3, 0, 0);
+                menuSetEnablePort(1);
+                fadeSet(3, lbl_8047B9D4);
+                fadeCheck(1);
+                GSmodelSetVisibility(PC_PTR(lbl_8047A414), 1);
+                menuSetDisp(0xD9, 1);
+                fadeSet(2, lbl_8047B9D0);
+                fadeCheck(1);
+                if (menuGetLastError() == 1) {
+                    winMsgOpen(2, 0x4448, 1, 0);
+                    menuClose(0xD9);
+                    lbl_8047A42C = 0;
+                } else {
+                    lbl_8047A42C = 7;
+                }
+                break;
+            }
+            case 11:
+                gbaTradeCheckImportItems();
+                break;
+            case 12:
+                fn_8002E460(PC_PTR(handle));
+                break;
+            case 13: {
+
+                work0 = heroGetStatus(base + 0x170, 1, 0);
+                work2 = heroGetStatus(NULL, 3, (u16)lbl_8047A424);
+                work3 = heroGetStatus(base + 0x170, 3, (u16)lbl_8047A420);
+                menuOpen(0xDE, 0);
+                menuModelInit(base + 0xD18, 0xE8, 0x11C);
+                menuModelInit(base + 0xCD0, 0xE8, 0x11C);
+                menuPokemonModelRequest(base + 0xD18, PC_PTR(work2));
+                menuPokemonModelRequest(base + 0xCD0, PC_PTR(work3));
+                work2 = PC_PTR32_IMPLICIT(pokemonBiosGetNicknamePtr(PC_PTR(work2)));
+                work3 = PC_PTR32_IMPLICIT(pokemonBiosGetNicknamePtr(PC_PTR(work3)));
+                msgctrlSetValue(0x4D, work0);
+                msgctrlSetValue(0x32, work2);
+                msgctrlSetValue(0x33, work3);
+                fadeSet(2, lbl_8047B9D0);
+                fadeCheck(1);
+                winMsgOpen(2, 0x43D6, 1, 0);
+                msgctrlSetValue(0x32, work2);
+                msgctrlSetValue(0x33, work3);
+                winMsgOpen(2, 0x43D8, 1, 0);
+                winMsgClose(1);
+                lbl_8047A42C = 14;
+                break;
+            }
+            case 14:
+                stateFunctionExChangeMain();
+                break;
+            case 15:
+                winMsgOpen(2, 0x43DC, 1, 0);
+                menuClose(0xDE);
+                menuModelTerm(base + 0xD18);
+                menuModelTerm(base + 0xCD0);
+                lbl_8047A42C = 0;
+                break;
+            case 16: {
+
+                work3 = heroGetStatus(base + 0x170, 1, 0);
+                work1 = heroGetStatus(NULL, 3, (u16)lbl_8047A424);
+                work0 = heroGetStatus(base + 0x170, 3, (u16)lbl_8047A420);
+                pokemonBiosSetFriend(PC_PTR(work1), 0x46);
+                pokemonBiosSetFriend(PC_PTR(work0), 0x46);
+                memoDataSet(0, work1);
+                work2 = PC_PTR32_IMPLICIT(pokemonBiosGetNicknamePtr(PC_PTR(work1)));
+                work0 = PC_PTR32_IMPLICIT(pokemonBiosGetNicknamePtr(PC_PTR(work0)));
+                msgctrlSetValue(0x4D, work3);
+                msgctrlSetValue(0x32, work2);
+                msgctrlSetValue(0x33, work0);
+                winMsgOpen(2, 0x43DA, 1, 0);
+                winMsgClose(1);
+                lbl_8047A42C = 17;
+                break;
+            }
+            case 17:
+                stateFunctionEvolution();
+                break;
+            case 18:
+                stateFunctionSaveReport(PC_PTR(handle));
+                break;
+            case 19: {
+                s8 answer;
+
+                winMsgOpen(2, 0x43DE, 0, 0);
+                answer = menuSubOpenYesNo(0, -1, -1, 0);
+                winMsgClose(1);
+                switch (answer) {
+                case 0:
+                    menuClose(0xDE);
+                    lbl_8047A428 = -1;
+                    lbl_8047A424 = -1;
+                    lbl_8047A420 = -1;
+                    menuModelTerm(base + 0xD18);
+                    menuModelTerm(base + 0xCD0);
+                    lbl_8047A410 = 1;
+                    lbl_8047A42C = 2;
+                    break;
+                case 1:
+                    menuClose(0xDE);
+                    menuModelTerm(base + 0xD18);
+                    menuModelTerm(base + 0xCD0);
+                    lbl_8047A42C = 0;
+                    break;
+                case -1:
+                    menuClose(0xDE);
+                    menuModelTerm(base + 0xD18);
+                    menuModelTerm(base + 0xCD0);
+                    lbl_8047A42C = 0;
+                    break;
+                }
+                break;
+            }
+            }
+        }
+        memcardFreeBuffer(PC_PTR(handle));
+        if (lbl_8047A40A != 0) {
+            if (lbl_804788B0 != 0) {
+                winMsgOpen(2, 0x44D0, 1, 0);
+                winMsgClose(1);
+            } else {
+                winMsgOpen(2, 0x44F1, 1, 0);
+                winMsgClose(1);
+            }
+        } else {
+            lbl_8047A40A = 1;
+        }
+        fn_801024E8(1);
+        if (fn_800FF52C()) {
+            floorBattleEndTerminateScripts();
+        } else {
+            floorLink(floorGetPrevFloorID(), 0);
+        }
+    }
+    lbl_8047A409 = 1;
+}
+#else
+void gbaTradeRun(void) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_8001E074();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void stateFunctionSaveReport(s32);
+#endif
+    extern void stateFunctionEvolution(void);
+    extern void stateFunctionExChangeMain(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_8002E460(s32);
+#endif
+    extern void gbaTradeCheckImportItems(void);
+    extern void fn_8002EE74(void);
+    extern void fn_8002F284(void);
+    extern void gbaTradeCheckExportItems(void);
+    extern void fn_8002FC58(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 fn_800849B4(s32 mode, s32 command, void* input, void* output);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_80097CD0(s32, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetVisibility(u32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fn_800FF52C();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorBattleEndTerminateScripts();
+#endif
+    extern s32 menuGetLastError();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_801021F8(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuSetDisp(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 menuGetCursor(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_801024E8();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuClose();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuOpen();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 menuOpenCustom(s32, u32, void*, s32, s32, s32, ...);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuSetEnablePort(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 windowGetValue(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void windowCheckCursor(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetActiveID();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowSearchItemID(u32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowSearchID(s32);
+    extern void winSpriteSetDisp(void*, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuPokemonModelRequest(void*, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuModelTerm(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuModelInit(void*, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void floorLink();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 floorGetPrevFloorID();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void pokemonBiosSetFriend(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 pokemonBiosGetNicknamePtr(s32 pokemon);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void memoDataSet(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s8 menuSubOpenYesNo(s32, s32, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fadeCheck(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fadeSet(s32, f32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void memcardFreeBuffer(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 memcardAllocBuffer(void);
+#endif
+    u8* base;
+    s32 handle;
+
+    base = lbl_803A2518;
+    lbl_804788B0 = 1;
+    if (lbl_8047A409 != 1) {
+        handle = PC_PTR32_IMPLICIT(memcardAllocBuffer());
+        while ((s32)lbl_8047A42C > 0) {
+            switch ((s32)lbl_8047A42C) {
+            case 1: {
+                NpcEventLinkRequest request;
+
+                request = *(const NpcEventLinkRequest*)lbl_80266F90;
+                if (fn_800849B4(0, 1, &request, 0) < 0) {
+                    lbl_8047A40A = 0;
+                    lbl_8047A42C = 0;
+                } else {
+                    lbl_8047A42C = 2;
+                }
+                break;
+            }
+            case 2:
+                fn_8002FC58();
+                break;
+            case 3:
+                NpcEventAskStart();
+                break;
+            case 4:
+                NpcEventAskQuit();
+                break;
+            case 5:
+                fadeSet(3, lbl_8047B9D0);
+                fadeCheck(1);
+                GSmodelSetVisibility(PC_PTR(lbl_8047A414), 0);
+                menuSetDisp(0xD9, 0);
+                fadeSet(2, lbl_8047B9D4);
+                fadeCheck(1);
+                fn_80097CD0(heroGetStatus(NULL, 3, (u16)lbl_8047A428), 0, 0);
+                fadeSet(3, lbl_8047B9D4);
+                fadeCheck(1);
+                GSmodelSetVisibility(PC_PTR(lbl_8047A414), 1);
+                menuSetDisp(0xD9, 1);
+                fadeSet(2, lbl_8047B9D0);
+                fadeCheck(1);
+                lbl_8047A42C = 2;
+                break;
+            case 6:
+                gbaTradeCheckExportItems();
+                break;
+            case 7:
+                fn_8002F284();
+                break;
+            case 8:
+                fn_8002EE74();
+                break;
+            case 9:
+                lbl_8047A410 = 1;
+                lbl_8047A424 = -1;
+                lbl_8047A42C = 2;
+                break;
+            case 10: {
+
+                fadeSet(3, lbl_8047B9D0);
+                fadeCheck(1);
+                GSmodelSetVisibility(PC_PTR(lbl_8047A414), 0);
+                menuSetDisp(0xDC, 0);
+                menuSetDisp(0xD9, 0);
+                fadeSet(2, lbl_8047B9D4);
+                fadeCheck(1);
+                NpcEventShowSummary(heroGetStatus(base + 0x170, 3, (u16)lbl_8047A428));
+                fadeSet(3, lbl_8047B9D4);
+                fadeCheck(1);
+                GSmodelSetVisibility(PC_PTR(lbl_8047A414), 1);
+                menuSetDisp(0xD9, 1);
+                fadeSet(2, lbl_8047B9D0);
+                fadeCheck(1);
+                if (menuGetLastError() == 1) {
+                    winMsgOpen(2, 0x4448, 1, 0);
+                    menuClose(0xD9);
+                    lbl_8047A42C = 0;
+                } else {
+                    lbl_8047A42C = 7;
+                }
+                break;
+            }
+            case 11:
+                gbaTradeCheckImportItems();
+                break;
+            case 12:
+                fn_8002E460(PC_PTR(handle));
+                break;
+            case 13:
+                NpcEventTradeShow(base);
+                lbl_8047A42C = 14;
+                break;
+            case 14:
+                stateFunctionExChangeMain();
+                break;
+            case 15:
+                winMsgOpen(2, 0x43DC, 1, 0);
+                menuClose(0xDE);
+                menuModelTerm(base + 0xD18);
+                menuModelTerm(base + 0xCD0);
+                lbl_8047A42C = 0;
+                break;
+            case 16:
+                NpcEventTradeDone(base);
+                lbl_8047A42C = 17;
+                break;
+            case 17:
+                stateFunctionEvolution();
+                break;
+            case 18:
+                stateFunctionSaveReport(PC_PTR(handle));
+                break;
+            case 19: {
+                s8 answer;
+
+                winMsgOpen(2, 0x43DE, 0, 0);
+                answer = menuSubOpenYesNo(0, -1, -1, 0);
+                winMsgClose(1);
+                switch (answer) {
+                case 0:
+                    menuClose(0xDE);
+                    lbl_8047A428 = -1;
+                    lbl_8047A424 = -1;
+                    lbl_8047A420 = -1;
+                    menuModelTerm(base + 0xD18);
+                    menuModelTerm(base + 0xCD0);
+                    lbl_8047A410 = 1;
+                    lbl_8047A42C = 2;
+                    break;
+                case 1:
+                    menuClose(0xDE);
+                    menuModelTerm(base + 0xD18);
+                    menuModelTerm(base + 0xCD0);
+                    lbl_8047A42C = 0;
+                    break;
+                case -1:
+                    menuClose(0xDE);
+                    menuModelTerm(base + 0xD18);
+                    menuModelTerm(base + 0xCD0);
+                    lbl_8047A42C = 0;
+                    break;
+                }
+                break;
+            }
+            }
+        }
+        memcardFreeBuffer(PC_PTR(handle));
+        if (lbl_8047A40A != 0) {
+            if (lbl_804788B0 != 0) {
+                winMsgOpen(2, 0x44D0, 1, 0);
+                winMsgClose(1);
+            } else {
+                winMsgOpen(2, 0x44F1, 1, 0);
+                winMsgClose(1);
+            }
+        } else {
+            lbl_8047A40A = 1;
+        }
+        fn_801024E8(1);
+        if (fn_800FF52C()) {
+            floorBattleEndTerminateScripts();
+        } else {
+            floorLink(floorGetPrevFloorID(), 0);
+        }
+    }
+    lbl_8047A409 = 1;
+}
+#endif
+#if !defined(GS_NPC_EVENT_ONLY_80031B4C)
+#pragma pop
+#endif
+#endif
+#endif
+#if !defined(GS_NPC_EVENT_ONLY_800301B0) && !defined(GS_NPC_EVENT_ONLY_80032ED8) && !defined(GS_NPC_EVENT_ONLY_80031B4C) && !defined(GS_NPC_EVENT_ONLY_800327FC)
+
+/* 0x800324A0 | 0xC4; linked (with the next two) from gs_npc_event_candidate_800324A0.c */
+extern void _threadSwitch(void);
+extern s32 winMsgOpen(s8 type, u32 message, u32 wait, u8 pause);
+extern void winMsgClose(u32 wait);
+extern void floorSetMapVisibility(s32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32  std093_getCurrentGroupID(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32  std112_modelGetResourceID(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32  GSresGetResource(u32, u32);
+extern void cameraPlayAnime(u32 groupId, u32 animationId, s32 frame, u8 loop);
+extern void GSscene_SetMode(s32);
+#endif
+extern void std116_mapObjectStopAnimation(u32);
+extern u8 lbl_8047A408;
+extern u32 lbl_8047A42C;
+extern u8 lbl_8047A409;
+extern u32 lbl_8047A428;
+extern u32 lbl_8047A424;
+extern u32 lbl_8047A420;
+extern u8 lbl_8047A410;
+extern u8 lbl_8047A41C;
+extern u8 lbl_8047A40A;
+extern u32 lbl_8047A418;
+extern u32 lbl_8047A414;
+#if 0
+/* NAME-T3 fn_800324A0 */
+asm void gbaTradeInit(void) {
+#include "src/game/gs_npc_event_fn_800324A0.inc"
+}
+#else
+#if !defined(GS_NPC_EVENT_ONLY_800324A0)
+#endif
+#if !defined(GS_NPC_EVENT_ONLY_800324A0)
+#endif
+/* NAME-T3 fn_800324A0 */ /* init callback of room 0x394 pokemonchange_menu (trading) */
+void gbaTradeInit(void) {
+    u32 handle;
+    s32 minus_one;
+
+    floorSetMapVisibility(0);
+    if (lbl_8047A408 != 0) {
+        lbl_8047A408 = 0;
+    } else {
+        lbl_8047A409 = 0;
+        minus_one = -1;
+        lbl_8047A42C = 1;
+        lbl_8047A428 = minus_one;
+        lbl_8047A424 = minus_one;
+        lbl_8047A420 = minus_one;
+        lbl_8047A410 = 1;
+        lbl_8047A41C = 1;
+        lbl_8047A40A = 1;
+        handle = std093_getCurrentGroupID();
+        lbl_8047A418 = std112_modelGetResourceID(PC_PTR(0x0FFE1000));
+        lbl_8047A414 = PC_PTR32_IMPLICIT(GSresGetResource(handle, lbl_8047A418));
+        cameraPlayAnime(0x37C, 0x0FFF1800, 0, 1);
+        GSscene_SetMode(4);
+        std116_mapObjectStopAnimation(0x10B11000);
+    }
+}
+#if !defined(GS_NPC_EVENT_ONLY_800324A0)
+#endif
+#endif
+
+/* 0x80032564 | 0x28 */
+extern void std098_mapWarpToMenuRoom(s32);
+#if 0
+asm void fn_80032564(void) {
+#include "src/game/gs_npc_event_fn_80032564.inc"
+}
+#else
+#if !defined(GS_NPC_EVENT_ONLY_800324A0)
+#endif
+void std198_menuEnterTradingMenu(void) {
+    std098_mapWarpToMenuRoom(0x394);
+    _threadSwitch();
+}
+#if !defined(GS_NPC_EVENT_ONLY_800324A0)
+#endif
+#endif
+
+/* 0x8003258C | 0x270 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void soundStartRaw(s32, s32, s32);
+#endif
+extern void heroAddPokecoupon(s32, s32);
+extern void jumptable_802E4FE0();
+extern u32 lbl_8047A450;
+extern u32 lbl_8047A458;
+extern u8 lbl_8047A44A;
+extern u8 lbl_803A3278[];
+extern u32 lbl_8047A43C;
+#if 0
+asm void fn_8003258C(void) {
+#include "src/game/gs_npc_event_fn_8003258C.inc"
+}
+#else
+#if !defined(GS_NPC_EVENT_ONLY_800324A0)
+#endif
+#if !defined(GS_NPC_EVENT_ONLY_800324A0)
+#endif
+void cardeAwardCoupons(void) {
+    s32 ctr;
+    s32 r31;
+
+    if (lbl_8047A450 < 0xFFFFFFFF) {
+        lbl_8047A450 = lbl_8047A450 + 1;
+    }
+    ctr = (s32)lbl_8047A450;
+    if ((u32)(ctr + 1) % 6U == 0) {
+        lbl_8047A458 = 0xe;
+        return;
+    }
+    if (lbl_8047A44A != 0) {
+        lbl_8047A44A = 0;
+        if ((u32)ctr < 0x1e) {
+            switch (ctr) {
+            case 6:
+                r31 = 0x258;
+                break;
+            case 12:
+                r31 = 0x4b0;
+                break;
+            case 18:
+                r31 = 0x960;
+                break;
+            case 24:
+                r31 = 0x12c0;
+                break;
+            default:
+                r31 = 0x258;
+                break;
+            }
+            soundStartRaw(0x3cc, 0, 0);
+            heroAddPokecoupon(0, r31);
+            msgctrlSetValue(0x2f, r31);
+            winMsgOpen(8, 0x3b60, 1, 0);
+            winMsgClose(1);
+        } else {
+            switch (ctr) {
+            case 0x1e:
+                soundStartRaw(0x3cc, 0, 0);
+                heroAddPokecoupon(0, 0x2580);
+                msgctrlSetValue(0x2f, 0x2580);
+                winMsgOpen(8, 0x3b8c, 1, 0);
+                winMsgClose(1);
+                break;
+            case 0x3c:
+                winMsgOpen(8, 0x3b8f, 1, 0);
+                winMsgClose(1);
+                break;
+            case 0x5a:
+                winMsgOpen(8, 0x3b53, 1, 0);
+                winMsgClose(1);
+                break;
+            case 0x78:
+                winMsgOpen(8, 0x3b56, 1, 0);
+                winMsgClose(1);
+                break;
+            case 0x96:
+                winMsgOpen(8, 0x3b59, 1, 0);
+                winMsgClose(1);
+                break;
+            }
+        }
+        lbl_8047A43C = 0;
+        lbl_803A3278[0] = 0;
+        lbl_803A3278[1] = 0;
+        lbl_803A3278[2] = 0;
+        lbl_803A3278[3] = 0;
+        lbl_803A3278[4] = 0;
+        lbl_803A3278[5] = 0;
+        lbl_803A3278[6] = 0;
+        lbl_803A3278[7] = 0;
+        lbl_803A3278[8] = 0;
+        lbl_803A3278[9] = 0;
+        lbl_803A3278[0xa] = 0;
+        lbl_803A3278[0xb] = 0;
+        lbl_803A3278[0xc] = 0;
+        lbl_803A3278[0xd] = 0;
+        lbl_803A3278[0xe] = 0;
+    }
+    lbl_8047A458 = 5;
+}
+#if !defined(GS_NPC_EVENT_ONLY_800324A0)
+#endif
+#endif
+
+#endif /* !GS_NPC_EVENT_ONLY_800301B0 */
+#if !defined(GS_NPC_EVENT_ONLY_800324A0) && !defined(GS_NPC_EVENT_ONLY_800301B0) && !defined(GS_NPC_EVENT_ONLY_80032ED8) && !defined(GS_NPC_EVENT_ONLY_80031B4C)
+/* 0x800327FC | 0x6DC */
+#if defined(GS_NPC_EVENT_ONLY_800327FC)
+/* Declared in regions this carve leaves out. */
+extern void _threadSwitch(void);
+extern u8 lbl_803A3278[];
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 _fadeEffectGetRandom__FUl(u32 range);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GScharCpy(void* dst, const void* src);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 pokemonGetStatus(void*, u32, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void cardeSaveGetCard(u32, s8, u8, u8);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 menuIsCheck(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 fn_800D37CC(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 GSgetFrameStep(void);
+#endif
+extern u8 lbl_8047A44A;
+extern u32 lbl_8047A430;
+extern u32 lbl_8047A43C;
+extern u8 lbl_803A3334[];
+extern u32 lbl_8047A434;
+extern s8 lbl_8047A448;
+extern f32 lbl_8047BA00;
+extern f32 lbl_8047B9F8;
+extern u8 lbl_8047A449;
+extern f64 lbl_8047BA08;
+extern f64 lbl_8047BA10;
+extern f32 lbl_8047BA18;
+extern u32 lbl_8047A458;
+extern u8* cardeBuildTrainerEncounter(s32, s32, u8*);
+#if 0
+asm void fn_800327FC(void) {
+#include "src/game/gs_npc_event_fn_800327FC.inc"
+}
+
+
+#endif
+
+typedef struct NpcEventRosterEntry {
+    u8 data[0xCA];
+} NpcEventRosterEntry;
+
+/* The record's last 0x2A bytes (0xA0-0xC9) are copied to the display data
+ * as one halfword-aligned block. */
+typedef struct NpcEventRecordTail {
+    u16 data[21];
+} NpcEventRecordTail;
+
+typedef struct NpcEventDisplayData {
+    u8 data[0xD0];
+} NpcEventDisplayData;
+
+typedef struct NpcEventSetupData {
+    u32 words[10];
+} NpcEventSetupData;
+
+typedef struct NpcEventEncounterData {
+    u8 pad_000[0x24];
+    u8 group;
+    u8 pad_025;
+    u8 variant;
+    u8 pad_027[0x31];
+    s8 candidate_count;
+    u8 pad_059[2];
+    s8 candidate_slots[6];
+} NpcEventEncounterData;
+
+#define NPC_EVENT_ENCOUNTER ((NpcEventEncounterData*)lbl_803A3334)
+typedef struct NpcEventSave {
+    u8 pad_0000[0x41E4];
+    NpcEventRosterEntry roster[10];
+} NpcEventSave;
+
+static inline NpcEventRosterEntry* NpcEventGetRoster(u32 index)
+{
+    return &((NpcEventSave*)PC_PTR(lbl_8047A430))->roster[index];
+}
+
+#define NPC_EVENT_ROSTER(index) NpcEventGetRoster(index)
+
+/* RULE-EXCEPTION(user-approved): single-use inline helper (cardeBattleSelectCard's party level step) - see docs/RULE_EXCEPTIONS.md */
+static inline u8 NpcEventGetPartyLevel(void)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 pokemonCheckValid(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* heroGetStatus(void*, s32, u16);
+#endif
+    u16 slot;
+    u8 best = 1;
+
+    for (slot = 0; slot < 6; slot++) {
+        void* pokemon = PC_PTR(heroGetStatus(NULL, 3, slot));
+
+        if (pokemonCheckValid(pokemon) == 1) {
+            u8 level = pokemonGetStatus(pokemon, 0, POKEMON_STATUS_LEVEL, 0);
+
+            if (best < level) {
+                best = level;
+            }
+        }
+    }
+    return best;
+}
+
+/* RULE-EXCEPTION(user-approved): single-use inline helper (cardeBattleSelectCard's team level step) - see docs/RULE_EXCEPTIONS.md */
+static inline u8 NpcEventGetTeamLevel(s8 slot)
+{
+    u8* team;
+    u16 member;
+    u8 best = 0;
+
+    team = lbl_803A3334 + slot * 0x28;
+    for (member = 0; member < 4; member++) {
+        s8 index = team[0x3B9 + member];
+
+        if (index >= 0) {
+            u8 level = lbl_803A3334[index * 0x2A + 0x517];
+
+            if (best < level) {
+                best = level;
+            }
+        }
+    }
+    return best;
+}
+
+/* RULE-EXCEPTION(user-approved): single-use inline helper (cardeBattleSelectCard's candidate selection step) - see docs/RULE_EXCEPTIONS.md */
+static inline s8 NpcEventSelectCandidate(void)
+{
+    s32 scores[3];
+    u8 group;
+    u8 variant;
+    u8 dark_level;
+    int candidate;
+    s8 selected;
+    u32 ties;
+
+    selected = 0;
+    ties = 1;
+    group = NPC_EVENT_ENCOUNTER->group;
+    variant = NPC_EVENT_ENCOUNTER->variant;
+    dark_level = NpcEventGetPartyLevel();
+
+    for (candidate = 0; candidate < NPC_EVENT_ENCOUNTER->candidate_count;
+         candidate++) {
+        u8 enemy_level;
+
+        cardeSaveGetCard(PC_PTR(lbl_8047A434), candidate, group, variant);
+        enemy_level = NpcEventGetTeamLevel(
+            NPC_EVENT_ENCOUNTER->candidate_slots[candidate]);
+
+        scores[candidate] = __abs(dark_level - enemy_level);
+        if (scores[candidate] < scores[selected]) {
+            selected = candidate;
+            ties = 1;
+        } else if (scores[candidate] == scores[selected]) {
+            ties++;
+            if (_fadeEffectGetRandom__FUl(ties) == 0) {
+                selected = candidate;
+            }
+        }
+    }
+    return selected;
+}
+
+#if !defined(GS_NPC_EVENT_ONLY_800327FC)
+/* RULE-EXCEPTION(user-approved): the file's local peephole-control pragma for the whole-file compiles; the linked carve uses unit-level -opt nopeephole instead - see docs/RULE_EXCEPTIONS.md */
+#pragma push
+#pragma peephole off
+#endif
+void cardeBattleSelectCard(void)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 pokemonCheckValid(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* heroGetStatus(void*, s32, u16);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void cardeSaveGetCard(u32, s8, u8, u8);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 menuIsCheck(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuClose(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fadeSet(s32, f32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuOpen(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fadeCheck(s32);
+#endif
+    NpcEventRosterEntry selected_record;
+    NpcEventDisplayData display;
+    s32 result;
+
+    if (lbl_8047A44A != 0) {
+        NpcEventRosterEntry* selected;
+        u32 i;
+
+        for (i = 0; i < 10; i++) {
+            selected = NPC_EVENT_ROSTER(i);
+            if (selected != NULL && (*(u16*)&selected->data[6] != 0 ||
+                                     *(u16*)&selected->data[8] != 0)) {
+                selected = NPC_EVENT_ROSTER(i + _fadeEffectGetRandom__FUl(10 - i));
+                break;
+            }
+        }
+
+        selected_record = *selected;
+        GScharCpy(&display, &selected_record.data[6]);
+
+        display.data[0x0C] = selected_record.data[0x12];
+        display.data[0x0D] = 0;
+        display.data[0x0E] = 0;
+        display.data[0x0F] = 0;
+        display.data[0x10] = 0;
+        *(u16*)&display.data[0x12] = *(u16*)&selected_record.data[0x14];
+        *(u16*)&display.data[0x14] = *(u16*)&selected_record.data[0x16];
+        *(u16*)&display.data[0x16] = *(u16*)&selected_record.data[0x18];
+        *(u16*)&display.data[0x18] = *(u16*)&selected_record.data[0x1A];
+        *(u32*)&display.data[0x1C] = selected_record.data[0x1C];
+        *(u16*)&display.data[0x20] = *(u16*)&selected_record.data[0x1E];
+        *(u16*)&display.data[0x22] = 0;
+        display.data[0x24] = selected_record.data[0x20];
+        *(NpcEventSetupData*)&display.data[0x28] = *(NpcEventSetupData*)&selected_record.data[0x22];
+        *(u16*)&display.data[0x50] = *(u16*)&selected_record.data[0x4A];
+        *(NpcEventSetupData*)&display.data[0x52] = *(NpcEventSetupData*)&selected_record.data[0x4C];
+        *(u16*)&display.data[0x7A] = *(u16*)&selected_record.data[0x74];
+        *(NpcEventSetupData*)&display.data[0x7C] = *(NpcEventSetupData*)&selected_record.data[0x76];
+        *(u16*)&display.data[0xA4] = *(u16*)&selected_record.data[0x9E];
+        *(NpcEventRecordTail*)&display.data[0xA6] = *(NpcEventRecordTail*)&selected_record.data[0xA0];
+
+        lbl_8047A43C = 0;
+        lbl_803A3278[0] = 0;
+        lbl_803A3278[1] = 0;
+        lbl_803A3278[2] = 0;
+        lbl_803A3278[3] = 0;
+        lbl_803A3278[4] = 0;
+        lbl_803A3278[5] = 0;
+        lbl_803A3278[6] = 0;
+        lbl_803A3278[7] = 0;
+        lbl_803A3278[8] = 0;
+        lbl_803A3278[9] = 0;
+        lbl_803A3278[10] = 0;
+        lbl_803A3278[11] = 0;
+        lbl_803A3278[12] = 0;
+        lbl_803A3278[13] = 0;
+        lbl_803A3278[14] = 0;
+        result = (s32)PC_PTR32(cardeBuildTrainerEncounter((s32)PC_PTR32(&display), 0x209, (u8*)&display + 0x28));
+    } else {
+        s8 selected = NpcEventSelectCandidate();
+
+        lbl_8047A448 = selected;
+        *(NpcEventSetupData*)&display = *(NpcEventSetupData*)(lbl_803A3334 +
+            NPC_EVENT_ENCOUNTER->candidate_slots[selected] * 0x28 + 0x3AC);
+        result = (s32)PC_PTR32(cardeBuildTrainerEncounter((s32)PC_PTR32(&display), 0x209, NULL));
+    }
+
+    if (menuIsCheck(0xA5)) {
+        menuClose(0xA5);
+    }
+    fadeSet(2, 0.3f);
+    menuOpen(0xA5, 1);
+    fadeCheck(1);
+    lbl_8047A449 = 1;
+
+    {
+        f32 elapsed = 0.0f;
+
+        while (elapsed < 1.0f) {
+            _threadSwitch();
+            elapsed += (f32)GSgetFrameStep() / (f32)fn_800D37CC();
+        }
+    }
+
+    switch (result) {
+    case 2:
+        lbl_8047A458 = 0xD;
+        break;
+    case 3:
+        lbl_8047A458 = 0xC;
+        break;
+    default:
+        lbl_8047A458 = 0xC;
+        break;
+    }
+}
+#if !defined(GS_NPC_EVENT_ONLY_800327FC)
+#pragma pop
+#endif
+
+
+
+#endif
+
+/* cardeBuildTrainerEncounter and cardeBuildTrainerPokemon also build alone for the linked
+ * gs_npc_event_candidate_80032ED8 unit. */
+#if !defined(GS_NPC_EVENT_ONLY_800324A0) && !defined(GS_NPC_EVENT_ONLY_800301B0) && !defined(GS_NPC_EVENT_ONLY_80031B4C) && !defined(GS_NPC_EVENT_ONLY_800327FC)
+/* 0x80032ED8 | 0x1E0 */
+#ifndef TARGET_PC /* PC: canonical prototypes in pc/prototypes.h */
+extern u32 std093_getCurrentGroupID(void);
+extern void cameraPlayAnime(u32 groupId, u32 animationId, s32 frame, u8 loop);
+extern u8*  fightEncountDataBiosGetPtr(s32);
+#endif
+extern void fightEncountDataBiosSetTrainer(u8*, s32);
+extern void fightEncountDataBiosSetFightFloorDataId(u8*, u16);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32  fightTrainerDataBiosGetPtr(s32);
+#endif
+extern void fightTrainerSet00(s32, u8);
+extern void fightTrainerDataBiosSetKindDataId(s32, s32);
+extern void fightTrainerSet06(s32, u16);
+extern void fightTrainerSet10(s32, u8);
+extern void fn_800896E0(s32);
+extern void fn_800896D8(s32);
+extern void fn_800896D0(s32);
+extern void fightTrainerSetU16Arr14(s32, u8, u16);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16 fn_801FCC3C(s32);
+#endif
+extern u8*  fightTrainerPokemonDataBiosGetPtr(u16 slot);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fightTrainerPokemonDataBiosSetPokemonDataId(s32, u16);
+#endif
+extern u8*  fieldStartEncount(s32, s32, s32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32  std228_soundGetCurrentBackgroundMusic(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void std104_soundSetBackgroundMusic(s32, s32, s32);
+#endif
+extern u32 lbl_8047A444;
+extern u8 lbl_8047A439;
+extern void cardeBuildTrainerPokemon(s32, u8*);
+#if 0
+asm void fn_80032ED8(void) {
+#include "src/game/gs_npc_event_fn_80032ED8.inc"
+}
+#else
+/* RULE-EXCEPTION(user-approved): local peephole-control pragma — see docs/RULE_EXCEPTIONS.md */
+#pragma push
+#pragma peephole off
+u8* cardeBuildTrainerEncounter(s32 arg0, s32 arg1, u8* arg2) {
+    extern u8 lbl_803A3334[];
+    u8* result;
+    s32 i;
+    int sfx_id;
+    u8* node;
+    s32 ctx;
+    u8* base;
+    s32 j;
+
+    node = fightEncountDataBiosGetPtr(arg1);
+    if (*(s32*)PC_PTR((arg0 + 0x1C)) == 0) {
+        fightEncountDataBiosSetTrainer(node, 0);
+    } else {
+        fightEncountDataBiosSetTrainer(node, 1);
+    }
+    fightEncountDataBiosSetFightFloorDataId(node, (u16)lbl_8047A444);
+
+    ctx = PC_PTR32_IMPLICIT(fightTrainerDataBiosGetPtr(9));
+    fightTrainerSet00(ctx, *(u8*)PC_PTR((arg0 + 0xC)));
+    fightTrainerDataBiosSetKindDataId(ctx, 0x26);
+    fightTrainerSet06(ctx, *(u16*)PC_PTR((arg0 + 0x20)));
+    fightTrainerSet10(ctx, *(u8*)PC_PTR((arg0 + 0x24)));
+
+    fn_800896E0(arg0);
+    fn_800896D8(0);
+    fn_800896D0(9);
+
+    for (i = 0; i < 4; i++) {
+        fightTrainerSetU16Arr14(ctx, (u8)i, *(u16*)PC_PTR((arg0 + i * 2 + 0x12)));
+    }
+    /* r3 from the previous call (assembly) */
+
+    base = fightTrainerPokemonDataBiosGetPtr(fn_801FCC3C(PC_PTR(ctx)));
+    for (j = 0; j < 4; j++) {
+        if (arg2 != 0) {
+            cardeBuildTrainerPokemon((s32)PC_PTR32((base + j * 0x50)), arg2 + j * 0x2A);
+        } else {
+            cardeBuildTrainerPokemon((s32)PC_PTR32((base + j * 0x50)), lbl_803A3334 + 0x514 + (s8)*(u8*)PC_PTR((arg0 + j + 0xD)) * 0x2A);
+        }
+    }
+    for (; j < 6; j++) {
+        fightTrainerPokemonDataBiosSetPokemonDataId(PC_PTR((s32)PC_PTR32((base + j * 0x50))), 0);
+    }
+
+    result = fieldStartEncount(arg1, 1, 0);
+    cameraPlayAnime(std093_getCurrentGroupID(), 0x11171800, 0, 0);
+
+    sfx_id = (lbl_8047A439 != 0) ? 0x446 : 0x4CD;
+    if (sfx_id != std228_soundGetCurrentBackgroundMusic()) {
+        std104_soundSetBackgroundMusic(sfx_id, 0, 0x7F);
+    }
+    return result;
+}
+#pragma pop
+#endif
+
+#if 0
+void fn_80032ED8_legacy_disabled(void) {
+    u8 sp[0x30];
+    u32 tmp = 0;
+    u32 r3 = 0;
+    u32 r4 = 0;
+    u32 r5 = 0;
+    u32 r6 = 0;
+    u32 r24 = 0;
+    u32 r25 = 0;
+    u32 r26 = 0;
+    u32 r27 = 0;
+    u32 r28 = 0;
+    u32 r29 = 0;
+    u32 r30 = 0;
+    u32 r31 = 0;
+
+    r29 = r3;
+    r30 = r4;
+    r31 = r5;
+    r3 = r30;
+    r3 = ((u32 (*)(RegWord))fightEncountDataBiosGetPtr)(r3);
+    tmp = *(u32*)((u8*)r29 + 0x1C);
+    r26 = r3;
+    if ((s32)tmp == 0) {
+        r4 = 0x0;
+        fightEncountDataBiosSetTrainer();
+    } else {
+
+        r4 = 0x1;
+        fightEncountDataBiosSetTrainer();
+    }
+    tmp = lbl_8047A444;
+    r3 = r26;
+    r4 = tmp & 0xFFFF;
+    ((void (*)(RegWord, RegWord))fightEncountDataBiosSetFightFloorDataId)(r3, r4);
+    r3 = 0x9;
+    r3 = ((u32 (*)(RegWord))fightTrainerDataBiosGetPtr)(r3);
+    r4 = *(u8*)((u8*)r29 + 0xC);
+    r27 = r3;
+    ((void (*)(RegWord, RegWord))fightTrainerSet00)(r3, r4);
+    r3 = r27;
+    r4 = 0x26;
+    ((void (*)(RegWord, RegWord))fightTrainerDataBiosSetKindDataId)(r3, r4);
+    r4 = *(u16*)((u8*)r29 + 0x20);
+    r3 = r27;
+    ((void (*)(RegWord, RegWord))fightTrainerSet06)(r3, r4);
+    r4 = *(u8*)((u8*)r29 + 0x24);
+    r3 = r27;
+    ((void (*)(RegWord, RegWord))fightTrainerSet10)(r3, r4);
+    r3 = r29;
+    ((void (*)(RegWord))fn_800896E0)(r3);
+    r3 = 0x0;
+    ((void (*)(RegWord))fn_800896D8)(r3);
+    r3 = 0x9;
+    ((void (*)(RegWord))fn_800896D0)(r3);
+    r28 = r29;
+    r26 = 0x0;
+    do {
+        r5 = *(u16*)((u8*)r28 + 0x12);
+        r3 = r27;
+        r4 = r26 & 0xFF;
+        ((void (*)(RegWord, RegWord, RegWord))fightTrainerSetU16Arr14)(r3, r4, r5);
+        r28 = r28 + 0x2;
+        r26 = r26 + 0x1;
+    } while ((s32)r26 < 4);
+    r3 = r27;
+    r3 = ((u32 (*)(RegWord))fn_801FCC3C)(r3);
+    r3 = ((u32 (*)(RegWord))fightTrainerPokemonDataBiosGetPtr)(r3);
+    r25 = r3;
+    r27 = r31;
+    r24 = 0x0;
+    r26 = r25;
+    r3 = (u32)lbl_803A3334;
+    r28 = (u32)lbl_803A3334;
+    do {
+        if (r31 != 0) {
+            r3 = r26;
+            r4 = r27;
+            ((void (*)(RegWord, RegWord))cardeBuildTrainerPokemon)(r3, r4);
+        } else {
+
+            tmp = r24 + 0xd;
+            r3 = r26;
+            tmp = *(u8*)(r29 + tmp);
+            tmp = (s8)tmp;
+            tmp = tmp * 0x2a;
+            r4 = r28 + tmp;
+            r4 = r4 + 0x514;
+            ((void (*)(RegWord, RegWord))cardeBuildTrainerPokemon)(r3, r4);
+        }
+        r27 = r27 + 0x2a;
+        r26 = r26 + 0x50;
+        r24 = r24 + 0x1;
+    } while ((s32)r24 < 4);
+    tmp = r24 * 0x50;
+    r26 = r25 + tmp;
+    while ((s32)r24 < 6) {
+
+        r3 = r26;
+        r4 = 0x0;
+        ((void (*)(RegWord, RegWord))fightTrainerPokemonDataBiosSetPokemonDataId)(r3, r4);
+        r26 = r26 + 0x50;
+        r24 = r24 + 0x1;
+
+    }
+    r3 = r30;
+    r4 = 0x1;
+    r5 = 0x0;
+    r3 = ((u32 (*)(RegWord, RegWord, RegWord))fieldStartEncount)(r3, r4, r5);
+    r26 = r3;
+    r3 = ((u32 (*)(void))fn_80113F48)();
+    r4 = 0x11170000;
+    r5 = 0x0;
+    r4 = r4 + 0x1800;
+    r6 = 0x0;
+    cameraPlayAnime();
+    tmp = lbl_8047A439;
+    if (tmp != 0) {
+        r28 = 0x446;
+    } else {
+
+        r28 = 0x4cd;
+    }
+    r3 = ((u32 (*)(void))fn_801653C4)();
+    if (r28 != r3) {
+        r3 = r28;
+        r4 = 0x0;
+        r5 = 0x7f;
+        r3 = ((u32 (*)(RegWord, RegWord, RegWord))fn_80165A20)(r3, r4, r5);
+    }
+    r3 = r26;
+    return;
+}
+#endif
+
+/* 0x800330B8 | 0x1C0 | WALL 98.2%: loop scheduling - mr r3 placement */
+extern void fightTrainerPokemonDataBiosSetNickname(s32, s32);
+extern void fightTrainerPokemonDataBiosSetDarkPokemonFlag(s32, u8);
+extern void darkPokemonSaveSet4A6(u8, u8);
+extern void fightTrainerPokemonDataBiosSetLevel(s32, u8);
+extern void fightTrainerPokemonDataBiosSetWazaDataId(s32, u32, u16);
+extern void fightTrainerPokemonDataBiosSetItemDataId(s32, u16);
+extern void fightTrainerPokemonDataBiosSetTokuseiFlag(s32, u8);
+extern void fightTrainerPokemonDataBiosSetStatusRnd(s32, s32, u8);
+extern void fightTrainerPokemonDataBiosSetStatusEffort(s32, s32, s16);
+extern void fightTrainerPokemonDataBiosSetFriend(s32, s16);
+extern void fightTrainerPokemonDataBiosSetSexDataId(s32, u8);
+extern void fightTrainerPokemonDataBiosSetSeikakuDataId(s32, u8);
+extern void fightTrainerPokemonDataBiosSetKeyPlayerFlag(s32, u8);
+extern void fightTrainerPokemonDataBiosSetPartDataId(s32, u8);
+#if 0
+asm void fn_800330B8(void) {
+#include "src/game/gs_npc_event_fn_800330B8.inc"
+}
+#else
+/* RULE-EXCEPTION(user-approved): local compiler-control pragma (push; optimization_level 4; peephole off) needed for the byte match of the code it covers - see docs/RULE_EXCEPTIONS.md */
+#pragma push
+#pragma optimization_level 4
+#pragma peephole off
+void cardeBuildTrainerPokemon(s32 arg0, u8* arg1) {
+    u8* walk;
+    s32 i;
+
+    fightTrainerPokemonDataBiosSetPokemonDataId(PC_PTR(arg0), *(u16*)(arg1 + 0x0));
+    fightTrainerPokemonDataBiosSetNickname(arg0, 0);
+    fightTrainerPokemonDataBiosSetDarkPokemonFlag(arg0, *(u8*)(arg1 + 0x2));
+    if (*(u8*)(arg1 + 0x2) != 0) {
+        darkPokemonSaveSet4A6(*(u8*)(arg1 + 0x2), *(u8*)(arg1 + 0x28));
+    }
+    fightTrainerPokemonDataBiosSetLevel(arg0, *(u8*)(arg1 + 0x3));
+    walk = arg1;
+    for (i = 0; i < 4; i++) {
+        fightTrainerPokemonDataBiosSetWazaDataId(arg0, i & 0xFF, *(u16*)(walk + 0x4));
+        walk += 2;
+    }
+    fightTrainerPokemonDataBiosSetItemDataId(arg0, *(u16*)(arg1 + 0xC));
+    fightTrainerPokemonDataBiosSetTokuseiFlag(arg0, *(u8*)(arg1 + 0xE));
+    fightTrainerPokemonDataBiosSetStatusRnd(arg0, 0, *(u8*)(arg1 + 0xF));
+    fightTrainerPokemonDataBiosSetStatusRnd(arg0, 1, *(u8*)(arg1 + 0x10));
+    fightTrainerPokemonDataBiosSetStatusRnd(arg0, 2, *(u8*)(arg1 + 0x11));
+    fightTrainerPokemonDataBiosSetStatusRnd(arg0, 3, *(u8*)(arg1 + 0x12));
+    fightTrainerPokemonDataBiosSetStatusRnd(arg0, 4, *(u8*)(arg1 + 0x13));
+    fightTrainerPokemonDataBiosSetStatusRnd(arg0, 5, *(u8*)(arg1 + 0x14));
+    fightTrainerPokemonDataBiosSetStatusEffort(arg0, 0, *(s16*)(arg1 + 0x16));
+    fightTrainerPokemonDataBiosSetStatusEffort(arg0, 1, *(s16*)(arg1 + 0x18));
+    fightTrainerPokemonDataBiosSetStatusEffort(arg0, 2, *(s16*)(arg1 + 0x1A));
+    fightTrainerPokemonDataBiosSetStatusEffort(arg0, 3, *(s16*)(arg1 + 0x1C));
+    fightTrainerPokemonDataBiosSetStatusEffort(arg0, 4, *(s16*)(arg1 + 0x1E));
+    fightTrainerPokemonDataBiosSetStatusEffort(arg0, 5, *(s16*)(arg1 + 0x20));
+    fightTrainerPokemonDataBiosSetFriend(arg0, *(s16*)(arg1 + 0x22));
+    fightTrainerPokemonDataBiosSetSexDataId(arg0, *(u8*)(arg1 + 0x24));
+    fightTrainerPokemonDataBiosSetSeikakuDataId(arg0, *(u8*)(arg1 + 0x25));
+    fightTrainerPokemonDataBiosSetKeyPlayerFlag(arg0, *(u8*)(arg1 + 0x26));
+    fightTrainerPokemonDataBiosSetPartDataId(arg0, *(u8*)(arg1 + 0x27));
+    return;
+}
+#endif
+
+#endif
+#if !defined(GS_NPC_EVENT_ONLY_800324A0) && !defined(GS_NPC_EVENT_ONLY_800301B0) && !defined(GS_NPC_EVENT_ONLY_80032ED8) && !defined(GS_NPC_EVENT_ONLY_80031B4C) && !defined(GS_NPC_EVENT_ONLY_800327FC)
+
+/* ===== Phase 2 recovery stubs ===== */
+
+/* fn_80030170 - 0x80030170 | size: 0x38 */
+typedef struct GSnpcEventQueue {
+    void* items[13];
+    u32 idx;
+} GSnpcEventQueue;
+
+void* fn_80030170(GSnpcEventQueue* q) {
+    u32 idx;
+    if (q == NULL) {
+        return NULL;
+    }
+    idx = q->idx;
+    if (idx >= 13) {
+        return NULL;
+    }
+    q->idx = idx + 1;
+    return q->items[idx];
+}
+
+/* fn_800301A8 - 0x800301A8 | size: 0x4 */
+#if 0
+asm void fn_800301A8(void) {
+#include "src/game/gs_npc_event_fn_800301A8.inc"
+}
+#else
+void fn_800301A8(void) { }
+#endif
+
+/* fn_800301AC - 0x800301AC | size: 0x4 */
+#if 0
+asm void fn_800301AC(void) {
+#include "src/game/gs_npc_event_fn_800301AC.inc"
+}
+#else
+void fn_800301AC(void) { }
+#endif
+
+
+/* fn_80030370 - 0x80030370 | size: 0xc */
+#if 0
+asm void fn_80030370(void) {
+#include "src/game/gs_npc_event_fn_80030370.inc"
+}
+#else
+void fn_80030370(u32 r3, u32* r4) {
+    r4[0x4C / 4] = 0x43E3;
+}
+#endif
+
+/* fn_8003037C - 0x8003037C | size: 0xc */
+#if 0
+asm void fn_8003037C(void) {
+#include "src/game/gs_npc_event_fn_8003037C.inc"
+}
+#else
+void fn_8003037C(u32 r3, u32* r4) {
+    r4[0x4C / 4] = 0x43E2;
+}
+#endif
+
+/* fn_80030388 - 0x80030388 | size: 0xa0 */
+#if 0
+asm void fn_80030388(void) {
+#include "src/game/gs_npc_event_fn_80030388.inc"
+}
+#else
+#pragma peephole off
+void fn_80030388(u8* r3, u8* r4) {
+    u32 flags = *(u32*)(r4 + 0x64);
+    s32 evtype = *(s16*)(r4 + 0x6);
+    u32 combined = (flags & 0xa1400000) | *(u8*)(r3 + 0x8b);
+    switch (evtype) {
+    case 0x10CB:
+        GSmsgPrintColor(0, 0, combined, 0x4412);
+        break;
+    case 0x10CA:
+        {
+            s32 val = heroGetStatus((void*)lbl_803A2688, 1, 0);
+            msgctrlSetValue(0x4D, val);
+            GSmsgPrintColor(0, 0, combined, 0x4413);
+        }
+        break;
+    }
+}
+#pragma peephole on
+#endif
+
+/* fn_80030428 - 0x80030428 | size: 0x4 */
+#if 0
+asm void fn_80030428(void) {
+#include "src/game/gs_npc_event_fn_80030428.inc"
+}
+#else
+void fn_80030428(void) { }
+#endif
+
+/* fn_8003042C - 0x8003042C | size: 0x148 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void pokemonGetSoubiItemDataId(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void itemDataBiosGetPtr(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void itemDataBiosGetName(void);
+#endif
+extern u8 lbl_80266F68[];
+extern u32 lbl_8047A424;
+extern u32 lbl_8047A420;
+#if 0
+asm void fn_8003042C(void) {
+#include "src/game/gs_npc_event_fn_8003042C.inc"
+}
+#else
+#ifndef TARGET_PC /* copy: fn_8003042C is owned and scored in main/game/gs_npc_event_candidate_8003037C_r40_8003042C_gc20; the PC links that one */
+void fn_8003042C(u8* arg0, u8* arg1) {
+    u32 combined;
+    s32 kind;
+    void* obj;
+
+    combined = (*(u32*)(arg1 + 0x64) & ~0xFF) | *(u8*)(arg0 + 0x8B);
+    kind = 0;
+    if (*(s16*)(arg1 + 0x6) == *(u16*)(lbl_80266F68 + 0x12)) {
+        kind = *(u16*)(lbl_80266F68 + 0x0);
+    }
+    if (*(s16*)(arg1 + 0x6) == *(u16*)(lbl_80266F68 + 0x26)) {
+        kind = *(u16*)(lbl_80266F68 + 0x14);
+    }
+
+    obj = 0;
+    if (kind == 1) {
+        obj = (void*)PC_PTR(heroGetStatus(0, 3, (u16)lbl_8047A424));
+    } else if (kind == 2) {
+        obj = (void*)PC_PTR(heroGetStatus(lbl_803A2688, 3, (u16)lbl_8047A420));
+    }
+
+    if (obj != 0) {
+        if (((u16 (*)(void*))pokemonGetSoubiItemDataId)(obj) != 0) {
+            itemDataBiosGetPtr();
+            itemDataBiosGetName();
+            msgctrlSetValue(0x37, ((s32 (*)(void))GSmsgGetGSchar)());
+            GSmsgPrintColor(0, 0, combined, 0xE7);
+            *(u32*)(arg1 + 0x4C) = 0;
+            winSpriteSetDisp(arg1, 1);
+        } else {
+            winSpriteSetDisp(arg1, 0);
+        }
+    } else {
+        winSpriteSetDisp(arg1, 0);
+    }
+}
+#endif
+#endif
+
+/* fn_80030574 - 0x80030574 | size: 0x234 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void pokemonWazaCheckValid(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 wazaGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSmsgPrintRect(s32, s32, s32, s32, u32, u16);
+#endif
+extern u32 lbl_8047A424;
+extern u32 lbl_8047A420;
+#if 0
+asm void fn_80030574(void) {
+#include "src/game/gs_npc_event_fn_80030574.inc"
+}
+#else
+void fn_80030574(u8* arg0, u8* arg1) {
+    u8* table;
+    u32 combined;
+    s32 group;
+    s32 slot;
+    s32 key;
+    u32 value;
+    void* obj;
+
+    combined = (*(u32*)(arg1 + 0x64) & ~0xFF) | *(u8*)(arg0 + 0x8B);
+    table = lbl_80266F68;
+    group = 0;
+    slot = 0;
+    key = *(s16*)(arg1 + 0x6);
+
+    {
+        s32 i;
+        for (i = 0; i < 2; i++) {
+            key = *(s16*)(arg1 + 0x6);
+            if (key == *(u16*)(table + 0x8)) {
+                group = *(u16*)(table + 0x0);
+                slot = 0;
+            }
+            if (key == *(u16*)(table + 0xA)) {
+                group = *(u16*)(table + 0x0);
+                slot = 1;
+            }
+            if (key == *(u16*)(table + 0xC)) {
+                group = *(u16*)(table + 0x0);
+                slot = 2;
+            }
+            if (key == *(u16*)(table + 0xE)) {
+                group = *(u16*)(table + 0x0);
+                slot = 3;
+            }
+            table += 0x14;
+        }
+    }
+
+    obj = 0;
+    if (group == 2) goto grp2;
+    if (group >= 2) goto grp_done;
+    if (group >= 1) goto grp1;
+    goto grp_done;
+grp1:
+    obj = (void*)PC_PTR(heroGetStatus(0, 3, (u16)lbl_8047A424));
+    goto grp_done;
+grp2:
+    obj = (void*)PC_PTR(heroGetStatus(lbl_803A2688, 3, (u16)lbl_8047A420));
+grp_done:
+    ;
+
+    /* Retail groups all three winSpriteSetDisp calls at the end: the obj == 0
+     * body is out of line, after the if/else, not inline at the test. */
+    if (obj == 0) {
+        goto no_object;
+    }
+
+    value = ((u16 (*)(void*, s32, s32, s32))pokemonGetStatus)(obj, 0, 0x7F, (u16)slot);
+    if (((u8 (*)(void*, s32))pokemonWazaCheckValid)(obj, (u16)slot) == 0) {
+        value = 0;
+    }
+
+    value = (u16)value;
+    switch (value) {
+    case 0xFFFF:
+        value = 0x933;
+        break;
+    case 0xFFFE:
+        value = 0x934;
+        break;
+    case 0:
+        break;
+    default:
+        value = ((u32 (*)(s32, u32, s32, s32))wazaGetStatus)(0, value, 1, 0);
+        break;
+    }
+
+    if (value != 0) {
+        msgctrlSetValue(0x37, ((s32 (*)(u32))GSmsgGetGSchar)(value));
+        GSmsgPrintRect(0, 0, *(s16*)(arg1 + 0x54), *(s16*)(arg1 + 0x56), combined, 0xE7);
+        winSpriteSetDisp(arg1, 1);
+    } else {
+        winSpriteSetDisp(arg1, 0);
+    }
+    return;
+
+no_object:
+    winSpriteSetDisp(arg1, 0);
+}
+#endif
+
+/* fn_800307A8 - 0x800307A8 | size: 0x12c */
+extern u32 lbl_8047A424;
+extern u32 lbl_8047A420;
+#if 0
+asm void fn_800307A8(void) {
+#include "src/game/gs_npc_event_fn_800307A8.inc"
+}
+#else
+void fn_800307A8(u8* arg0, u8* arg1) {
+    u32 combined;
+    s32 kind;
+    void* obj;
+
+    combined = (*(u32*)(arg1 + 0x64) & ~0xFF) | *(u8*)(arg0 + 0x8B);
+    kind = 0;
+    if (*(s16*)(arg1 + 0x6) == *(u16*)(lbl_80266F68 + 0x2)) {
+        kind = *(u16*)(lbl_80266F68 + 0x0);
+    }
+    if (*(s16*)(arg1 + 0x6) == *(u16*)(lbl_80266F68 + 0x16)) {
+        kind = *(u16*)(lbl_80266F68 + 0x14);
+    }
+
+    obj = 0;
+    if (kind == 1) {
+        obj = (void*)PC_PTR(heroGetStatus(0, 3, (u16)lbl_8047A424));
+    } else if (kind == 2) {
+        obj = (void*)PC_PTR(heroGetStatus(lbl_803A2688, 3, (u16)lbl_8047A420));
+    }
+
+    if (obj != 0) {
+        msgctrlSetValue(0x2F, ((u8 (*)(void*, s32, s32, s32))pokemonGetStatus)(obj, 0, 0x7A, 0));
+        GSmsgPrintRect(0, 0, *(s16*)(arg1 + 0x54), *(s16*)(arg1 + 0x56), combined, 0x4414);
+        winSpriteSetDisp(arg1, 1);
+    } else {
+        winSpriteSetDisp(arg1, 0);
+    }
+}
+#endif
+
+/* fn_800308D4 - 0x800308D4 | size: 0x170 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void pokemonDataBiosGetPtr(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void pokemonDataBiosGetName(void);
+#endif
+extern u32 lbl_8047A424;
+extern u32 lbl_8047A420;
+#if 0
+asm void fn_800308D4(void) {
+#include "src/game/gs_npc_event_fn_800308D4.inc"
+}
+#else
+void fn_800308D4(u8* arg0, u8* arg1) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 pokemonGetStatus(void* obj, s32 a, s32 b, s32 c);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 pokemonDataBiosGetPtr(s32 v);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 pokemonDataBiosGetName(s32 v);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 GSmsgGetRect(s32 m);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 GSmsgGetGSchar(s32 m);
+#endif
+    s32 hi;
+    s32 kind;
+    u32 combined;
+    void* obj;
+    u8* tbl;
+
+    obj = 0;
+    kind = 0;
+    combined = (*(u32*)(arg1 + 0x64) & ~0xFF) | *(u8*)(arg0 + 0x8B);
+    tbl = lbl_80266F68;
+    if (*(s16*)(arg1 + 0x6) == *(u16*)(tbl + 0x6)) {
+        kind = *(u16*)(tbl + 0x0);
+    }
+    tbl += 0x14;
+    if (*(s16*)(arg1 + 0x6) == *(u16*)(tbl + 0x6)) {
+        kind = *(u16*)(tbl + 0x0);
+    }
+
+    switch (kind) {
+    case 1:
+        obj = (void*)PC_PTR(heroGetStatus(0, 3, (u16)lbl_8047A424));
+        break;
+    case 2:
+        obj = (void*)PC_PTR(heroGetStatus(lbl_803A2688, 3, (u16)lbl_8047A420));
+        break;
+    }
+
+    if (obj != 0) {
+        hi = (s16)((u32)GSmsgGetRect(0x2BD4) >> 16);
+        GSmsgPrintColor(0, 0, combined, 0x2BD4);
+        msgctrlSetValue(0x37, PC_PTR32_IMPLICIT(GSmsgGetGSchar(pokemonDataBiosGetName(pokemonDataBiosGetPtr(pokemonGetStatus(obj, 0, POKEMON_STATUS_SPECIES, 0))))));
+        GSmsgPrintColor(hi, 0, combined, 0xE7);
+        *(u32*)(arg1 + 0x4C) = 0;
+        winSpriteSetDisp(arg1, 1);
+    } else {
+        winSpriteSetDisp(arg1, 0);
+    }
+}
+#endif
+
+/* fn_80030A44 - 0x80030A44 | size: 0x1d0 */
+extern u32 lbl_8047A424;
+extern u32 lbl_8047A420;
+#if 0
+asm void fn_80030A44(void) {
+#include "src/game/gs_npc_event_fn_80030A44.inc"
+}
+#else
+void fn_80030A44(u8* arg0, u8* arg1) {
+    u8* table;
+    u32 combined;
+    s32 group;
+    s32 msg;
+    s32 x;
+    void* obj;
+
+    combined = (*(u32*)(arg1 + 0x64) & ~0xFF) | *(u8*)(arg0 + 0x8B);
+    table = lbl_80266F68;
+    group = 0;
+
+    if (*(s16*)(arg1 + 0x6) == *(u16*)(table + 0x4)) {
+        group = *(u16*)(table + 0x0);
+    }
+    table += 0x14;
+    if (*(s16*)(arg1 + 0x6) == *(u16*)(table + 0x4)) {
+        group = *(u16*)(table + 0x0);
+    }
+
+    obj = 0;
+    if (group == 2) goto grp2;
+    if (group >= 2) goto grp_done;
+    if (group >= 1) goto grp1;
+    goto grp_done;
+grp1:
+    obj = (void*)PC_PTR(heroGetStatus(0, 3, (u16)lbl_8047A424));
+    goto grp_done;
+grp2:
+    obj = (void*)PC_PTR(heroGetStatus(lbl_803A2688, 3, (u16)lbl_8047A420));
+grp_done:
+    ;
+
+    /* As in fn_80030574: retail puts the obj == 0 body last, out of line. */
+    if (obj == 0) {
+        goto no_object_30A44;
+    }
+
+    msgctrlSetValue(0x37, ((s32 (*)(void*))pokemonBiosGetNicknamePtr)(obj));
+    GSmsgPrintColor(0, 0, combined, 0xE7);
+    winSpriteSetDisp(arg1, 1);
+
+    if (((u8 (*)(void*))pokemonCheckValid)(obj) != 0 &&
+        ((u8 (*)(void*))menuCBRule_CheckPokemonEventFlag)(obj) == 1) {
+        switch (((u8 (*)(void*))menuSubGetPokemonSexForDisp)(obj)) {
+        case 0:
+            msg = 0xD67;
+            break;
+        case 1:
+            msg = 0xD68;
+            break;
+        default:
+            msg = 0;
+            break;
+        }
+
+        if (msg != 0) {
+            x = (s16)(((u32 (*)(s32))GSmsgGetRect)(0xE7) >> 16);
+            msgctrlSetValue(0x37, ((s32 (*)(s32))GSmsgGetGSchar)(msg));
+            GSmsgPrintColor((u16)x + 2, 0, combined, 0xCF);
+        }
+    }
+    return;
+
+no_object_30A44:
+    winSpriteSetDisp(arg1, 0);
+}
+#endif
+
+/* fn_80030C14 - 0x80030C14 | size: 0x120 */
+extern u8 lbl_803A3230[];
+extern u8 lbl_803A31E8[];
+extern u8 lbl_80314F98[];
+#ifndef TARGET_PC /* PC: canonical declaration in pc/prototypes.h */
+extern f32 lbl_8047B9D4;
+#endif
+extern f32 lbl_8047B9F0;
+#if 0
+asm void fn_80030C14(void) {
+#include "src/game/gs_npc_event_fn_80030C14.inc"
+}
+#else
+#pragma peephole off
+void fn_80030C14(void* r3, u8* r4) {
+    void* model = NULL;
+    s32 evtype = *(s16*)(r4 + 0x6);
+    switch (evtype) {
+    case 0x10CC:
+        model = menuModelRender(lbl_803A3230);
+        break;
+    case 0x10CD:
+        model = menuModelRender(lbl_803A31E8);
+        break;
+    }
+    if (model != NULL) {
+        gfxSetFlags(3);
+        gfxClearFlags(4);
+        gfxSetPrimitive(7);
+        gfxSetVtxDesc(lbl_80314F98);
+        gfxLoadTexture(0, model);
+        gfxBegin(2);
+        gfxVtxPos2s16(0, 0);
+        gfxVtxColor4u8(0, 0xFF, 0xFF, 0xFF, 0xFF);
+        gfxVtxTexCoord(0, lbl_8047B9D4, lbl_8047B9D4);
+        gfxVtxPos2s16(*(s16*)(r4 + 0x54), *(s16*)(r4 + 0x56));
+        gfxVtxColor4u8(0, 0xFF, 0xFF, 0xFF, 0xFF);
+        gfxVtxTexCoord(0, lbl_8047B9F0, lbl_8047B9F0);
+        gfxEnd();
+    }
+}
+#pragma peephole on
+#endif
+
+/* fn_80030D34 - 0x80030D34 | size: 0x1d8 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void pokemonBiosGetItemDataId(void);
+#endif
+#if 0
+asm void fn_80030D34(void) {
+#include "src/game/gs_npc_event_fn_80030D34.inc"
+}
+#else
+void fn_80030D34(u8* arg0, u8* arg1) {
+    u8* table;
+    s32 kind;
+    s32 arg;
+    s32 i;
+    s32 side;
+    void* obj;
+
+    table = lbl_80266E90;
+    kind = 0;
+    arg = 0;
+    for (i = 0; i < 12; i++) {
+        if (*(s16*)(arg1 + 0x6) == *(u16*)(table + 0x8)) {
+            kind = *(u8*)(table + 0x0);
+            arg = *(u8*)(table + 0x1);
+        }
+        table += 0x12;
+    }
+
+    obj = 0;
+    if (kind == 1) {
+        obj = (void*)PC_PTR(heroGetStatus(0, 3, (u16)arg));
+    } else if (kind == 2) {
+        obj = (void*)PC_PTR(heroGetStatus(lbl_803A2688, 3, (u16)arg));
+    }
+
+    if (((u8 (*)(void*))pokemonBiosGetFuseiFlag)(obj) != 0) {
+        side = ((u16 (*)(void*))pokemonBiosGetItemDataId)(obj);
+        if (side != 0) {
+            winSpriteSetDisp(arg1, 1);
+        } else {
+            winSpriteSetDisp(arg1, 0);
+        }
+    } else if (((u8 (*)(void*))pokemonCheckValid)(obj) != 0 &&
+               ((u8 (*)(void))menuCBRule_CheckPokemonEventFlag)() == 1) {
+        side = ((u16 (*)(void*))pokemonBiosGetItemDataId)(obj);
+        if (side != 0) {
+            winSpriteSetDisp(arg1, 1);
+        } else {
+            winSpriteSetDisp(arg1, 0);
+        }
+    } else {
+        winSpriteSetDisp(arg1, 0);
+    }
+}
+#endif
+
+/* fn_80030F0C - 0x80030F0C | size: 0x27c */
+extern void pokemonBiosGetDarkFlag(void);
+#if 0
+asm void fn_80030F0C(void) {
+#include "src/game/gs_npc_event_fn_80030F0C.inc"
+}
+#else
+void fn_80030F0C(u8* arg0, u8* arg1) {
+    u8* table;
+    s32 group;
+    s32 arg;
+    s32 side;
+    s32 i;
+    void* obj;
+
+    table = lbl_80266E90;
+    group = 0;
+    arg = 0;
+    side = 0;
+    for (i = 0; i < 12; i++) {
+        if (*(s16*)(arg1 + 0x6) == *(u16*)(table + 0x4)) {
+            group = *(u8*)(table + 0x0);
+            arg = *(u8*)(table + 0x1);
+            side = 1;
+        } else if (*(s16*)(arg1 + 0x6) == *(u16*)(table + 0x6)) {
+            group = *(u8*)(table + 0x0);
+            arg = *(u8*)(table + 0x1);
+            side = 2;
+        }
+        table += 0x12;
+    }
+
+    obj = 0;
+    if (group == 1) {
+        obj = (void*)PC_PTR(heroGetStatus(0, 3, (u16)arg));
+    } else if (group == 2) {
+        obj = (void*)PC_PTR(heroGetStatus(lbl_803A2688, 3, (u16)arg));
+    }
+
+    if (((u8 (*)(void*))pokemonBiosGetFuseiFlag)(obj) != 0) {
+        if (((u8 (*)(void*))pokemonBiosGetDarkFlag)(obj) == 1) {
+            winSpriteSetDisp(arg1, side == 2);
+        } else {
+            winSpriteSetDisp(arg1, side == 1);
+        }
+    } else if (((u8 (*)(void*))pokemonCheckValid)(obj) != 0 &&
+               ((u8 (*)(void*))menuCBRule_CheckPokemonEventFlag)(obj) == 1) {
+        if (((u8 (*)(void*))pokemonBiosGetDarkFlag)(obj) == 1) {
+            winSpriteSetDisp(arg1, side == 2);
+        } else {
+            winSpriteSetDisp(arg1, side == 1);
+        }
+    } else {
+        winSpriteSetDisp(arg1, 0);
+    }
+}
+#endif
+
+/* fn_800347B8 - 0x800347B8 | size: 0xc */
+extern u32 lbl_8047A440;
+#if 0
+asm void fn_800347B8(void) {
+#include "src/game/gs_npc_event_fn_800347B8.inc"
+}
+#else
+void fn_800347B8(void) {
+    *(u8*)&lbl_8047A440 = 1;
+}
+#endif
+
+/* fn_800347C4 - 0x800347C4 | size: 0x24 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void soundStartSE(s32);
+#endif
+#if 0
+asm void fn_800347C4(void) {
+#include "src/game/gs_npc_event_fn_800347C4.inc"
+}
+#else
+void fn_800347C4(void) {
+    soundStartSE(0x26);
+}
+#endif
+
+/* fn_800347E8 - 0x800347E8 | size: 0x24 */
+#if 0
+asm void fn_800347E8(void) {
+#include "src/game/gs_npc_event_fn_800347E8.inc"
+}
+#else
+void fn_800347E8(void) {
+    soundStartSE(0x26);
+}
+#endif
+
+/* fn_8003480C - 0x8003480C | size: 0x24 */
+#if 0
+asm void fn_8003480C(void) {
+#include "src/game/gs_npc_event_fn_8003480C.inc"
+}
+#else
+void fn_8003480C(void) {
+    soundStartSE(0x26);
+}
+#endif
+
+/* fn_80034DC0 - 0x80034DC0 | size: 0x78 | WALL 80%: oris+ori constant build pattern */
+extern u32 lbl_8047A44C;
+#if 0
+asm void fn_80034DC0(void) {
+#include "src/game/gs_npc_event_fn_80034DC0.inc"
+}
+#else
+void fn_80034DC0(u8* arg0, u8* arg1) {
+    u32 byte;
+    s32 mask;
+    s32 combined;
+
+    byte = *(u8*)(arg0 + 0x8B);
+    mask = -0x100;
+    combined = byte | mask;
+    GSmsgPrintColor(0, 0, combined, 0x3CC8);
+    msgctrlSetValue(0x34, lbl_8047A44C);
+    GSmsgPrintRect(0, 0, *(s16*)(arg1 + 0x54), *(s16*)(arg1 + 0x56), combined, 0x3CC9);
+}
+#endif
+
+#endif
+
+/* fn_800301B0 and fn_800302D0 also build alone for the linked
+ * gs_npc_event_candidate_800301B0 unit. */
+#if !defined(GS_NPC_EVENT_ONLY_800324A0) && !defined(GS_NPC_EVENT_ONLY_80032ED8) && !defined(GS_NPC_EVENT_ONLY_80031B4C) && !defined(GS_NPC_EVENT_ONLY_800327FC)
+extern u8 lbl_803A3230[];
+extern u8 lbl_803A31E8[];
+extern u8 lbl_80314F98[];
+extern u8 lbl_803A2688[];
+#ifndef TARGET_PC /* PC: canonical declaration in pc/prototypes.h */
+extern f32 lbl_8047B9D4;
+#endif
+extern f32 lbl_8047B9F0;
+
+/* fn_800301B0 - 0x800301B0 | size: 0x120 */
+/* RULE-EXCEPTION(user-approved): local peephole-control pragma — see docs/RULE_EXCEPTIONS.md */
+#pragma push
+#pragma peephole off
+void fn_800301B0(void* r3, u8* r4) {
+    void* model = NULL;
+    s32 evtype = *(s16*)(r4 + 0x6);
+    switch (evtype) {
+    case 0x10CE:
+        model = menuModelRender(lbl_803A3230);
+        break;
+    case 0x10CF:
+        model = menuModelRender(lbl_803A31E8);
+        break;
+    }
+    if (model != NULL) {
+        gfxSetFlags(3);
+        gfxClearFlags(4);
+        gfxSetPrimitive(7);
+        gfxSetVtxDesc(lbl_80314F98);
+        gfxLoadTexture(0, model);
+        gfxBegin(2);
+        gfxVtxPos2s16(0, 0);
+        gfxVtxColor4u8(0, 0xFF, 0xFF, 0xFF, 0xFF);
+        gfxVtxTexCoord(0, lbl_8047B9D4, lbl_8047B9D4);
+        gfxVtxPos2s16(*(s16*)(r4 + 0x54), *(s16*)(r4 + 0x56));
+        gfxVtxColor4u8(0, 0xFF, 0xFF, 0xFF, 0xFF);
+        gfxVtxTexCoord(0, lbl_8047B9F0, lbl_8047B9F0);
+        gfxEnd();
+    }
+}
+#pragma pop
+
+/* fn_800302D0 - 0x800302D0 | size: 0xa0 */
+/* RULE-EXCEPTION(user-approved): local compiler-control pragma (peephole off) needed for the byte match of the code it covers - see docs/RULE_EXCEPTIONS.md */
+#pragma peephole off
+void fn_800302D0(u8* r3, u8* r4) {
+    u32 flags = *(u32*)(r4 + 0x64);
+    s32 evtype = *(s16*)(r4 + 0x6);
+    u32 combined = (flags & 0xa1400000) | *(u8*)(r3 + 0x8b);
+    switch (evtype) {
+    case 0xFBD:
+        GSmsgPrintColor(0, 0, combined, 0x4412);
+        break;
+    case 0xFBC:
+        {
+            s32 val = heroGetStatus((void*)lbl_803A2688, 1, 0);
+            msgctrlSetValue(0x4D, val);
+            GSmsgPrintColor(0, 0, combined, 0x4413);
+        }
+        break;
+    }
+}
+#endif

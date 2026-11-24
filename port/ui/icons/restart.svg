@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- A one-colour circular arrow for About's "Restart now" button (2026-11-23; snatcherLeo and Studio: the same small icon
+     buttons in both programs' About). White, filled paths only (port/src/pc_svg.cpp reads no strokes): a 2-unit ring
+     (eight quadratic arcs, outer radius 8, inner 6) open at the top right, and its arrowhead pointing on round. Tinted at
+     draw time. Drawn by Main; no outside art. -->
+<path fill="#FFFFFF" d="M17.657 6.343 Q20 8.686 20 12 Q20 15.314 17.657 17.657 Q15.314 20 12 20 Q8.686 20 6.343 17.657 Q4 15.314 4 12 Q4 8.686 6.343 6.343 Q8.686 4 12 4 L12 6 Q9.515 6 7.757 7.757 Q6 9.515 6 12 Q6 14.485 7.757 16.243 Q9.515 18 12 18 Q14.485 18 16.243 16.243 Q18 14.485 18 12 Q18 9.515 16.243 7.757 Z"/>
+<path fill="#FFFFFF" d="M11 1.2 L16.6 5 L11 8.8 Z"/>
+</svg>

@@ -1,0 +1,565 @@
+#ifndef GAME_BATTLE_BATTLE_WAZA_TYPES_H
+#define GAME_BATTLE_BATTLE_WAZA_TYPES_H
+
+/**
+ * @file battle_waza_types.h
+ * @brief Shared types and cross-TU declarations for the waza (move animation)
+ *        system, split across game/mail.c, game/mailMain.c,
+ *        game/wazaSequenceCamera.c, game/wazaViewer.c,
+ *        game/wazaSequenceEntry.c, game/wazaSequenceSys.c,
+ *        game/wazaSequenceSys_tail.c,
+ *        game/wazaSequence.c and game/sequence.c (originally one
+ *        CodeCandidate bucket: game/battle/battle_waza.c,
+ *        0x801D1338 - 0x801DE698).
+ *
+ * These declarations span matching and partially decompiled units; this
+ * header lets each split TU see the others' signatures without
+ * redeclaration mismatches.
+ */
+
+#include "game/battle/battle.h"
+#include "pc/disc_types.h" /* DISC_STRUCT (empty on the GameCube) */
+
+/* =========================================================================
+ * Waza Entry Structure (temporary - based on 0x2C byte size)
+ * ========================================================================= */
+
+/* The mail table's rows (mailData, common_rel data; the name is historical): disc data, big-endian on the PC, so
+ * read through a byte-swapping view (DISC_STRUCT). Before (2026-10-16): read natively, the send condition (a flag id)
+ * came out byte-swapped and the first hero step crashed in std082_flagGetValue (cbStep -> chkMailSend). */
+typedef struct DISC_STRUCT WazaEntry {
+    /* 0x00 */ u8  sendCondType;
+    /* 0x01 */ u8  pad_01[3];
+    /* 0x04 */ u16 field_04;
+    /* 0x06 */ u16 sendRate;
+    /* 0x08 */ f32 duration;       /* Duration of the entry */
+    /* 0x0C */ u32 field_0C;       /* Unknown field */
+    /* 0x10 */ u32 field_10;       /* Unknown field */
+    /* 0x14 */ u32 field_14;
+    /* 0x18 */ u32 field_18;
+    /* 0x1C */ s32 sendCondition;
+    /* 0x20 */ s32 field_20;
+    /* 0x24 */ s32 field_24;      /* Field being accessed by mailDataBiosGet24 */
+    /* 0x28 */ s32 resourceID;    /* Resource ID */
+    /* 0x2C */ /* end of struct */
+} WazaEntry;
+
+typedef struct WazaSequenceNode WazaSequenceNode;
+typedef struct WazaSequence WazaSequence;
+typedef struct WazaEffect WazaEffect;
+typedef WazaEffect WazaSequenceOwner;
+typedef struct GSpart GSpart;
+typedef struct GSvec GSvec;
+
+struct WazaSequenceNode { /* GameCube layout on the PC too (0xB4 bytes; pools are sized in GameCube bytes): pointer
+                           * fields are 32-bit slots (pc/ptr32.h), since many files view it through raw offsets */
+    /* 0x00 */ s32 linkKey;
+    /* 0x04 */ s32 kind;
+    /* 0x08 */ s32 linkedEntryKey;
+    /* 0x0C */ s32 sourceIndex;
+    /* 0x10 */ s32 targetIndex;
+    /* 0x14 */ s32 timingIndex;
+    /* 0x18 */ s32 state;
+    /* 0x1C */ u32 flags;
+    /* 0x20 */ s32 attachment;
+    /* 0x24 */ s32 partIndex;
+    /* 0x28 */ s32 positionType;
+    /* 0x2C */ s32 timing[0x10];
+    /* 0x6C */ u32 runtimeState;
+    /* 0x70 */ s32 startTime;
+    /* 0x74 */ s32 currentTime;
+    /* 0x78 */ s32 resourceId;
+    /* 0x7C */ u32 runtimeFlags;
+    /* 0x80 */ s32 field_80;
+    /* 0x84 */ s32 animationMode;
+    /* 0x88 */ PTR32_FIELD(void) resource;
+    /* 0x8C */ s32 textureAnimationMode;
+    /* 0x90 */ s32 textureAnimation;
+    /* 0x94 */ s32 restoreTransform;
+    /* 0x98 */ u8 pad_98[8];
+    /* 0xA0 */ s32 attached;
+    /* 0xA4 */ PTR32_FIELD(void) model;
+    /* 0xA8 */ PTR32_FIELD(WazaSequenceNode) next;
+    /* 0xAC */ PTR32_FIELD(WazaSequenceNode) previous;
+    /* 0xB0 */ PTR32_FIELD(WazaSequence) sequence;
+};
+
+struct WazaSequence { /* GameCube layout on the PC too (0x40 bytes), like WazaSequenceNode */
+    /* 0x00 */ u32 state;
+    /* 0x04 */ u8 pad_04[4];
+    /* 0x08 */ u32 flags;
+    /* 0x0C */ s32 kind;
+    /* 0x10 */ s32 field_10;
+    /* 0x14 */ u8 active;
+    /* 0x15 */ u8 stopping;
+    /* 0x16 */ u8 cameraActive;
+    /* 0x17 */ u8 pad_17[0x0D];
+    /* 0x24 */ PTR32_FIELD(WazaSequenceNode) firstNode;
+    /* 0x28 */ u8 pad_28[2];
+    /* 0x2A */ u16 handle;
+    /* 0x2C */ u16 moveIndex;
+    /* 0x2E */ u16 animationMode;
+    /* 0x30 */ u8 pad_30[0x0C];
+    /* 0x3C */ PTR32_FIELD(WazaSequenceOwner) owner;
+};
+
+typedef struct WazaPartyScratch {
+    u16 seqIds[0x200];
+    u16 count;
+    u8 receivedFlags[0x40];
+    u8 selectedHandle;
+    u8 currentHandle;
+} WazaPartyScratch;
+
+/* Waza effect data table entry (stride 0xD4) */
+typedef struct WazaEffectTblEntry {
+    /* 0x00 */ u8  pad_00[0x4C];
+    /* 0x4C */ u32 field_4C[0x11];
+    /* 0x90 */ s32 field_90;                 /* set by wazaSequenceOwnerSetAnim */
+    /* 0x94 */ u8  pad_94[0xD4 - 0x94];
+} WazaEffectTblEntry;
+
+/* Waza battle effect object (size 0x8C) */
+struct WazaEffect { /* GameCube layout on the PC too (0x8C bytes), like WazaSequenceNode */
+    /* 0x00 */ u8 pad_00[0x10];
+    /* 0x10 */ s32 scale_selector;          /* selects scale value */
+    /* 0x14 */ u8 pad_14[0x02];
+    /* 0x16 */ u8 motionBusy;
+    /* 0x17 */ u8 sequenceEnabled;
+    /* 0x18 */ u8 flags;                     /* trajectory/flags byte */
+    /* 0x19 */ u8 pad_19[0x0B];
+    /* 0x24 */ PTR32_FIELD(struct GSmodel) model;
+    /* 0x28 */ PTR32_FIELD(void) particleBank;
+    /* 0x2C */ PTR32_FIELD(WazaEffectTblEntry) table;    /* effect data table */
+    /* 0x30 */ u8 pad_30[0x02];
+    /* 0x32 */ u16 index;                    /* table index */
+    /* 0x34 */ u16 field_34;                 /* set by wazaSequenceOwnerSetAnim */
+    /* 0x36 */ u8 pad_36[0x32];
+    /* 0x68 */ PTR32_FIELD(WazaSequence) sequenceList;
+    /* 0x6C */ PTR32_FIELD(WazaSequence) currentSequence;
+    /* 0x70 */ u8 pad_70[0x04];
+    /* 0x74 */ u8 active;
+    /* 0x75 */ u8 animationActive;
+    /* 0x76 */ u8 pad_76[0x0A];
+    /* 0x80 */ PTR32_FIELD(u8) field_80;                 /* secondary particle node */
+    /* 0x84 */ PTR32_FIELD(u8) effect_handle;            /* particle node */
+    /* 0x88 */ u8 pad_88[0x04];
+};
+
+typedef struct WazaFxNode {
+    u8 pad_00[0x2C];
+    u16 field_2C;
+    u16 field_2E;
+    u8 pad_30[0x04];
+    PTR32_FIELD(struct WazaFxNode) next; /* 0x34 */
+} WazaFxNode;
+
+typedef struct WazaFxOwner {
+    u8 pad_00[0x68];
+    PTR32_FIELD(WazaFxNode) first_child;
+} WazaFxOwner;
+
+/* =========================================================================
+ * External function declarations (other, already-split, translation units)
+ * ========================================================================= */
+
+/* CRT */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memset(void* dst, int val, u32 size);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memcpy(void* dst, const void* src, u32 size);
+#endif
+
+/* Engine core */
+extern void  GSlogWrite(const char* fmt, ...);           /* GSlog_Print */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32   fn_800D37CC(void);                            /* GSrandom_Get */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32   GSgetFrameStep(void);                            /* GSgfx tick */
+#endif
+extern void* fn_800DB940(u32 size);                        /* GSmem_Alloc */
+extern void  fn_800DB9A4(void* ptr);                       /* GSmem_Free */
+
+/* Scene management */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  menuCloseCustom(s32 objID, s32 arg1, s32 arg2);  /* release scene object */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8    menuIsCheck(s32 objID);                       /* check scene object active */
+#endif
+extern void* fn_801025C0(s32 objID);                       /* get scene object pointer */
+
+/* HSD model/animation */
+extern void  fn_80362D0C(void* jobj);                      /* HSD_JObjAnimAll */
+extern void  fn_80362E40(void* jobj, f32 frame);           /* HSD_JObjReqAnimAll */
+extern void* fn_80363B8C(void* data, s32 idx);             /* HSD_JObjLoadJoint */
+extern void  fn_80363CF4(void* jobj);                      /* HSD_JObjRemoveAll */
+extern void  fn_8036A384(void* jobj, f32 x, f32 y, f32 z); /* HSD_JObjSetTranslate */
+
+/* Sound */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  std105_soundPlayEffect(s32 sndID, s32 fadeTime, s32 volume); /* sndPlay */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  soundStop(s32 sndID, s32 volume);              /* soundStop */
+#endif
+extern void  soundStopRaw(s32 handle, s32 fadeTime, s32 volume);
+extern void  heroMoveAddStepCallback(void* callback, s32 arg);
+
+/* Particle system */
+extern void GSthreadTerminateGroup(u32 priority);          /* stop particle system */
+extern void* fn_80121E24(s32 effectID, f32 x, f32 y, f32 z); /* spawn particle effect */
+extern void  fn_80121F3C(void* particle);                  /* destroy particle */
+extern void  fn_80122048(void* particle, f32 x, f32 y, f32 z); /* set particle pos */
+
+/* Battle grid/scene */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* savedataGetStatus(s32 side, s32 slotType);
+#endif
+extern void* fadeEffectDokuStop(s32 slot);                 /* get grid slot model (was fn_801C4078) */
+extern f32   fadeEffectHookFunction_Doku_Init(s32 slot);   /* get slot X (was fn_801C4814) */
+extern f32   fadeEffectHookFunction_fadein_Init(s32 slot);                        /* get slot Y */
+extern f32   fadeEffectHookFunction_trainer_Init(s32 slot);                        /* get slot Z */
+
+/* Waza effect functions (engine callbacks) */
+extern u8*   gsParticleCreate(u8* texture, u32 selector, u32 subid);
+extern void  fn_80118C88(void* particleNode, u32 visible);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern GSpart* GSmodelGetPart(struct GSmodel* model, s32 partIndex);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+void  set__5GSvecFfff(f32* vec, f32 x, f32 y, f32 z);
+#endif
+extern void  gsParticleLinkToJObj(u8* particleNode, GSpart* part, u32 state,
+                         u8 byte5, u32 initFromZero, u8 attachModel);
+extern void  fn_80118D18(void* particleNode, u8 enabled);
+extern void  fn_80118DE0(u8* particleNode, f32* scale, u32 applyToGenerator,
+                         u32 angleRadiusScale);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  GSpartFree(GSpart* part);
+#endif
+extern u8    GSmodelCenterNull(struct GSmodel* model);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32   GSmodelWalkJObjs(struct GSmodel* model);
+#endif
+extern void  fn_80118CAC(void* particleNode, u8 enabled);
+
+/* Additional externs (other TUs) referenced from scattered file-scope
+ * declarations in the original battle_waza.c; consolidated here so every
+ * split TU sees them regardless of which one the declaration used to sit
+ * physically next to. */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  GSscene_SetMode(s32 arg);
+#endif
+extern void  cameraStopAnime(void* arg);
+extern void  fn_801765F4(s32 arg);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32   GSgetVersionMinor(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  _threadSwitch(void);
+#endif
+extern s32   fn_8017B2CC(s32 id);
+extern void  fn_800F915C(s32 id);
+extern void  GSresReleaseById(s32 id);
+extern u32   GSmodelIsRootNullAdded(struct GSmodel* model);
+extern void  GSmodelGetRootPosition(struct GSmodel* model, GSvec* position);
+extern void  GSmodelAddNull(struct GSmodel* model, const GSvec* position,
+                            const GSvec* rotation, const GSvec* scale);
+extern void  GSmodelRemoveNull(struct GSmodel* model);
+extern void  GSmodelStopAnimation(struct GSmodel* model);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  GSmodelSetVisibility(struct GSmodel* model, u8 visible);
+#endif
+extern void  GSmodelForceAnimTransformUpdate(struct GSmodel* model);
+extern u32   fn_800E3CBC(struct GSmodel* model);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  GSmodelDrawModel(struct GSmodel* model, u32 flags);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  GSmodelLinkToGSparticleBank(struct GSmodel* model, void* bank);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  fn_800E3CC8(struct GSmodel* model, u8 enable);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  gsParticleKill(u8* resource, u32 notify);
+#endif
+
+/* Data symbols (lbl_*, in .sdata/.sdata2/.bss of neighboring TUs) referenced
+ * from scattered file-scope declarations in the original battle_waza.c. */
+extern u32*  mailData_number;           /* the mail table's count pointer */
+extern WazaEntry* mailData;              /* the mail table (WazaEntry is a historical name for its rows) */
+extern s32   lbl_80478CB8;
+extern u32   lbl_8036E0E0[20];
+extern s32   ReceiveWork[];
+extern void* lbl_8047B3EC;
+extern void* lbl_8047B3F0;
+extern s32   _resource_id_count;
+extern u8    lbl_80467CC0[];
+extern u8    lbl_8047B3F4;
+extern u8    lbl_804673F8[];
+extern s32   _modelShadowLight;
+extern s32   _modelShadowCount;
+extern u8    lbl_80467C80[];
+
+/* =========================================================================
+ * Cross-TU forward declarations for all waza-system functions.
+ *
+ * These are the functions physically defined across the 8 split TUs
+ * (plus 12 defined in the neighboring gs_range_801DE698.c /
+ * field_range_801DF790.c units). Declaring them all here -- with the
+ * exact signature used at each definition site -- lets any TU call any
+ * other without per-file extern bookkeeping, and avoids the
+ * MWCC redeclaration-mismatch errors that ad hoc function-local externs
+ * can cause.
+ * ========================================================================= */
+
+extern u16 mailBiosGetCounter(void);
+extern void* fn_801D1364(u16 handle, s32 idx);
+extern u32 mailDataBiosGet08(s32 idx);
+extern u32 mailDataBiosGet04(s32 idx);
+extern u32 mailDataBiosGet01(s32 idx);
+extern u32 mailGetNbMailData(void);
+extern s32 mailDataBiosGet28(s32 idx);
+extern s32 mailDataBiosGet24(s32 idx);
+extern s32 mailDataBiosGet20(s32 idx);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 mailGetSendCondition(s32 idx);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 mailGetSendCondType(s32 idx);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 mailGetSendRate(s32 idx);
+#endif
+extern u32 mailGetMailCount(void);
+extern u32 mailGetEntryField4(u32 idx);
+extern u32 mailGetEntryField0(u32 idx);
+extern void fn_801D167C(u8 handle);
+extern u8 mailGetCurrentIndex(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 mailGetAttachFileGroup(s32 idx);
+#endif
+extern u8 shadowGroupGetEntryByte(s32 sequence, s32 index);
+extern u16 shadowGroupGetEntryId(s32 sequence, s32 index);
+extern u32 fn_801D19A4(s32 idx);
+extern u32 mailGetContents(s32 idx);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 mailGetSenderName(s32 idx);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 mailGetSubject(s32 idx);
+#endif
+extern void mailSetFlag442(s32 handle);
+extern u8 mailGetSortMode(void);
+extern BOOL fn_801D1B78(s32 mailId);
+extern BOOL fn_801D1C20(s32 mailId);
+extern BOOL mailChkReceiveMail(s32 idx);
+extern BOOL mailAddMailbox(s32 mailId);
+extern s32 mailGetReceiveNumber(s32 mailId);
+extern BOOL fn_801D1E50(s32 seqHandle);
+extern s32 mailGetMailIDInMailbox(s32 idx);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16 mailGetNbMailInMailbox(void);
+#endif
+extern void mailInitMailbox(WazaPartyScratch* mailbox);
+extern void mailMainSendByScrpt(s32 seqHandle, f32 alpha, f32 speed);
+extern void mailMainSendAllMail(void);
+extern void fn_801D228C(s32 seqHandle);
+extern void mailMainReceiveTerminate(void);
+extern void fn_801D2404(void);
+extern void mailMainReceiveStart(void);
+extern s32 chkMailSend(s32 seqHandle, f32 step);
+extern void cbStep(s32 moveID, s32 hitCount);
+extern void mailMainInit(void);
+extern void* wazaSequenceCameraGetPattern__Fbi(u8 shortTable, s32 flags);
+extern void* battleCameraWazaGetOwner(void);
+extern void battleCameraStartOwner(void* owner);
+extern void battleCameraUpdateWaza(void);
+extern void battleCameraEndWaza(void);
+extern void battleCameraWazaInit(void);
+extern void battleCameraEndOwnerWaza(void* state);
+extern void battleCameraStartWaza(void* owner, void* sequence);
+extern void _wazaSequenceCameraDoPosition__FP13ModelSequenceP24wazaSequenceCameraParamsfb(
+    void* modelSequence, void* cameraParams, s32 shift, u8 reverse);
+extern void _wazaSequenceCameraDoDollyPosition__FP21TemplateExpFileHeaderP24wazaSequenceCameraParamsfb(
+    void* header, void* params, s32 shift, u8 reverse);
+extern void _wazaSequenceCameraDoFOV__FP13ModelSequenceP24wazaSequenceCameraParamsif(
+    void* modelSequence, void* cameraParams, s32 flags, s32 shift);
+extern s32 _wazaSequenceCameraSelectDuration__FUcPff(
+    s32 mode, f32* thresholds, s32 duration);
+extern void _wazaSequenceCameraSelectMotion__FP13ModelSequenceP12WazaSequenceP24wazaSequenceCameraParams(
+    void* modelSequence, void* wazaSequence, void* cameraParams);
+extern void _wazaSequenceCameraCalculateParams__FP13ModelSequenceiP24wazaSequenceCameraParams(
+    void* modelSequence, s32 flags, void* cameraParams);
+extern void _wazaViewerFinalize(u8 r, u8 g, u8 b, f32 duration);
+extern void _wazaViewerUpdate(void);
+extern void _wazaViewerInitialize(void);
+extern void wazaViewerThread(void);
+extern void wazaViewerResetAndLoad(void);
+extern void wazaViewerInit(void);
+extern void wazaViewerLoadSequenceFiles(s32 slot);
+extern void wazaViewerApplyColorFile(void);
+extern void wazaViewerUpdate(void); /* GSgapp per-frame callback; takes no arguments */
+extern void wazaViewerUpdateModels(void);
+extern void wazaViewerUpdatePlayMode(void);
+extern void wazaViewerDrawBackdrop(void* effect);
+extern void wazaViewerDrawErrors(void);
+extern void wazaViewerSetErrorFlag(u32 bits);
+extern void wazaViewerUpdateInput(void);
+extern void wazaViewerDrawAttachPoints(void* effect);
+extern u8 wazaSequenceEntryStop(void* entry, BOOL immediate);
+extern u8 wazaSequenceEntryUpdate(void* entry, s32 elapsed);
+extern u8 wazaSequenceEntryStart(void* entry);
+extern u8 _wazaSequenceEffectEntryStart(void* entry);
+extern u8 _wazaSequenceParticleEntryStart(WazaSequenceNode* entry);
+extern u8 _wazaSequenceModelEntryStart(WazaSequenceNode* entry);
+extern void* wazaSequenceEntryGetAttachPart(void* entry);
+extern void wazaSequenceGetEffectScale(void* owner, f32* scale, s32 selector);
+extern u8 wazaSequencePokemonMotionStart(void* owner, BOOL enabled);
+extern u8 wazaSequenceOwnerGetFlag77(void* obj);
+extern void wazaSequenceOwnerDeleteAuraParticle(void* obj);
+extern void wazaSequenceOwnerCreateAuraParticle(void* effect);
+extern void wazaSequenceOwnerDeleteStopParticle(void* effect);
+extern void wazaSequenceOwnerCreateStopParticle(void* effect);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void wazaSequenceOwnerSetFlags(void* effect, s32 flags);
+#endif
+extern void wazaSequenceOwnerResetFlags(void* effect);
+extern u8 wazaSequenceOwnerGetFlags(void* effect);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void wazaSequenceOwnerClearState(void* effect, s32 trajType);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void wazaSequenceOwnerSetState(void* effect, s32 trajType);
+#endif
+extern u32 wazaSequenceOwnerIsVisible(void* effect);
+extern void wazaSequenceOwnerSetParticleVisibility(void* effect, u32 visible);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void wazaSequenceOwnerSetVisibility(void* effect, u32 visible);
+#endif
+extern void wazaSequenceSetDownFlag(void* effect, u8 val);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 wazaSequenceSysIsAllEnd(s32 timeType);
+#endif
+extern u8 wazaSequenceSysIsWazaEnd(void* sequence, s32 moveID, s32 variant, s32 timeType);
+extern s32 wazaSequenceSysGetWazaTimeById(void* sequence, s32 moveID, s32 variant, s32 timeType);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void wazaSequenceSysFreeAll(void);
+#endif
+extern void wazaSequenceSysFreeOwnerSequences(void* effect);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void wazaSequenceSysStopWaza(void* obj, s32 search_key1, s32 search_key2);
+#endif
+extern void wazaSequenceClearFlag16(void* obj, s32 search_key1, s32 search_key2);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 wazaSequenceSysIsPlayingWaza(void* obj, s32 search_key1, s32 search_key2);
+#endif
+extern void wazaSequenceSysApplyStopWaza(void* obj, s32 search_key1, s32 search_key2);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void wazaSequenceSysStartWaza(void* sequence, s32 moveID, s32 variant);
+#endif
+extern void wazaSequenceOwnerDraw(void* effect);
+extern f32 wazaSequenceOwnerGetSizeScale(void* obj);
+extern u32 wazaSequenceOwnerGetSizeClass(void* obj);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 wazaSequenceOwnerGetModel(void* obj);
+#endif
+extern u32 wazaSequenceOwnerIsPlaying(void* obj);
+extern u16 wazaSequenceOwnerGetId(void* obj);
+extern void wazaSequenceSysRelease(void);
+extern void wazaSequenceSysInitWithoutParticles(void* context);
+extern void wazaSequenceSysInit(s32 count);
+extern int wazaSequenceSysGetResID(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void wazaSequenceSysUpdate(void);
+#endif
+extern void wazaSequenceOwnerFree(void* obj);
+extern void* wazaSequenceSysAllocOwner(void);
+extern void wazaSequenceSysFreeSequenceResource(void* obj);
+extern void wazaSequenceSysFreeWazaResource(void* seqData);
+extern s32 wazaSequenceSysGetWazaTime(void* owner, void* sequence, s32 timeType);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 wazaSequenceSysGetModelShadowLight__Fv(void);
+#endif
+extern s32 wazaSequenceSysGetModelShadowCount__Fv(void);
+extern void* wazaSequenceSysGetModelShadowList__Fv(void);
+extern void wazaSequenceSysResetAnimationExcept(void* except);
+extern void wazaSequenceOwnerDrawAttached(void* entry, u32 drawFlags, u8 modelID);
+extern s32 wazaSequenceUpdate(void* sequence);
+extern void wazaSequenceApplyStop(void* obj);
+extern void wazaSequenceReleaseOwner(void* obj);
+extern void wazaSequenceStart(void* sequence);
+extern void wazaSequenceFree(void* obj);
+extern WazaSequence* wazaSequenceAllocNode(void);
+extern u8 wazaSequenceLoadData(void* sequence, void* resource);
+extern void wazaSequenceEntryLink(void* sequence, void* entry);
+extern void* wazaSequenceLoadEntryParams(u8* entry, void* data);
+extern void* wazaSequenceLoadHeader(void* sequence, u8* data);
+extern void* _wazaSequenceEffectEntryLoad(void* entry, void* data);
+extern void* _wazaSequenceParticleEntryLoad(void* sequence, u8* entry,
+                                            u8* data);
+extern void* _wazaSequenceModelEntryLoad(void* sequence, u8* entry,
+                                         u8* data);
+extern void* wazaSequenceOwnerFindEntry(void* obj, s32 fieldEffect);
+extern s32 wazaSequenceOwnerGetColorSwapActive(void* obj);
+extern void wazaSequenceOwnerApplyShinyColors(void* obj);
+extern void wazaSequenceOwnerClearNull(void* obj);
+extern void wazaSequenceOwnerSetNull(WazaEffect* effect);
+extern void wazaSequenceOwnerClearStop(void* obj);
+extern void wazaSequenceOwnerSetStop(void* obj);
+extern void wazaSequenceOwnerClearAura(void* obj);
+extern void wazaSequenceOwnerSetAura(void* obj);
+#if defined(BATTLE_WAZA_GETWAZA_U16)
+extern void* GetWaza__12NullSequenceCFUsUs(void* obj, u16 search_key1, u16 search_key2);
+#else
+/* Legacy s32 view kept for callers whose matched codegen depends on it. */
+extern void* GetWaza__12NullSequenceCFUsUs(void* obj, s32 search_key1, s32 search_key2);
+#endif
+extern void wazaSequenceOwnerSetAnim(WazaSequenceOwner* owner, WazaSequence* sequence);
+extern void wazaSequenceOwnerUpdate(void* obj);
+extern void wazaSequenceOwnerRelease(void* obj);
+extern void wazaSequenceOwnerFreeSequences(void* obj);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern BOOL sequenceLoad(void* effect, void* data);
+#endif
+extern u8 wazaSequenceOwnerLoadResource(void* effect, u8* resource);
+extern BOOL wazaSequenceOwnerAddSequence(void* owner, void* resource);
+extern s32 wazaSequenceCheckResExists(u16 index, u16 type);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern BOOL wazaSequenceOwnerLoadWaza(void* owner, u16 group, u16 index, u8 variant);
+#endif
+extern void wazaSequenceGetWazaResource(void* owner, u16 group, u16 type, u8 variant,
+                        u32* resourceGroup, u32* resourceId);
+extern BOOL wazaSequenceOwnerGet78(s32 slot);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* wazaSequencePokemonCreate(u16 index, void* model, u8 variant);
+#endif
+extern void* wazaSequenceTrainerCreate(u16 index);
+extern void wazaSequenceLoadGroupAndWait(u32 group, u32 resource);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void sequenceAnimEndCallback(void* model, void* info); /* GSmodel anim-ended callback */
+#endif
+extern void fn_801DE698(u32 model, u8* info); /* as defined (gs_range_801DE698.c) */
+extern void _eyeTexAnimEnded(void* model, u8* info); /* as defined (gs_range_801DE698.c) */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void wazaSequenceOwnerStartMotion(s32 slot, u32 status);
+#endif
+extern void wazaSequenceOwnerPlayIdle(void* obj, s32 arg1, s32 arg2);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void wazaSequenceOwnerPlayMotion(s32 weatherType);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 wazaSequenceOwnerFindAnim(u8* obj);
+#endif
+extern void wazaSequenceOwnerUpdateBlink(void* obj);
+extern void wazaSequenceOwnerTexAnimOff(void* obj);
+extern void wazaSequenceOwnerTexAnimOn(void* obj);
+extern void std087_sequenceUnk87(s32 slot, s32 abilityID);
+extern void std086_sequenceJump86(s32 slot, s32 itemID);
+extern void std085_sequenceJump85(void);
+
+#endif /* GAME_BATTLE_BATTLE_WAZA_TYPES_H */

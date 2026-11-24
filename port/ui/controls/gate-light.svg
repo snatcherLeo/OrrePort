@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<!-- the controller setup screen's live stick view: the GameCube's octagonal gate (corners at the 8 directions, radius 54
+     = full tilt), filled paths only for the menu's SVG reader (pc_svg.cpp); hand-written, 2026-11-12 -->
+<path fill="#9AA59C" d="M118 64 L102.18 102.18 L64 118 L25.82 102.18 L10 64 L25.82 25.82 L64 10 L102.18 25.82 Z"/>
+<path fill="#FFFFFF" d="M116.5 64 L101.12 101.12 L64 116.5 L26.88 101.12 L11.5 64 L26.88 26.88 L64 11.5 L101.12 26.88 Z"/>
+<path fill="#D5DCD4" d="M63.4 57 L64.6 57 L64.6 71 L63.4 71 Z"/>
+<path fill="#D5DCD4" d="M57 63.4 L71 63.4 L71 64.6 L57 64.6 Z"/>
+</svg>

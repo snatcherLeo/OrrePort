@@ -1,0 +1,194 @@
+/** Exact GSvtr texture-display setup and draw callback, 0x801E1300 - 0x801E16D0. */
+#include "dolphin/types.h"
+
+#define GS_SDATA2 SECTION(".sdata2")
+extern GS_SDATA2 const char lbl_8047E458[];
+extern GS_SDATA2 const char lbl_8047E45C[];
+extern GS_SDATA2 const char lbl_8047E464[];
+extern GS_SDATA2 const char lbl_8047E46C[];
+extern GS_SDATA2 const char lbl_8047E474[];
+
+void _vtrTexDispFunc__Fv(void);
+
+void vtrInit(void)
+{
+    extern u32 _vtrGSgappHdlList[];
+    extern u8 lbl_8047B420;
+    extern u32 lbl_8047B424;
+    extern u32 _vtrGSgappCount;
+    extern u8 lbl_8047B434;
+    extern u32 lbl_8047B438;
+    extern u8 lbl_8047B43C;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void *memset(void *dst, int value, u32 size);
+#endif
+    extern u32 GSgappCreate(s32 state, u8 priority, u32 param, void *func);
+
+    lbl_8047B420 = 0;
+    lbl_8047B424 = 0;
+    _vtrGSgappCount = 0;
+    lbl_8047B438 = 0;
+    lbl_8047B434 = 1;
+    lbl_8047B43C = 0;
+    memset(_vtrGSgappHdlList, 0, 0x10);
+    GSgappCreate(1, 0xFD, 10, _vtrTexDispFunc__Fv);
+}
+
+void _vtrTexDispFunc__Fv(void)
+{
+    extern u8 lbl_8047B420;
+    extern u32 lbl_8047B424;
+    extern u32 lbl_8047B428;
+    extern u8 lbl_8047B434;
+    extern u8 lbl_8047B435;
+#ifndef TARGET_PC /* PC: one type per label in a file (GCC); the code below sees its own type through a cast */
+    extern void* lbl_8047B438;
+#else
+    extern u32 lbl_8047B438;
+#define lbl_8047B438 (*(void**)&lbl_8047B438)
+#endif
+    extern f32 lbl_8047E428;
+    extern f32 lbl_8047E42C;
+    extern f32 lbl_8047E430;
+    extern f32 lbl_8047E434;
+    extern f32 lbl_8047E438;
+    extern f32 lbl_8047E43C;
+    extern f32 lbl_8047E440;
+    extern f32 lbl_8047E444;
+    extern f32 lbl_8047E448;
+    extern f32 lbl_8047E44C;
+    extern f32 lbl_8047E450;
+    extern f32 lbl_8047E454;
+    extern u8 lbl_80314958[];
+    extern u8 lbl_80314C78[];
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxSetFlags(s32 mode);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxClearFlags(s32 mode);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxSetOrtho(f32, f32, f32, f32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxSetBlendMode(s32, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxSetUpdates(s32, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxSetZMode(s32, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxSetCullMode(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_800D9ED8(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxSetPrimitive(s32 primitive);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxSetVtxDesc(void* format);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxBegin(s32 count);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxVtxPos(f32 x, f32 y, f32 z);
+#endif
+    extern void gfxVtxColor(s32 index, s32 red, s32 green, s32 blue);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxLoadTexture(s32 index, void* texture);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxVtxTexCoord(s32 index, f32 u, f32 v);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void gfxEnd(void);
+#endif
+    extern void GSmsgPrintf(s32 x, s32 y, s32 color, const char* text,
+                            ...);
+
+    if (!lbl_8047B420 || !lbl_8047B434) {
+        return;
+    }
+    if (lbl_8047B438 == NULL) {
+        return;
+    }
+
+    gfxSetFlags(1);
+    gfxClearFlags(4);
+    gfxSetOrtho(lbl_8047E428, lbl_8047E428, lbl_8047E42C,
+                lbl_8047E430);
+    gfxSetBlendMode(0, 1, 1);
+    gfxSetUpdates(1, 1, 0);
+    gfxSetZMode(0, 1, 1);
+    gfxSetCullMode(0);
+    fn_800D9ED8(1);
+    gfxSetPrimitive(4);
+
+    if (lbl_8047B435) {
+        gfxClearFlags(2);
+        gfxSetVtxDesc(lbl_80314958);
+        gfxBegin(4);
+        gfxVtxPos(lbl_8047E434, lbl_8047E438, lbl_8047E428);
+        gfxVtxColor(0, 0xFF, 0, 0);
+        gfxVtxPos(lbl_8047E43C, lbl_8047E438, lbl_8047E428);
+        gfxVtxColor(0, 0xFF, 0, 0);
+        gfxVtxPos(lbl_8047E434, lbl_8047E440, lbl_8047E428);
+        gfxVtxColor(0, 0xFF, 0, 0);
+        gfxVtxPos(lbl_8047E43C, lbl_8047E440, lbl_8047E428);
+        gfxVtxColor(0, 0xFF, 0, 0);
+        gfxEnd();
+    }
+
+    gfxSetFlags(2);
+    gfxSetVtxDesc(lbl_80314C78);
+    gfxLoadTexture(0, lbl_8047B438);
+    gfxBegin(4);
+    gfxVtxPos(lbl_8047E444, lbl_8047E448, lbl_8047E428);
+    gfxVtxColor(0, 0xFF, 0xFF, 0xFF);
+    gfxVtxTexCoord(0, lbl_8047E428, lbl_8047E428);
+    gfxVtxPos(lbl_8047E44C, lbl_8047E448, lbl_8047E428);
+    gfxVtxColor(0, 0xFF, 0xFF, 0xFF);
+    gfxVtxTexCoord(0, lbl_8047E450, lbl_8047E428);
+    gfxVtxPos(lbl_8047E444, lbl_8047E454, lbl_8047E428);
+    gfxVtxColor(0, 0xFF, 0xFF, 0xFF);
+    gfxVtxTexCoord(0, lbl_8047E428, lbl_8047E450);
+    gfxVtxPos(lbl_8047E44C, lbl_8047E454, lbl_8047E428);
+    gfxVtxColor(0, 0xFF, 0xFF, 0xFF);
+    gfxVtxTexCoord(0, lbl_8047E450, lbl_8047E450);
+    gfxEnd();
+
+    switch (lbl_8047B424) {
+    case 0:
+        GSmsgPrintf(0x230, 0x2C, -1, lbl_8047E458);
+        break;
+    case 1:
+        GSmsgPrintf(0x230, 0x2C, -1, lbl_8047E45C);
+        break;
+    case 2:
+        GSmsgPrintf(0x230, 0x2C, -1, lbl_8047E464);
+        break;
+    case 3:
+        switch (lbl_8047B428) {
+        case 0:
+        case 1:
+            GSmsgPrintf(0x230, 0x2C, -1, lbl_8047E46C);
+            break;
+        case 2:
+        case 3:
+            GSmsgPrintf(0x230, 0x2C, -1, lbl_8047E45C);
+            break;
+        }
+        break;
+    case 4:
+        GSmsgPrintf(0x230, 0x2C, -1, lbl_8047E474);
+        break;
+    }
+    fn_800D9ED8(0);
+}
+#ifdef TARGET_PC
+#undef lbl_8047B438
+#endif

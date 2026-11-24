@@ -1,0 +1,6 @@
+{
+  "_what": "the reference playthrough, after the Hitmonlee edit, before P06 (snatcherLeo, 2026-11-04): \"why can't we just get rid of primeape completely? I don't need it\", then \"Yes, remove it\". Primeape (Lv 30, box 1 #8, moved there by p05_hitmonlee_run3.json) is released: its slot gets the save's own empty-slot record, as the game's release does.",
+  "release_from_box": [
+    {"box": 1, "slot": 8, "species": 57, "_note": "Primeape Lv 30"}
+  ]
+}

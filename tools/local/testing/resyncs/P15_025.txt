@@ -1,0 +1,5 @@
+# P15 (sitting 025_20261022_1600): logged resyncs for the second pass (2026-10-30; match ledger, P15 rows).
+# No hand edits, no Wes placements, no per-sitting seeds: settings only, to the end on the first run (p2_P15a):
+#   P14's settings (resyncs/P14_024.txt) + ORRE_ROLL_SEEDS for all 48 battles (roll_resync_spec.py --all-battles on
+#   replay_2 to replay_5, twelve battles per PLAYREC_RNGCALL capture, each playrec.py check'ed: 1160 flag changes in
+#   order; the four files concatenated).

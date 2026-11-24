@@ -1,0 +1,4 @@
+{
+  "_why": "Battle Mode test, snatcherLeo's order of 2026-11-11: Battle Now, then the Orre Colosseum cup with an edited team (one Quit-and-Continue mid-cup). Orre Colosseum Lv50 (course 3) is locked until Phenac, Pyrite and The Under are cleared in single and double, and Lv100 (course 5) until Realgam Tower is (battle-mode.md); this opens both. The team is snatcherLeo's choice at play time: register it from the story save in Battle Mode's Register menu (it is checked against rule 2), or add Pokemon to the story party in this same recipe first.",
+  "unlock_battle_courses": [3, 5]
+}

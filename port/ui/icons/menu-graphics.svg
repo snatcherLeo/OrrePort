@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- OrrePort menu icon: Graphics (a monitor). Filled shapes only (port/src/pc_svg.cpp). -->
+<path fill="#FFFFFF" fill-rule="evenodd" d="M2 4 H22 V17 H2 Z M3.9 5.9 H20.1 V15.1 H3.9 Z"/>
+<path fill="#FFFFFF" d="M11.1 17 H12.9 V19.6 H11.1 Z"/>
+<path fill="#FFFFFF" d="M7 19.3 H17 V21 H7 Z"/>
+</svg>

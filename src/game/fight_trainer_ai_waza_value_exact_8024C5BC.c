@@ -1,0 +1,285 @@
+/**
+ * @file fight_trainer_ai_waza_value_exact_8024C5BC.c
+ * @brief Exact pure-C trainer AI value island, 0x8024C5BC - 0x8024D818.
+ */
+#include "game/colosseum.h"
+
+u32 fightTrainerAiWazaValueTobihaneru(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightFloorGetFightTrainerFightOutPokemonPtrAry(u32, void*, u32*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightOutPokemonGetPokemonPtr(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetFightPokemonWazaAry(void*, u32, u16*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void*, u32, u32);
+#endif
+    extern s32 fightTrainerAiIsFasterBasis(void*, u32, u32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fn_80239984(u32, void*, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_80239EE8(u32, void*, u32, u32, u32, u32, u32, u32);
+#endif
+    extern u8 fightTrainerAiCheckJoutaiKieWazaHitWazaDataId(void*, u32, u32);
+    u32 outPokemon[8];
+    u16 moves[10];
+    u32 handle;
+    u16 outCount;
+    u16 moveCount;
+    u16 i;
+    u16 j;
+    u8 found;
+
+    handle = 0;
+    outCount = fightFloorGetFightTrainerFightOutPokemonPtrAry(0, PC_PTR32_IMPLICIT(ctx), outPokemon, 0, 1);
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(3)) == 1) {
+        handle = fn_80239984(0, ctx, 0x7e);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x7e);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(4)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x7f);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x7f);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(6)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x80);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x80);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(5)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x81);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x81);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(9)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x82);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x82);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0xa)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x83);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x83);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x18)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x84);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x84);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x1e)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x85);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x85);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x1c)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x86);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x86);
+    }
+    if (fightTrainerAiIsFasterBasis(ctx, param1, param3) > 0) {
+        handle = fn_80239984(handle, ctx, 0x87);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x87);
+    }
+    handle = fn_80239984(handle, ctx, 0x88);
+    fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x88);
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(3)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x89);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x89);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(4)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x8a);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x8a);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(6)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x8b);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x8b);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(5)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x8c);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x8c);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(9)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x8d);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x8d);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0xa)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x8e);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x8e);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0x18)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x8f);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x8f);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0x1e)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x90);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x90);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0x1c)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x91);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x91);
+    }
+
+    for (i = 0; i < outCount; i++) {
+        moveCount = fightTrainerAiGetFightPokemonWazaAry(ctx, outPokemon[i], moves, 0, 0);
+        if (moveCount != 0) {
+            found = 0;
+            for (j = 0; j < moveCount; j++) {
+                if (fightTrainerAiCheckJoutaiKieWazaHitWazaDataId(ctx, 0x1f, moves[j]) == 1) {
+                    handle = fn_80239984(handle, ctx, 0x92);
+                    fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x92);
+                    found = 1;
+                    break;
+                }
+            }
+            if (found == 1) {
+                break;
+            }
+        }
+    }
+
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0x1d)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x93);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x93);
+    }
+    return handle;
+}
+
+u32 fightTrainerAiWazaValueSorawotobu(void* ctx, u32 param1, u32 param2, u32 param3) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightFloorGetFightTrainerFightOutPokemonPtrAry(u32, void*, u32*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightOutPokemonGetPokemonPtr(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 fightTrainerAiGetFightPokemonWazaAry(void*, u32, u16*, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fightTrainerAiIsPokemonJoutai(void*, u32, u32);
+#endif
+    extern s32 fightTrainerAiIsFasterBasis(void*, u32, u32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fn_80239984(u32, void*, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_80239EE8(u32, void*, u32, u32, u32, u32, u32, u32);
+#endif
+    extern u8 fightTrainerAiCheckJoutaiKieWazaHitWazaDataId(void*, u32, u32);
+    u32 outPokemon[8];
+    u16 moves[10];
+    u32 handle;
+    u32 stateType;
+    u16 outCount;
+    u16 moveCount;
+    u16 i;
+    u16 j;
+    u8 found;
+
+    handle = 0;
+    stateType = 0;
+    outCount = fightFloorGetFightTrainerFightOutPokemonPtrAry(0, PC_PTR32_IMPLICIT(ctx), outPokemon, 0, 1);
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(3)) == 1) {
+        handle = fn_80239984(0, ctx, 0x69);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x69);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(4)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x6a);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x6a);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(6)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x6b);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x6b);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(5)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x6c);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x6c);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(9)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x6d);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x6d);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0xa)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x6e);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x6e);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x18)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x6f);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x6f);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x1e)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x70);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x70);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param3), PC_PTR(0x1c)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x71);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x71);
+    }
+    if (fightTrainerAiIsFasterBasis(ctx, param1, param3) > 0) {
+        handle = fn_80239984(handle, ctx, 0x72);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x72);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(3)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x73);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x73);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(4)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x74);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x74);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(6)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x75);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x75);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(5)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x76);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x76);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(9)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x77);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x77);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0xa)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x78);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x78);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0x18)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x79);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x79);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0x1e)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x7a);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x7a);
+    }
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0x1c)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x7b);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x7b);
+    }
+
+    if ((param2 & 0xffff) == 0x13 || (param2 & 0xffff) == 0x154) {
+        stateType = 0x1f;
+    } else if ((param2 & 0xffff) == 0x5b) {
+        stateType = 0x20;
+    } else if ((param2 & 0xffff) == 0x123) {
+        stateType = 0x21;
+    }
+
+    for (i = 0; i < outCount; i++) {
+        moveCount = fightTrainerAiGetFightPokemonWazaAry(ctx, outPokemon[i], moves, 0, 0);
+        if (moveCount != 0) {
+            found = 0;
+            for (j = 0; j < moveCount; j++) {
+                if (fightTrainerAiCheckJoutaiKieWazaHitWazaDataId(ctx, stateType, moves[j]) == 1) {
+                    handle = fn_80239984(handle, ctx, 0x7c);
+                    fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x7c);
+                    found = 1;
+                    break;
+                }
+            }
+            if (found == 1) {
+                break;
+            }
+        }
+    }
+
+    if (fightTrainerAiIsPokemonJoutai(ctx, PC_PTR(param1), PC_PTR(0x1d)) == 1) {
+        handle = fn_80239984(handle, ctx, 0x7d);
+        fn_80239EE8(0xec64, PC_PTR32_IMPLICIT(ctx), PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(param1)), 0, 0, param2, 0, 0x7d);
+    }
+    return handle;
+}

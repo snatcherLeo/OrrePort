@@ -1,0 +1,34 @@
+<rml>
+<head>
+	<title>[controls.page]</title>
+	<link type="text/rcss" href="controls.rcss"/>
+	<link type="text/rcss" href="controls/gcpad-layout.rcss"/>
+</head>
+<!-- The controller setup screen (snatcherLeo, 2026-11-12: "Yes, build it"; mockups 17 / 18 in build-pc/mockups/ingame/;
+     reworked the same day after his hand check, mockups 20-22 in build-pc/mockups/ingame/c20; #lits: the selected
+     label's line lit over the picture):
+     a GameCube controller with each button labelled by what presses it, live highlights, the sticks' live views, the
+     feel settings and the open-menu button. Written into by port/src/pc_controls_ui.cpp. The picture and the labels'
+     and rings' places come from tools/local/brand/gcpad_stage.py (controls/). -->
+<body id="body" class="dark">
+	<div id="top">
+		<span id="back">&#8249;</span>
+		<!-- the words are "[key]"s from ui/lang/<code>.txt (pc_text.h), as on every page -->
+		<!-- "Player 1" follows the title wherever it ends (a longer title in another language never runs into it) -->
+		<span id="title">[controls.title]<span id="sub">[controls.player1]</span></span>
+		<div id="pick"></div>
+	</div>
+	<div id="stage">
+		<div id="layers"></div>
+		<div id="rings"></div>
+		<div id="lits"></div>
+		<div id="labels"></div>
+		<div id="note"></div>
+	</div>
+	<div id="side"></div>
+	<div id="bot"></div>
+	<div id="list"></div>
+	<div id="plist"></div>
+	<div id="prompt"></div>
+</body>
+</rml>

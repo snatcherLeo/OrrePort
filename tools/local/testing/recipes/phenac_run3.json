@@ -1,0 +1,32 @@
+{
+  "_what": "the reference playthrough's Phenac edit, after P01 (run3-guide.md section 3; the decision log 2026-10-28 / 29 / 30 / 11-01 / 11-02, final form): Espeon's moves changed (Psychic, Protect, Quick Attack, Light Screen); Sneasel Lv 30 in the party (Aerial Ace, Brick Break, Shadow Ball, Quick Attack); Aerodactyl, Gengar and Poliwrath Lv 50 in the PC box for after The Under (no Typhlosion, no Pikachu: snatcherLeo 2026-11-01 / 02); Run 2's E1 items and money; Rare Candy x99 in the bag and x99 in the PC. Natures are the project's choice (snatcherLeo gave moves and levels only): Sneasel and Aerodactyl physical (Adamant, Jolly), Gengar Modest as in E1, Poliwrath Naughty (mixed: Waterfall is special in Gen 3). IVs 31 as in E1.",
+  "modify_pokemon": [
+    {"species": 196, "moves": [94, 182, 98, 113], "_note": "Espeon: Psychic, Protect, Quick Attack, Light Screen (level, IVs and the rest kept)"}
+  ],
+  "add_pokemon": [
+    {"species": 215, "level": 30, "nature": 3, "ivs": 31, "moves": [332, 280, 247, 98], "_note": "Sneasel, Adamant: Aerial Ace, Brick Break, Shadow Ball (TMs), Quick Attack (Lv 8)"},
+    {"species": 142, "level": 50, "nature": 13, "ivs": 31, "moves": [89, 246, 332, 36], "to": "box", "_note": "Aerodactyl, Jolly: Earthquake, AncientPower, Aerial Ace, Take Down"},
+    {"species": 94, "level": 50, "nature": 15, "ivs": 31, "moves": [94, 95, 7, 8], "to": "box", "_note": "Gengar, Modest: Psychic, Hypnosis, Fire Punch and Ice Punch (GBA tutor moves: flagged, kept as asked)"},
+    {"species": 62, "level": 50, "nature": 4, "ivs": 31, "moves": [280, 127, 95, 182], "to": "box", "_note": "Poliwrath, Naughty: Brick Break, Waterfall, Hypnosis, Protect"}
+  ],
+  "set_items": [
+    {"pocket": "normal", "item": 19, "count": 99},
+    {"pocket": "normal", "item": 23, "count": 99},
+    {"pocket": "normal", "item": 25, "count": 99},
+    {"pocket": "normal", "item": 37, "count": 99},
+    {"pocket": "normal", "item": 68, "count": 99},
+    {"pocket": "pc", "item": 68, "count": 99},
+    {"pocket": "balls", "item": 1, "count": 1},
+    {"pocket": "balls", "item": 2, "count": 99},
+    {"pocket": "balls", "item": 3, "count": 99},
+    {"pocket": "balls", "item": 4, "count": 99},
+    {"pocket": "balls", "item": 6, "count": 99},
+    {"pocket": "balls", "item": 7, "count": 99},
+    {"pocket": "balls", "item": 8, "count": 99},
+    {"pocket": "balls", "item": 9, "count": 99},
+    {"pocket": "balls", "item": 10, "count": 99},
+    {"pocket": "balls", "item": 11, "count": 99},
+    {"pocket": "balls", "item": 12, "count": 99}
+  ],
+  "set_money": 5000000
+}

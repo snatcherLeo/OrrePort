@@ -1,0 +1,13 @@
+{
+  "_what": "Battle-mode team A, second version (snatcherLeo, 2026-10-24: Mewtwo replaces Venusaur, holding Venusaur's Starf Berry). Otherwise as ebm_team_a.json: applied to the battle-mode card only, never snatcherLeo's story card; six Pokemon at Lv 50, every held item different, all moves from each species' level-up or TM/HM lists on the disc. Themes kept: the weather fight (Drizzle vs Drought), Intimidate, two-turn moves (Fly, Dig, Solar Beam without sun), Thrash, Hyper Beam's recharge, Spikes, Toxic, Surf and Earthquake, Bullet Seed, the no-story-source held items. Lost with Venusaur: Leech Seed and Sleep Powder. Mewtwo adds Thunder in and out of rain (Kyogre's comparison) and Shadow Ball.",
+  "template_slot": 0,
+  "clear_party": true,
+  "add_pokemon": [
+    {"species": 404, "level": 50, "nature": 15, "ivs": 31, "moves": [57, 58, 87, 347], "item": 142, "_note": "Kyogre (Drizzle), Modest: Surf, Ice Beam, Thunder (sure-hit in rain), Calm Mind; Sitrus Berry"},
+    {"species": 405, "level": 50, "nature": 3, "ivs": 31, "moves": [89, 76, 126, 91], "item": 141, "_note": "Groudon (Drought), Adamant: Earthquake, Solar Beam (one turn in sun), Fire Blast, Dig (two-turn); Lum Berry"},
+    {"species": 130, "level": 50, "nature": 3, "ivs": 31, "moves": [37, 349, 89, 63], "item": 186, "_note": "Gyarados (Intimidate), Adamant: Thrash (multi-turn), Dragon Dance (Lv 50), Earthquake (hits the partner too), Hyper Beam (recharge); Choice Band"},
+    {"species": 227, "level": 50, "nature": 3, "ivs": 31, "moves": [191, 19, 92, 182], "item": 219, "_note": "Skarmory (Keen Eye), Adamant: Spikes (Lv 42), Fly (two-turn, HM02), Toxic, Protect; Shell Bell"},
+    {"species": 150, "level": 50, "nature": 15, "ivs": 31, "moves": [94, 87, 58, 247], "item": 174, "_note": "Mewtwo (Pressure), Modest: Psychic, Thunder, Ice Beam, Shadow Ball (all TMs on the disc); Starf Berry (Venusaur's)"},
+    {"species": 297, "level": 50, "nature": 15, "ivs": 31, "moves": [240, 331, 58, 182], "item": 140, "_note": "Ludicolo (Swift Swim), Modest: Rain Dance, Bullet Seed (multi-hit), Ice Beam, Protect; Persim Berry"}
+  ]
+}

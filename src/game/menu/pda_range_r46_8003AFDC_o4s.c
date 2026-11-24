@@ -1,0 +1,747 @@
+/**
+ * PDA fn_8003AFDC (.text 0x8003AFDC - 0x8003B2D8): per-event sprite drawing
+ * (model texture, status icon, caption). Carved from pda_range_80037158.c, which keeps the
+ * same body for its other candidate partitions.
+ */
+#include "dolphin/types.h"
+#include "pc/disc_types.h" /* big-endian data read in place on the PC */
+
+extern s8 lbl_8047A470;
+extern void* lbl_8047A480;
+extern s8 lbl_8047A490;
+extern f32 lbl_8047A478;
+extern f32 lbl_8047A484;
+extern f32 lbl_8047A488;
+extern f32 lbl_8047A48C;
+extern f32 lbl_8047A494;
+extern s8 lbl_8047A47C;
+extern s8 lbl_8047A47D;
+extern s32 lbl_8047A4A8;
+extern s32 lbl_8047A4B8;
+extern s32 lbl_8047A4B4;
+extern s32 lbl_8047A4B0;
+extern u32 lbl_8047A498;
+extern u32 lbl_8047A49C;
+extern u32 lbl_8047A4A0;
+extern s32 lbl_8047A4AC;
+extern s32 lbl_8047A4BC;
+extern f32 lbl_8047A4C0;
+extern u8 lbl_803A6498[];
+extern u8 lbl_80314F98[];
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* pcboxGetItem(void*, s16);
+#endif
+extern s32 fn_801429E8(u32 entry);
+
+extern f32 lbl_8047BA58;
+extern f32 lbl_8047BA5C;
+extern f32 lbl_8047BAB0;
+extern f32 lbl_8047BABC;
+extern f32 lbl_8047BA60;
+extern f32 lbl_8047BA64;
+extern f32 lbl_8047BA68;
+extern f32 lbl_8047BA6C;
+extern f32 lbl_8047BA70;
+extern f32 lbl_8047BA74;
+extern f32 lbl_8047BA78;
+extern f32 lbl_8047BAC0;
+
+typedef struct PdaModelWindow {
+    u8 pad00[0x8];
+    s32 field_08;
+    s32 field_0C;
+    s32 field_10;
+    u8 pad14[0x4];
+    f32 field_18;
+    u8 pad1C[0xC];
+    f32 field_28;
+    u8 pad2C[0x18];
+    f32 alphaScale;
+    u8 pad48[0x4C];
+    s8 variant;
+} PdaModelWindow;
+
+typedef struct PdaSprite {
+    u8 pad00[0x4];
+    s8 flags;
+    u8 pad05;
+    s16 eventId;
+    u8 pad08[0x44];
+    s32 messageId;
+    s16 field_50;
+    s16 field_52;
+    s16 x;
+    s16 y;
+    u8 pad58[0xc];
+    u8 colorR;
+    u8 colorG;
+    u8 colorB;
+    u8 alpha;
+    u8 pad68[0x8];
+    f32 value;
+    u8 pad74[0x17];
+    u8 alphaByte;
+    u8 pad8c[9];
+    s8 selectedIndex;
+} PdaSprite;
+
+typedef struct PdaSceneWork {
+    s32 currentIndex;
+    u8 pad04[0xC];
+    s32 field_10;
+    u8 pad14[0x14];
+    s32 field_28;
+    u8 pad2C[0x14];
+    f32 angle;
+    u8 pad44[8];
+    f32 alphaScale;
+} PdaSceneWork;
+
+typedef struct PdaEvent {
+    u8 pad00[0x6];
+    s16 messageId;
+} PdaEvent;
+
+typedef struct PdaMenuState {
+    u8 pad00;
+    s8 mode;
+    s8 menuSet;
+} PdaMenuState;
+
+typedef struct PdaSelectionWork {
+    u8 pad00[4];
+#ifdef TARGET_PC
+    u32 menu; /* PC: the window's 32-bit id; a void* moved selectedIndex off +0x95 (pda_exact_80038250.c) */
+#else
+    void* menu;
+#endif
+    u8 pad08[0x8d];
+    s8 selectedIndex;
+} PdaSelectionWork;
+
+typedef struct PdaKeyInfo {
+    u8 pad00[4];
+    u16 trigger;
+    u16 buttons;
+} PdaKeyInfo;
+
+typedef struct PdaListEntry {
+    u16 field_00;
+    u16 battleId;
+} PdaListEntry;
+
+typedef struct PdaOrbitPoint {
+    f32 angle;
+    f32 pad04[6];
+    f32 alpha;
+    f32 pad20;
+} PdaOrbitPoint;
+
+typedef struct PdaDrawWork {
+    u8 pad00[0x88];
+    PTR32_FIELD(void) drawData; /* window +0x88: 32-bit slot on the PC too (pc/ptr32.h) */
+    u8 pad8C[9];
+    s8 selectedPage;
+} PdaDrawWork;
+
+extern PdaModelWindow lbl_803A6748;
+extern u8 lbl_803A67FC[];
+extern PdaSceneWork lbl_803A6818;
+
+extern s32 pdaSnagListDetailKey(void* window, s32 enabled);
+extern void pdaSnagListDrawDetail(PdaSprite* sprite, PdaEvent* event);
+extern s32 fn_80041E48(void* work, s32 mode);
+extern s32 pdaModelViewerControl(void* work, s32 mode);
+extern void pdaReadPadInput(void* scene);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSscene_SetMode(s32 mode);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuButtonNormal(void* button);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void winSpriteSetDisp(void* sprite, s32 disp);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSmsgPrintColor(s32 arg0, s32 arg1, s32 arg2, void* data);
+#endif
+
+#if !defined(PDA_RANGE_EXACT_80037174_ONLY)
+
+#endif
+
+/* Retail places this callback immediately after menuColosseumBattleConnectionInit. */
+
+#if !defined(PDA_RANGE_EXACT_80037174_ONLY)
+#endif
+
+#if !defined(PDA_RANGE_EXACT_80037174_ONLY)
+/* Four copies of the same fade-in step, one per 0x18-byte record in
+   lbl_803A654C. Two shapes here are load-bearing: 0.0f as a literal, because
+   retail reloads the constant instead of reusing the compare's copy, and the
+   embedded `velocity =`, which orders the record load ahead of the velocity
+   load. */
+
+/* |v|. Retail's shape -- `> 0` first -- is what emits the two-way
+   branch rather than an inverted single one. */
+static inline f32 pdaOrbitAbs(f32 v)
+{
+    if (v > 0.0f) {
+        return v;
+    }
+    return -v;
+}
+
+static inline void pdaUpdateOrbitSprite(PdaSprite* sprite, f32 baseAngle,
+                                        s32 updateTarget)
+{
+    extern f32 lbl_802E52A8[4];
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern PdaKeyInfo* windowGetKeyInfo(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern f64 cos(f64 angle);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern f64 sin(f64 angle);
+#endif
+    f32 angle;
+    f32 step;
+    f32 distance;
+    f32 magnitude;
+    s8 direction;
+
+    if (updateTarget) {
+        lbl_8047A488 = lbl_802E52A8[lbl_8047A47C];
+    }
+    angle = lbl_8047A484 - baseAngle;
+    if (angle < 0.0f) {
+        angle += 6.28318548f;
+    }
+    if (angle >= 6.28318548f) {
+        angle -= 6.28318548f;
+    }
+
+    windowGetKeyInfo();
+    step = lbl_8047BA64 * lbl_8047A494;
+    if (lbl_8047A484 != lbl_8047A488) {
+        if (lbl_8047A488 - lbl_8047A484 < 0.0f) {
+            step = -step;
+        }
+        lbl_8047A48C = step;
+        lbl_8047A484 += step;
+        if (lbl_8047A484 >= 6.28318548f) {
+            lbl_8047A484 -= 6.28318548f;
+        }
+        if (lbl_8047A484 < 0.0f) {
+            lbl_8047A484 += 6.28318548f;
+        }
+
+        distance = pdaOrbitAbs(lbl_8047A484 - lbl_8047A488);
+        magnitude = pdaOrbitAbs(step);
+        if (distance < magnitude) {
+            lbl_8047A484 = lbl_8047A488;
+            lbl_8047A48C = 0.0f;
+        }
+    } else if (lbl_8047A47D != lbl_8047A47C) {
+        direction = lbl_8047A47D - lbl_8047A47C;
+        if (direction > 0) {
+            lbl_8047A48C = -step;
+        } else if (direction < 0) {
+            lbl_8047A48C = step;
+        }
+        lbl_8047A47D = lbl_8047A47C;
+    }
+
+    sprite->field_50 =
+        (s16)(lbl_8047BA6C * (f32)sin(angle) + lbl_8047BA68);
+    sprite->field_52 =
+        (s16)(lbl_8047BA6C * (f32)cos(angle) + lbl_8047BA70);
+}
+
+/* The redundant expressions preserve MWCC's exact register/scheduling shape. */
+
+static inline u8 pdaAllStopped(void)
+{
+    extern u8 lbl_803A654C[];
+    f32* p = (f32*)lbl_803A654C;
+    s32 i;
+
+    for (i = 0; i < 4; i++, p += 6) {
+        if (lbl_8047BA58 != p[4]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/* Re-seed the People screen's two 4-entry widget tables and reset the
+   carousel angle back to the table's rest value. */
+static inline void pdaResetPeopleTables(u8* base, u8* tbl)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* memcpy(void* dst, const void* src, u32 size);
+#endif
+    u8* dst;
+    u8* src;
+    s32 i;
+
+    lbl_8047A480 = (void*)0x1b5a;
+    src = tbl + 0;
+    dst = base + 0xb4;
+    for (i = 0; i < 4; dst += 0x18, src += 0x18, i++) {
+        memcpy(dst, src, 0x18);
+    }
+    src = tbl + 0x60;
+    dst = base + 0x54;
+    for (i = 0; i < 4; dst += 0x18, src += 0x18, i++) {
+        memcpy(dst, src, 0x18);
+    }
+    lbl_8047A47C = 0;
+#ifdef TARGET_PC
+    {
+        /* PC: tbl + 0xE0 is past the end of the 0xC0-byte table (the GameCube's next table, the wheel angles; see
+         * pda_range_80037158.c) */
+        extern f32 lbl_802E52A8[4];
+        lbl_8047A488 = lbl_802E52A8[0];
+        lbl_8047A484 = lbl_802E52A8[0];
+    }
+#else
+    lbl_8047A488 = *(f32*)(tbl + 0xe0);
+    lbl_8047A484 = *(f32*)(tbl + 0xe0);
+#endif
+    lbl_8047A47D = 0;
+}
+
+/* People screen driver: run the top-level menu, dispatch the four entries,
+   and tear the menu down on exit. */
+
+/* Prime the save-overwrite prompt with the current play time and the two
+   hero-name message slots. */
+static inline void pdaFillSavePrompt(void)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fn_80005748(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 darkPokemonCountFlag14(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 darkPokemonCountFlag12(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void msgctrlSetValue(s32 id, u32 value);
+#endif
+    u32 playTime;
+
+    playTime = fn_80005748();
+    if (lbl_8047A498 != 0) {
+        playTime = lbl_8047A498;
+    }
+    lbl_8047A49C = darkPokemonCountFlag14();
+    lbl_8047A4A0 = darkPokemonCountFlag12();
+    msgctrlSetValue(0x4c, playTime);
+    msgctrlSetValue(0x2f, darkPokemonCountFlag12());
+    msgctrlSetValue(0x30, darkPokemonCountFlag14());
+}
+
+typedef struct PdaSaveImage {
+    u8 bytes[0x1dfd0];
+} PdaSaveImage;
+
+/* Save-and-quit flow reached from the People screen's model preview. */
+
+/* The data id / count of the target-th listed item in PC box 0. */
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+static inline s32 pdaBoxItemId(s32 target)
+{
+    extern u16 pcboxGetNbItemSlot(s32 box);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 itemBiosGetItemDataId(void* item);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 itemBiosGetNum(void* item);
+#endif
+    void* item;
+    s32 i;
+    s32 found;
+    s32 slots;
+
+    slots = pcboxGetNbItemSlot(0);
+    found = -1;
+    for (i = 0; i < slots; i++) {
+        item = pcboxGetItem(0, (s16)i);
+        if ((u8)fn_801429E8(PC_PTR32_IMPLICIT(item)) != 0) {
+            found++;
+            if (found >= target) {
+                return itemBiosGetItemDataId(item);
+            }
+        }
+    }
+    return 0;
+}
+#else
+static inline s32 pdaBoxItemId(s32 target)
+{
+    extern u16 pcboxGetNbItemSlot(s32 box);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 itemBiosGetItemDataId(void* item);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 itemBiosGetNum(void* item);
+#endif
+    void* item;
+    s32 i;
+    s32 found;
+    s32 slots;
+
+    slots = pcboxGetNbItemSlot(0);
+    found = -1;
+    for (i = 0; i < slots; i++) {
+        item = pcboxGetItem(0, (s16)i);
+        if ((u8)fn_801429E8(PC_PTR32(item)) != 0) {
+            found++;
+            if (found >= target) {
+                return itemBiosGetItemDataId(item);
+            }
+        }
+    }
+    return 0;
+}
+#endif
+
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+static inline s32 pdaBoxItemNum(s32 target)
+{
+    extern u16 pcboxGetNbItemSlot(s32 box);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 itemBiosGetItemDataId(void* item);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 itemBiosGetNum(void* item);
+#endif
+    void* item;
+    s32 i;
+    s32 found;
+    s32 slots;
+
+    slots = pcboxGetNbItemSlot(0);
+    found = -1;
+    for (i = 0; i < slots; i++) {
+        item = pcboxGetItem(0, (s16)i);
+        if ((u8)fn_801429E8(PC_PTR32_IMPLICIT(item)) != 0) {
+            found++;
+            if (found >= target) {
+                return itemBiosGetNum(item);
+            }
+        }
+    }
+    return 0;
+}
+#else
+static inline s32 pdaBoxItemNum(s32 target)
+{
+    extern u16 pcboxGetNbItemSlot(s32 box);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 itemBiosGetItemDataId(void* item);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 itemBiosGetNum(void* item);
+#endif
+    void* item;
+    s32 i;
+    s32 found;
+    s32 slots;
+
+    slots = pcboxGetNbItemSlot(0);
+    found = -1;
+    for (i = 0; i < slots; i++) {
+        item = pcboxGetItem(0, (s16)i);
+        if ((u8)fn_801429E8(PC_PTR32(item)) != 0) {
+            found++;
+            if (found >= target) {
+                return itemBiosGetNum(item);
+            }
+        }
+    }
+    return 0;
+}
+#endif
+
+/* PC item list: cursor/page input, item swapping, and caption refresh. */
+
+/* PC item transfer loop: run the box list and move the highlighted stack
+   between the bag (mode 0) and the PC (mode 1) until the list is closed. */
+
+typedef struct PdaNumberRange {
+    s32 max;
+    s32 min;
+} PdaNumberRange;
+
+typedef struct PdaNumberWork {
+    u8 pad00[0x60];
+    PTR32_FIELD(PdaNumberRange) range; /* window +0x60: 32-bit slot on the PC too (pc/ptr32.h) */
+    u8 pad64[0x31];
+    s8 digitIndex;
+} PdaNumberWork;
+
+/* Digit-wise spinner for the PDA's numeric entry field: left/right step the
+   selected digit with wraparound inside the field's range, up/down move
+   between digits. */
+
+
+extern u8 lbl_802EF0A8[];
+extern u8 lbl_80314F98[];
+extern u8 lbl_80267190[];
+extern u8 lbl_803A6A60[];
+extern PdaListEntry* lbl_8047A4D4;
+extern u32 lbl_8047A4D0;
+extern u32 lbl_8047A4D8;
+extern u32 lbl_8047A4DC;
+extern u32 lbl_8047A4E0;
+extern u16* lbl_8047A4E4;
+extern u16 lbl_8047A4E8;
+extern s32 lbl_804788C0;
+extern s16 lbl_804788C8[2];
+extern s16 lbl_804788CC[2];
+extern s16 lbl_804788D0[2];
+extern f32 lbl_8047BC94;
+extern f32 lbl_8047BC98;
+extern f32 lbl_8047BCA0;
+extern f32 lbl_8047BAC4;
+extern f32 lbl_8047BAC8;
+extern f32 lbl_8047BCB8;
+extern f32 lbl_8047BCBC;
+extern f32 lbl_8047BCC0;
+extern f32 lbl_8047BCC4;
+extern f32 lbl_8047BCC8;
+#ifndef TARGET_PC /* PC: canonical declaration in pc/prototypes.h */
+extern const f32 lbl_8047BCF4;
+#endif
+extern f32 lbl_8047BCF8;
+extern f32 lbl_8047BAC0;
+extern f32 lbl_8047BDAC;
+extern f32 lbl_8047BDF0;
+
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 gfxVtxTexCoord();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 gfxVtxColor4u8();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 gfxVtxPos2s16();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 gfxEnd();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 gfxBegin();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 gfxSetPrimitive();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 gfxSetVtxDesc();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 gfxLoadTexture();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 gfxClearFlags();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 gfxSetFlags();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 GSmemGetHandleByPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 GSmemFree();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_800E24B0();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 GSmemLock();
+#endif
+extern u32 GSmemAlloc();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_800FA280();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* menuDataBiosGetPtr(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_80102510();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_8010264C();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_801040F0();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* windowGetKeyInfo(void*);
+#endif
+extern u32 menuModelRender();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_80109B90();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_8011D8D8();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_8011D8F4();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_8011DFE0();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 pokemonGetSex();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_801240C4();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_80132A38();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 soundStartRaw(u32, u32, u32);
+#endif
+extern u32 GSresReleaseById();
+extern s32 fn_8017B2CC();
+extern u32 fn_8017B3E4();
+extern u32 fn_801EE0BC();
+extern u16 darkPokemonSaveGet4A0();
+extern u32 darkPokemonSaveGetName();
+extern u16 darkPokemonGetFlag1C();
+extern u32 darkPokemonSaveGet8();
+extern u8 darkPokemonCheckFlag16();
+extern u8 darkPokemonCheckFlag12();
+extern u8 darkPokemonCheckFlag14();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 darkPokemonCheckFlag0C(u16);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16 fn_801EEFAC();
+#endif
+extern u32 fightTrainerDataBiosGetNameMsgId();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fightTrainerDataBiosGetPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 gamedataGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuCloseSync(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_80018F54();
+#endif
+extern u32 fn_800F915C();
+
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void windowDrawSprite(s16 x, s16 y, PdaSprite* sprite, u16 id, s32 arg4);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 menuModelCheck(void* work, s32 index);
+#endif
+
+static inline void pdaDrawModelTexture(PdaSprite* sprite, u8* model)
+{
+    u32 texture = menuModelRender(model);
+    if (texture != 0) {
+        gfxSetFlags(3);
+        gfxClearFlags(4);
+        gfxSetPrimitive(7);
+        gfxSetVtxDesc(lbl_80314F98);
+        gfxLoadTexture(0, PC_PTR(texture));
+        gfxBegin(2);
+        gfxVtxPos2s16(0, 0);
+        gfxVtxColor4u8(0, 0xFF, 0xFF, 0xFF, 0xFF);
+        gfxVtxTexCoord(0, lbl_8047BAC4, lbl_8047BAC4);
+        gfxVtxPos2s16(sprite->x, sprite->y);
+        gfxVtxColor4u8(0, 0xFF, 0xFF, 0xFF, 0xFF);
+        gfxVtxTexCoord(0, lbl_8047BAC8, lbl_8047BAC8);
+        gfxEnd();
+    }
+}
+
+/* RULE-EXCEPTION(user-approved): local compiler-control pragma (peephole off) needed for the byte match of the code it covers - see docs/RULE_EXCEPTIONS.md */
+#pragma peephole off
+void fn_8003AFDC(u8* context, PdaSprite* sprite)
+{
+    u8* model;
+    u16 battleId;
+    u16 entryId;
+    u8* layout;
+    u8 registered;
+    u8 cleared;
+    s32 state;
+    s32 messageId;
+
+    switch (sprite->eventId) {
+    case 0xD96:
+    case 0xD97:
+    case 0xD99:
+    case 0x308:
+    case 0x30B:
+        break;
+    case 0xD98:
+        if (darkPokemonCheckFlag16(lbl_8047A4D4[*(u32*)&lbl_803A6748].battleId) != 0 &&
+            menuModelCheck(model = (u8*)&lbl_803A6748 + 0x4C, 0) == 0) {
+            pdaDrawModelTexture(sprite, model);
+        }
+        break;
+    default:
+        battleId = lbl_8047A4D4[*(u32*)&lbl_803A6748].battleId;
+        darkPokemonCheckFlag0C(lbl_8047A4D4[(u16)*(u32*)&lbl_803A6748].battleId);
+        layout = lbl_802EF0A8;
+        entryId = lbl_8047A4D4[(u16)*(u32*)&lbl_803A6748].battleId;
+        darkPokemonGetFlag1C(entryId);
+        darkPokemonCheckFlag16(entryId);
+        registered = darkPokemonCheckFlag12(entryId);
+        cleared = darkPokemonCheckFlag14(entryId);
+        if (registered != 0) {
+            if (cleared != 0) {
+                state = 1;
+            } else {
+                state = 0;
+            }
+        } else {
+            state = 2;
+        }
+        switch (state) {
+        case 0:
+            windowDrawSprite(
+                PC_PTR(DISC_S16(layout + 0x55FA) - sprite->field_50 - 7),
+                PC_PTR(DISC_S16(layout + 0x55FC) - sprite->field_52 - 4),
+                (PdaSprite*)context, 0x161, 0);
+            break;
+        case 1:
+            windowDrawSprite(
+                PC_PTR(DISC_S16(layout + 0x55FA) - sprite->field_50),
+                PC_PTR(DISC_S16(layout + 0x55FC) - sprite->field_52),
+                (PdaSprite*)context, 0x160, 0);
+            break;
+        case 2:
+            break;
+        }
+        registered = darkPokemonCheckFlag16(battleId);
+        cleared = darkPokemonCheckFlag14(battleId);
+        if (registered != 0) {
+            if (cleared != 0) {
+                messageId = 0x36E7;
+            } else {
+                messageId = 0x36E6;
+            }
+        } else {
+            messageId = 0x36E8;
+        }
+        GSmsgPrintColor(0, 0, context[0x8B] | -0x100, PC_PTR32_IMPLICIT((void*)PC_PTR(messageId)));
+        break;
+    }
+}
+#pragma peephole reset
+#endif

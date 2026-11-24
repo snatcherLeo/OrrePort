@@ -1,0 +1,259 @@
+/**
+ * @file menuColosseumBattle_prefix.c
+ * @brief menuColosseumBattle.cpp prefix candidate, 0x80058150 - 0x80058754.
+ */
+#include "dolphin/types.h"
+#include "game/menu/menu_name_entry.h"
+#include "game/constants/pokemon_status.h"
+
+typedef struct ColosseumBattleConnectState {
+    s32 active;
+    s32 connected;
+    s32 busyRequest;
+    s32 reserved;
+} ColosseumBattleConnectState;
+
+typedef struct ColosseumUnownMenuIds {
+    u32 normal;
+    u32 shiny;
+} ColosseumUnownMenuIds;
+
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void _threadSwitch(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 _toolentryAlloc__FUl(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* GSmemLock(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_800E24B0(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSmemFree(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* getPokemon__5PCBOXFScSc(void*, s8, s8);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 GSthreadCreate(u32, u32, u32, u32, u32, void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* heroGetStatus(void*, s32, u16);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuClose();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 menuCloseSync(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 menuOpen(s32, s32);
+#endif
+extern s8 pcboxGetNbPokemonBox(void);
+extern s8 fn_801347D8(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 pokemonCheckValid(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 pokemonIsDarkPokemon(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 pokemonBiosGetPokemonDataId(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 pokemonGetStatus(void*, u32, u32, u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 pokemonGetAnnonKatati(u32);
+#endif
+extern void scriptStoreTemochiPokemon(s32);
+extern u8 scriptCheckTemochiPokemon(s32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 floorGetCurrentContext(void);
+#endif
+extern void fn_80057E70(void);
+extern void fn_80055B98(s32);
+extern void fn_800F915C(s32);
+extern void fn_8017B3E4(s32);
+extern s32 fn_8017B2CC(s32);
+extern void GSresReleaseById(s32);
+extern void std078_flagSetFalse(s32);
+
+extern void* lbl_8047A590;
+extern const ColosseumUnownMenuIds lbl_802676F0[28];
+extern u8 lbl_803A9A08[];
+
+#define gColosseumBattleConnect (*(ColosseumBattleConnectState*)lbl_803A9A08)
+
+static inline s32 colosseumBattleGetConnectState(void) {
+    if (gColosseumBattleConnect.active != 0) {
+        if (gColosseumBattleConnect.connected != 0) {
+            return 1;
+        }
+        return 0;
+    }
+    return 2;
+}
+
+typedef struct ColosseumUnownMenuTable {
+    ColosseumUnownMenuIds ids[28];
+} ColosseumUnownMenuTable;
+
+static inline s32 colosseumBattleGetMenuPokemonId(void* pokemon) {
+    u32 id;
+    u32 form;
+    u8 shiny;
+
+    id = pokemonBiosGetPokemonDataId(pokemon);
+    if ((u16)id == 0) {
+        return -1;
+    }
+    if ((u16)id == 0xC9) {
+        ColosseumUnownMenuTable table = *(ColosseumUnownMenuTable*)lbl_802676F0;
+
+        form = pokemonGetAnnonKatati(pokemonGetStatus(pokemon, 0, POKEMON_STATUS_PERSONALITY, 0));
+        if ((u8)form >= 28) {
+            return -1;
+        }
+        id = pokemonBiosGetPokemonDataId(pokemon);
+        if ((u16)id == 0) {
+            return -1;
+        }
+        if ((u8)pokemonGetStatus(pokemon, id, POKEMON_STATUS_IS_SHINY, 0) != 0) {
+            return table.ids[(u8)form].shiny;
+        }
+        return table.ids[(u8)form].normal;
+    }
+    shiny = pokemonGetStatus(pokemon, id, POKEMON_STATUS_IS_SHINY, 0);
+    id = pokemonGetStatus(NULL, id, 0x5A, (u16)((u8)shiny != 0 ? 1 : 0));
+    if (id == 0) {
+        return -1;
+    }
+    return id;
+}
+
+static inline s32 colosseumBattleCountPokemon(void) {
+    s32 slot;
+    s32 box;
+    s32 count;
+    void* pokemon;
+
+    count = 0;
+    for (slot = 0; slot < 6; slot++) {
+        pokemon = PC_PTR(heroGetStatus(NULL, 3, (u16)slot));
+        if (pokemon != NULL && pokemonCheckValid(pokemon) != 0) {
+            count++;
+        }
+    }
+
+    for (slot = 0; slot < pcboxGetNbPokemonBox(); slot++) {
+        for (box = 0; box < fn_801347D8(); box++) {
+            pokemon = getPokemon__5PCBOXFScSc(0, (s8)slot, (s8)box);
+            if (pokemon != NULL && pokemonCheckValid(pokemon) != 0) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+/* Address: 0x80058150 | Size: 0x604 */
+void pcBoxStorageMain(void) {
+    u32 handle;
+    s32 boxSlot;
+    u32* list;
+    u32* out;
+    s32 slot;
+    s32 listCount;
+    void* pokemon;
+    void* boxPokemon;
+    s32 box;
+    u32 id;
+    s32 connectedState;
+    s32 shouldSkipWait;
+
+    scriptStoreTemochiPokemon(0);
+    fn_8017B3E4(0x70B);
+    while (fn_8017B2CC(0x70B) == 1) {
+        _threadSwitch();
+    }
+
+    listCount = colosseumBattleCountPokemon() + 1;
+    if (listCount > 0) {
+        handle = _toolentryAlloc__FUl((u32)listCount * sizeof(u32));
+        list = GSmemLock(handle);
+        lbl_8047A590 = list;
+        out = list;
+
+        if (list != NULL) {
+            for (slot = 0; slot < 6; slot++) {
+                pokemon = PC_PTR(heroGetStatus(NULL, 3, (u16)slot));
+                if (pokemon != NULL && pokemonCheckValid(pokemon) != 0) {
+                    id = colosseumBattleGetMenuPokemonId(pokemon);
+                    if (id != -1) {
+                        *out++ = id;
+                    }
+                }
+            }
+
+            for (slot = 0; slot < pcboxGetNbPokemonBox(); slot++) {
+                for (boxSlot = 0; boxSlot < fn_801347D8(); boxSlot++) {
+                    boxPokemon = getPokemon__5PCBOXFScSc(0, (s8)slot, (s8)boxSlot);
+                    if (boxPokemon != NULL && pokemonCheckValid(boxPokemon) != 0) {
+                        id = colosseumBattleGetMenuPokemonId(boxPokemon);
+                        if (id != -1) {
+                            *out++ = id;
+                        }
+                    }
+                }
+            }
+            *out = 0;
+        }
+    } else {
+        lbl_8047A590 = NULL;
+    }
+
+    GSthreadCreate(1, floorGetCurrentContext(), 0x4000, 1, 1, fn_80057E70);
+    menuClose(0x19);
+    menuClose(0x1A);
+    menuClose(0x1B);
+    menuCloseSync(0x19, 1);
+    menuCloseSync(0x1A, 1);
+    menuCloseSync(0x1B, 1);
+    fn_80055B98(0);
+    menuOpen(0x1A, 0);
+    menuOpen(0x1B, 0);
+    menuOpen(0x19, 0);
+
+    connectedState = colosseumBattleGetConnectState();
+    if (connectedState == 2) {
+        GSresReleaseById(0x48A);
+        fn_800F915C(0x48A);
+        shouldSkipWait = 1;
+    } else {
+        if (connectedState == 1) {
+            gColosseumBattleConnect.busyRequest = 0;
+        }
+        gColosseumBattleConnect.reserved = 1;
+        shouldSkipWait = 0;
+    }
+
+    if (shouldSkipWait == 0) {
+        while (colosseumBattleGetConnectState() != 2) {
+            _threadSwitch();
+        }
+    }
+
+    if (listCount > 0) {
+        fn_800E24B0(handle);
+        GSmemFree(handle);
+    }
+
+    GSresReleaseById(0x70B);
+    fn_800F915C(0x70B);
+    if (scriptCheckTemochiPokemon(0) != 0) {
+        std078_flagSetFalse(0xDDE);
+    }
+}

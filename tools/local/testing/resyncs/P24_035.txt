@@ -1,0 +1,4 @@
+# P24 (sitting 035_20261023_2040): logged resyncs for the second pass (2026-10-30; match ledger, P24 rows).
+# No hand edits, no Wes placements: settings only, to the end on the first run (p2_P24a):
+#   P14's settings (resyncs/P14_024.txt) + ORRE_ROLL_SEEDS for all 7 battles (one PLAYREC_RNGCALL capture, replay_3,
+#   windows from battlewin.py; checked: 1,696 flag changes identical).

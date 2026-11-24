@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- OrrePort menu icon: Audio (a speaker with two waves). Filled shapes only (port/src/pc_svg.cpp). -->
+<path fill="#FFFFFF" d="M2.5 9 H6.5 L11.5 4.8 V19.2 L6.5 15 H2.5 Z"/>
+<path fill="#FFFFFF" d="M14.4 8.6 Q17.2 12 14.4 15.4 L15.7 16.6 Q19.4 12 15.7 7.4 Z"/>
+<path fill="#FFFFFF" d="M17.2 5.9 Q21.8 12 17.2 18.1 L18.5 19.3 Q23.8 12 18.5 4.7 Z"/>
+</svg>

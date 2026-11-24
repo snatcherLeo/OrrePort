@@ -1,0 +1,7 @@
+{
+  "_note": "the reference playthrough, before P14, on P13's end save (snatcherLeo, 2026-11-09): 'give me in my box a level 1 swinub and magnemite, I'll intentionally lose a match in P14 beginning to see if their faint animations look glitched in any way' (later check L3, port-gaps 71: Magnemite's eyes and Swinub's feet during the faint). Both into the first free PC box slots; their level-1 moves from the disc's level-up lists (Swinub: Tackle, Odor Sleuth; Magnemite: Tackle, Metal Sound). Nature Hardy (neutral) and IVs 31: the project's choice, as in the earlier edits; nothing else changes.",
+  "add_pokemon": [
+    {"species": 220, "level": 1, "nature": 0, "ivs": 31, "moves": [33, 316], "to": "box", "_note": "SWINUB Lv 1: Tackle, Odor Sleuth"},
+    {"species": 81, "level": 1, "nature": 0, "ivs": 31, "moves": [33, 319], "to": "box", "_note": "MAGNEMITE Lv 1: Tackle, Metal Sound"}
+  ]
+}

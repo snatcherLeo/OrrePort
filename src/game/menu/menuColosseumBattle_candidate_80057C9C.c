@@ -1,0 +1,65 @@
+/**
+ * @file menuColosseumBattle_candidate_80057C9C.c
+ * @brief menuColosseumBattle.cpp candidate range, 0x80057C9C - 0x80057DE8.
+ */
+#include "dolphin/types.h"
+
+typedef struct ColosseumConnectJob {
+    s32 running;
+    s32 ready;
+    s32 request;
+    s32 canceled;
+} ColosseumConnectJob;
+
+extern ColosseumConnectJob lbl_803A9A08;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void _threadSwitch(void);
+#endif
+extern void GSresReleaseById(s32);
+extern s32 fn_8017B2CC(s32);
+extern void fn_8017B3E4(s32);
+extern void fn_800F915C(s32);
+extern s32 fn_80097D94(void*, void*, s32*);
+
+static inline s32 getConnectJobState(void)
+{
+    if (lbl_803A9A08.running != 0) {
+        if (lbl_803A9A08.ready != 0) {
+            return 1;
+        }
+        return 0;
+    }
+    return 2;
+}
+
+void fn_80057C9C(void* pokemon, void* callback, s32* navigation)
+{
+    u8 ownsRequest = 0;
+
+    if (getConnectJobState() != 2) {
+        lbl_803A9A08.request = 1;
+        ownsRequest = 1;
+        while (getConnectJobState() != 1) {
+            _threadSwitch();
+        }
+    }
+
+    GSresReleaseById(0x70B);
+    fn_800F915C(0x70B);
+    fn_8017B3E4(0x66F);
+    while (fn_8017B2CC(0x66F) == 1) {
+        _threadSwitch();
+    }
+
+    fn_80097D94(pokemon, callback, navigation);
+    GSresReleaseById(0x66F);
+    fn_800F915C(0x66F);
+    fn_8017B3E4(0x70B);
+    while (fn_8017B2CC(0x70B) == 1) {
+        _threadSwitch();
+    }
+
+    if (ownsRequest) {
+        lbl_803A9A08.request = 0;
+    }
+}

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- OrrePort menu icon: Controls (a controller, with a cross and two buttons cut out). Filled shapes only
+     (port/src/pc_svg.cpp). -->
+<path fill="#FFFFFF" fill-rule="evenodd" d="M7 6.5 H17 Q22.5 6.5 22.5 12.8 Q22.5 18.2 18.8 18.2 Q17 18.2 16 16.2 L15.2 14.6 H8.8 L8 16.2 Q7 18.2 5.2 18.2 Q1.5 18.2 1.5 12.8 Q1.5 6.5 7 6.5 Z M6.2 9.6 H7.8 V11.4 H9.6 V13 H7.8 V14.8 H6.2 V13 H4.4 V11.4 H6.2 Z M15.4 10.6 Q15.4 9.6 16.4 9.6 Q17.4 9.6 17.4 10.6 Q17.4 11.6 16.4 11.6 Q15.4 11.6 15.4 10.6 Z M17.4 13.2 Q17.4 12.2 18.4 12.2 Q19.4 12.2 19.4 13.2 Q19.4 14.2 18.4 14.2 Q17.4 14.2 17.4 13.2 Z"/>
+</svg>

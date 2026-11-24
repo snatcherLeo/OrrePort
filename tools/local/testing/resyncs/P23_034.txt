@@ -1,0 +1,12 @@
+# P23 (sitting 034_20261023_1932): logged resyncs for the second pass (2026-10-30; match ledger, P23 rows).
+# Settings: P14's (resyncs/P14_024.txt) + ORRE_ROLL_SEEDS (two PLAYREC_RNGCALL captures of 17 battles each, windows
+# from battlewin.py; seeds for 24 of the 34 battles: ten windows had no battle-logic draws (likely battles decided
+# without a roll the resync covers, or windows that need a look); all 34 battles replayed as on the console anyway).
+#
+# 1. (2026-10-30) After battle 12 (in battle room 0xCE), back in field room 0x20, the console's Wes walks south to
+#    z = -477.9 and east to the door into room 0x1D; the PC's walk (starting at the same frame, the message window's
+#    close) stayed around z = -465 and ran into a wall at x = 62.8. Wes placed on the console's walk, from
+#    replay_1/pos.csv frame 153080; PC frame = pos.csv frame + 578 there (both start walking at the window's close:
+#    console events 153758, PC 153508). Apply with --log <p2_P23a>/run.log.
+@153658 npc 0 21.5187 -14.5681 -477.8919  # console pos.csv 153080, on the walk to room 0x1D's door
+#    With it (p2_P23b): all 207 room entries and all 34 battles as on the console, to the end.

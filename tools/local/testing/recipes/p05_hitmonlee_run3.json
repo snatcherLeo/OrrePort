@@ -1,0 +1,9 @@
+{
+  "_what": "the reference playthrough, after P05, before P06 (snatcherLeo, 2026-11-04): \"can we replace Primeape with Hitmonlee in my save file? Keep same moveset, just get rid of Thrash with Hi Jump Kick, should be legal\". Primeape is moved to the PC box unchanged (nothing deleted); Hitmonlee takes its party slot at Primeape's level (30), with Primeape's nature (Adamant) and IVs (31), as in the P04 edits.",
+  "move_to_box": [
+    {"species": 57, "_note": "Primeape Lv 30 to the first free box slot, unchanged"}
+  ],
+  "add_pokemon": [
+    {"species": 106, "level": 30, "nature": 3, "ivs": 31, "moves": [280, 136, 182, 89], "_note": "Hitmonlee, Adamant: Brick Break, Hi Jump Kick, Protect, Earthquake"}
+  ]
+}

@@ -1,0 +1,38 @@
+# P11 (sitting 021_20261022_0129): logged resyncs for the second pass (2026-10-29; match ledger, P11 rows).
+# Pads made with: replay_check.py --replay 1 --window-frameat --cursor-sync all --fadein --fade-lag 1
+#   --entry-lag-rooms 0x390,0x38F --windows-rooms 0x38F --window-seed-burst 20 --window-seed-keep 1
+#   --window-seed-blink, ORRE_ROLL_SEEDS from replay_4 (battles 1-3) and replay_5 (battles 4-6).
+#
+# 1. A hand edit of the pad: the B that closes the Y-menu (window 0x41) in the menu-room visit after room 0x24 (console
+#    entry 23, +550), pressed one frame later. Pad lines "+3:SX=222+SY=144+CY=127", "+3:B+SX=222+SY=144+CY=127",
+#    "+4:B+SX=222+SY=145+CY=127" become "+3:...", "+4:B...", "+3:B..." (the press a frame later, the steps after it
+#    on their old frames). On the console the menu opens and the B pressed on that frame closes it the next; on the PC
+#    the menu became the active window a frame after the B, so the B counted as held, the menu stayed open until the
+#    next B tap, and that tap (meant for running) left Wes walking: he missed the talk at +1321 and story flag
+#    (class 3, word 0, bit 23) was never set.
+#
+# 2. Wes placed on the console's route twice in the visit of room 0x24 after the Relic Stone area (console entry 32,
+#    frame 57663; the PC's visit starts at its frame 58335 in the reference run p2_P11b, which has item 1): at visit
+#    +500 and +700. From about +450 the PC's Wes falls behind (20 units by +500) and stands blocked at x -106 from
+#    +705 while the console's walks on to the exit at (-23.7, -25.9) and room 0x25 (likely a townsperson in his path
+#    at another place on the PC: the P02 class; not traced). Values from replay_1/pos.csv.
+#    Apply with: pad_resync.py <run>/sitting.pad P11_021.txt --log <p2_P11b>/run.log (a pad with item 1's edit)
+@58835 npc 0 -127.4362 40.0015 44.6894  # console visit +500
+@59035 npc 0 -55.0675 40.7874 140.4066  # console visit +700
+#
+# 3. Wes placed where the console's stops after the Relic Stone's purification (room 0x27, back from menu room 0x385:
+#    console 0x385 entry 173957 + 6915). The PC's walk stops 2.3 units off ((9.47, 7.44) against (7.95, 9.19)) and the
+#    talk at +6961 finds nobody. Absolute PC frame from the reference run p2_P11f (0x385 entered at its frame 174206;
+#    a pad with items 1-2, the port-gaps 29 fix in the exe). Apply with --log <p2_P11f>/run.log.
+@181121 npc 0 7.9540 0 9.1909  # console 0x385 +6915
+#
+# *Updated 2026-10-29 afternoon:* pads from here on are made with --windows-rooms 0x38F,0x386 (the evolution room's
+# presses timed from its windows). Items 1-3 carry over unchanged: the pad only differs inside room 0x386, after them
+# (the old pad's lines up to the 0x386 visit spliced onto the new pad's from there; p2_P11m).
+#
+# 4. A hand edit of the pad: the B that the console reads 2 frames before the Y-menu (window 0x41) is ready, after the
+#    naming screen (console frame 198282; the menu ready at 198284), pressed one frame earlier. Pad lines "+22:B",
+#    "+9:-", "+7:B", "+21:-" (from the 0x63 anchor of the menu-room visit after room 0x390) become "+22:B", "+9:-",
+#    "+6:B", "+22:-". The pad made from the controller recording has that B one frame later than the console's own
+#    input log (input.csv, latched buttons): on the PC it came one frame before the menu was ready, which closed the
+#    menu at once, so the next A never re-entered menu room 0x38F (p2_P11m stopped there).

@@ -1,0 +1,3830 @@
+/**
+ * @file menuFight.c
+ * @brief menuFight -- XD translation unit: overworld NPC "fight menu" UI
+ *        (item/money/quest/mart/trainer-battle bridge, secret-base status
+ *        menus, target selection, waza/move-tutor, purification, warp).
+ *
+ * Address range: 0x8000DAA8 - 0x80011B4C (46 functions)
+ *
+ * Split from game/gs_npc_interact.c (a CodeCandidate bucket spanning two
+ * XD-era translation units) into its true source file. See
+ * game/menuFightStatus.c for the sibling TU (0x80011B4C-0x80011EA4) that
+ * used to share this bucket; in XD, menuFightStatus.cpp links immediately
+ * after menuFight.cpp, but in Colosseum's link order they occupy the same
+ * CodeCandidate range, so the split follows the high-confidence boundary
+ * at 0x80011B4C (see split rationale in the naming-pass notes).
+ *
+ * heroMoveRunEvent is physically included at the top of this file even though
+ * its address (0x8000D710) sits just below this TU's declared start; it
+ * belongs to the preceding range unit (game/gs_range_8000D290.c) and is
+ * carried over unmodified from the original monolithic file pending a
+ * follow-up boundary fix.
+ */
+
+#include "dolphin/types.h"
+#include "game/constants/battle_messages.h"
+#include "game/constants/menu_keys.h"
+#include "game/constants/moves.h"
+#include "game/constants/pokemon_status.h"
+#include "dolphin/pad/Pad.h"
+
+/* One-function carves: menuFight_r51_8000DE24.c, menuFight_r51_8000E290.c and
+ * menuFight_candidate_8000ED34.c each define one MENU_FIGHT_ONLY_<addr> and
+ * compile only that function (with the declarations and inline helpers it
+ * uses); every other function is excluded so the object links at its range. */
+#if defined(MENU_FIGHT_ONLY_8000DEC4) || defined(MENU_FIGHT_ONLY_8000E290) || \
+    defined(MENU_FIGHT_ONLY_8000ED34)
+#define MENU_FIGHT_ONLY
+#endif
+#if defined(MENU_FIGHT_ONLY_8000F400)
+#define MENU_FIGHT_ONLY
+#endif
+#if defined(MENU_FIGHT_ONLY_8000F768)
+#define MENU_FIGHT_ONLY
+#endif
+
+/* =========================================================================
+ * External declarations
+ * ========================================================================= */
+
+/* renamed symbols referenced by asm incs (symbolmap port) */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 _menuFightIsUse__FP16MENU_WAZA_STATUSUs();
+#endif
+extern void* menuSubCalcColor(void*, void*);
+
+/* NPC/People system */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  winSpriteSetDisp(void* npc, s32 direction);  /* Set NPC facing */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* menuItemBiosGetPtr(s16 npcId);                  /* Lookup NPC data by ID */
+#endif
+
+/* Text/dialog system */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  windowDrawSprite();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  winSeqSetMenu(void* ctx, s32 state);       /* Set dialog state */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  fn_801081F8(void* ctx, s32 msgId, s32 flags); /* Display message */
+#endif
+
+/* Rendering */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32   GSmsgGetRect();                           /* Get model dimensions */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  GSmsgPrintColor();
+#endif
+
+/* Map/warp */
+extern u8    fightFloorCheckFightActionFightOutPokemonIrekaeSelect(s32 p1, void* warpId, void* outDest);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* fightOutPokemonGetNicknamePtr(void* mapData);              /* Get map name string */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  winMsgOpen(s32 slot, s32 msgId, s32 p3, s32 p4);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  winMsgClose(s32 slot);                   /* Close message box */
+#endif
+
+/* Input/frame */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8    fn_801F18DC(s32 controller);             /* Check input ready */
+#endif
+extern u8    fightFloorIsUseFightTimerCommand(s32 controller);             /* Check button pressed */
+extern u8    fightTimerCommandIsOver(void);                       /* Check A button */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16   std103_battleGetResult(void);                       /* Get input state */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  _threadSwitch(void);                       /* Frame advance */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32   GSinputButtonsChanged(s32 slot);                   /* Get render flags */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32   fn_800F7BC4(s32 slot);                   /* Get VSync flags */
+#endif
+
+/* Battle bridge */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  msgctrlSetValue();                           /* Set battle parameter */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  fightFloorSetStatus();                           /* Configure map object */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32   windowGetParam();                           /* Get participant data */
+#endif
+
+/* =========================================================================
+ * SDA globals
+ * ========================================================================= */
+
+/* NPC interaction state variables are scattered across the SDA region.
+ * The exact mapping is determined by the lbz/sth instructions that
+ * reference r0+offset or r13+offset addressing modes. */
+
+/* ===================================================================
+ * AUTO-GENERATED accessor functions
+ * Generated by tools/gen_accessors.py
+ * 1 functions matched
+ * =================================================================== */
+
+#ifndef MENU_FIGHT_ONLY
+extern u8 lbl_8047A2A0;
+
+/* Address: 0x8000DAA8 | Size: 0x8 | Pattern: sda_getter */
+u8 fn_8000DAA8(void) {
+    return lbl_8047A2A0;
+}
+
+/* =========================================================================
+ * Stubs for remaining GSnpcInteract functions (0x800111C4-0x80011EA4)
+ * ========================================================================= */
+
+/* 0x800111C4 | 0x24 -- small accessor */
+extern u32 gbaCommandRequestAction(u32, u32, u32, u32);
+#if 0
+asm void menuFightOpenGBAMain(void) {
+#include "src/game/gs_npc_interact_fn_800111C4.inc"
+}
+#else
+#ifdef TARGET_PC
+/* PC: void on the GameCube; fight_menu.c reads gbaCommandRequestAction's result from r3, so the PC returns it (2026-10-29;
+ * port-gaps 34's lead) */
+u32 menuFightOpenGBAMain(u32 a, u32 b, u32 c) { return gbaCommandRequestAction(a, b, c, 0); }
+#else
+void menuFightOpenGBAMain(u32 a, u32 b, u32 c) { gbaCommandRequestAction(a, b, c, 0); }
+#endif
+#endif
+
+/* 0x800111E8 | 0x24 -- small accessor */
+#if 0
+asm void menuFightOpenGBAIrekae(void) {
+#include "src/game/gs_npc_interact_fn_800111E8.inc"
+}
+#else
+#ifdef TARGET_PC
+u32 menuFightOpenGBAIrekae(u32 a, u32 b, u32 c) { return gbaCommandRequestAction(a, b, c, 1); } /* PC: as menuFightOpenGBAMain */
+#else
+void menuFightOpenGBAIrekae(u32 a, u32 b, u32 c) { gbaCommandRequestAction(a, b, c, 1); }
+#endif
+#endif
+
+/* 0x7C | menuFightCloseTarget | nullcheck_call_flag */
+u32 menuFightCloseTarget(void* obj) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuCloseCustom();
+#endif
+    if ((u8)menuIsCheck(0xff) != 0) menuCloseCustom(0xff, 0, PC_PTR32_IMPLICIT(obj));
+    if ((u8)menuIsCheck(0x104) != 0) menuCloseCustom(0x104, 0, PC_PTR32_IMPLICIT(obj));
+    menuIsCheck(0x100);
+    return 0;
+}
+
+/* 0x80011288 | 0x21C */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 menuOpenCustom(s32, ...);
+#endif
+#if 0
+asm void menuFightOpenTarget(void) {
+#include "src/game/gs_npc_interact_fn_80011288.inc"
+}
+#else
+s32 menuFightOpenTarget(u8* ctx, s32 arg1, s32 arg2) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuItemBiosSetSelectFlag(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 menuGetCursorFromItemID(s32, s32);
+#endif
+    s32 cursor;
+    u8* entry;
+    s32 i;
+    s32 item;
+    s32 id;
+    s32 result;
+
+    if (ctx[0x21] == 0) {
+        menuItemBiosSetSelectFlag(0x1258, 0);
+        menuItemBiosSetSelectFlag(0x1259, 0);
+        menuItemBiosSetSelectFlag(0x125A, 0);
+        menuItemBiosSetSelectFlag(0x125B, 0);
+        entry = ctx;
+        for (i = 0; i < 4; i++) {
+            switch (*(s32*)(entry + 4)) {
+            case 0x45:
+                item = 0x125B;
+                break;
+            case 0x46:
+                item = 0x125A;
+                break;
+            case 0x47:
+                item = 0x1258;
+                break;
+            case 0x48:
+                item = 0x1259;
+                break;
+            default:
+                item = 0;
+                break;
+            }
+            if (item != 0) {
+                menuItemBiosSetSelectFlag(item, 1);
+            }
+            entry += 8;
+        }
+        cursor = menuGetCursorFromItemID(0xFF, 0x125A);
+        if (cursor == -1) {
+            cursor = menuGetCursorFromItemID(0xFF, 0x125B);
+            if (cursor == -1) {
+                cursor = 0;
+            }
+        }
+        switch (menuOpenCustom(0xFF, 0, &cursor, 0, arg2, 1, ctx)) {
+        case 0x1258:
+            id = 0x47;
+            break;
+        case 0x1259:
+            id = 0x48;
+            break;
+        case 0x125A:
+            id = 0x46;
+            break;
+        case 0x125B:
+            id = 0x45;
+            break;
+        default:
+            id = -1;
+            break;
+        }
+        result = -1;
+        for (i = 0; i < 4; i++) {
+            if (id == *(s32*)(ctx + 4 + i * 8)) {
+                result = i;
+                break;
+            }
+        }
+    } else {
+        result = menuOpenCustom(0x104, 0, PC_PTR(arg1), 0, arg2, 1, ctx);
+    }
+    return result;
+}
+#endif
+
+/* 0x800114A4 | 0x25C */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* fightTypeDataBiosGetPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 fightTypeDataBiosGetFightoutPokemonNum();
+#endif
+extern s32 menuPokemonOpenFight(u8, u32, u32, u32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuCloseCustom();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* fightTargetGetPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 fightOutPokemonCheckFightOut();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fightMenuGetFightOutPokemonPtrToStatusMenuId();
+#endif
+extern u32 menuPokemonCheckPokemonChange();
+static inline u32 menuFightTargetMenuId(s32 target, u32 a1, u32 a2) {
+    void* ptr = PC_PTR(fightTargetGetPtr(target, a1, a2));
+
+    if (fightOutPokemonCheckFightOut(ptr) == 1) {
+        return fightMenuGetFightOutPokemonPtrToStatusMenuId(ptr, a2, 0);
+    }
+    return 0;
+}
+
+s32 menuFightOpenPokemon(u32 a0, u32 a1, u32 a2, u32 a3, u8 a4) {
+    u8 num;
+    s32 sel;
+    s32 target;
+    u32 buf[9];
+
+    num = fightTypeDataBiosGetFightoutPokemonNum(fightTypeDataBiosGetPtr(a2));
+    if (a4 == 0) {
+        sel = menuPokemonOpenFight(num, a3, a0, a1);
+    } else {
+        do {
+            do {
+                winSeqSetMenu(PC_PTR32_IMPLICIT((void*)0xF8), 0x1E);
+                sel = menuOpenCustom(0xF8, 0, 0, 0, 1, 3, a0, a1, a3 & 0xFF);
+                winSeqSetMenu(PC_PTR32_IMPLICIT((void*)0xF8), 0x20);
+                if (sel == -1) {
+                    menuCloseCustom(0xF8, 0, 1);
+                    return -1;
+                }
+            } while ((u8)menuPokemonCheckPokemonChange(a1, a0, sel) == 0);
+            if ((u8)a3 == 0 || num < 2) {
+                break;
+            }
+            buf[1] = menuFightTargetMenuId(0xF, a1, a2);
+            buf[3] = menuFightTargetMenuId(0x10, a1, a2);
+            buf[5] = menuFightTargetMenuId(0xE, a1, a2);
+            buf[7] = 0;
+            ((u8*)buf)[0x21] = a4;
+            target = menuFightOpenTarget((u8*)buf, 0, 1);
+            if ((u8)menuIsCheck(0xFF) != 0) {
+                menuCloseCustom(0xFF, 0, 1);
+            }
+            if ((u8)menuIsCheck(0x104) != 0) {
+                menuCloseCustom(0x104, 0, 1);
+            }
+            menuIsCheck(0x100);
+        } while (target == -1);
+        menuCloseCustom(0xF8, 0, 1);
+    }
+    return sel;
+}
+
+
+/* 0x80011700 | 0xBC - clear 4 event flags referenced by input arg */
+#if 0
+asm void menuFightCloseWaza(void) {
+#include "src/game/gs_npc_interact_menuFightCloseWaza.inc"
+}
+#else
+s32 menuFightCloseWaza(s32 arg) {
+    if ((u8)menuIsCheck(0x4c) != 0) menuCloseCustom(0x4c, 0, arg);
+    if ((u8)menuIsCheck(0xf9) != 0) menuCloseCustom(0xf9, 0, arg);
+    if ((u8)menuIsCheck(0xfa) != 0) menuCloseCustom(0xfa, 0, arg);
+    if ((u8)menuIsCheck(0xf7) != 0) menuCloseCustom(0xf7, 0, arg);
+    return 0;
+}
+#endif
+
+#endif /* !MENU_FIGHT_ONLY */
+
+/* TRUE when the battle timer forces the current menu closed. */
+static inline u8 menuFightIsTimeUp(void)
+{
+    if (fn_801F18DC(0) != 0) {
+        if (fightFloorIsUseFightTimerCommand(0) == 1 && fightTimerCommandIsOver() == 1) {
+            return 1;
+        }
+        if (std103_battleGetResult() == 1) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+#ifndef MENU_FIGHT_ONLY
+/* 0x800117BC | 0x1EC */
+extern void winMsgOpenFight();
+extern void winMsgCloseFight();
+s32 menuFightOpenWaza(u8* status, u32 arg1, u32 arg2) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 _menuFightIsUse__FP16MENU_WAZA_STATUSUs(u8* status, u16 waza);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuCloseCustom();
+#endif
+    s32 menu;
+    s32 sel;
+    u32 msg;
+
+    if (status[0x44] == 0) {
+        menu = 0x4c;
+    } else {
+        menu = 0xf7;
+    }
+    while (1) {
+        winSeqSetMenu(PC_PTR32_IMPLICIT((void*)PC_PTR(menu)), 0x1e);
+        sel = menuOpenCustom(menu, 0, PC_PTR(arg1), 0, arg2, 1, status);
+        if (sel < 0) {
+            break;
+        }
+        msg = _menuFightIsUse__FP16MENU_WAZA_STATUSUs(status, sel);
+        if (msg == 0) {
+            break;
+        }
+        if ((u8)menuIsCheck(0x4c) != 0) {
+            menuCloseCustom(0x4c, 0, 1);
+        }
+        if ((u8)menuIsCheck(0xf9) != 0) {
+            menuCloseCustom(0xf9, 0, 1);
+        }
+        if ((u8)menuIsCheck(0xfa) != 0) {
+            menuCloseCustom(0xfa, 0, 1);
+        }
+        if ((u8)menuIsCheck(0xf7) != 0) {
+            menuCloseCustom(0xf7, 0, 1);
+        }
+        winMsgOpenFight(msg, 1, 1);
+        while ((fn_800F7BC4(1) & GSinputButtonsChanged(1) & (PAD_BUTTON_B | PAD_BUTTON_A)) == 0) {
+            if (menuFightIsTimeUp() != 0) {
+                break;
+            }
+            _threadSwitch();
+        }
+        winMsgCloseFight(1);
+    }
+    winSeqSetMenu(PC_PTR32_IMPLICIT((void*)PC_PTR(menu)), 0x20);
+    return sel;
+}
+
+/* 0x74 | menuFightCloseTop | nullcheck_call_flag */
+u32 menuFightCloseTop(void* obj) {
+    if ((u8)menuIsCheck(0x4b) != 0) menuCloseCustom(0x4b, 0, PC_PTR32_IMPLICIT(obj));
+    if ((u8)menuIsCheck(0xf6) != 0) menuCloseCustom(0xf6, 0, PC_PTR32_IMPLICIT(obj));
+    return 0;
+}
+
+/* 0x80011A1C | 0x130 */
+#if 0
+asm void fn_80011A1C(void) {
+#include "src/game/gs_npc_interact_fn_80011A1C.inc"
+}
+#else
+s32 fn_80011A1C(u8* obj, s32 a1, s32 a2) {
+    u32 sp8;
+    s32 ret;    /* r30 */
+    u8 locked;  /* r29 */
+    s32 ret2;   /* r31 */
+
+    locked = obj[0x16];
+#ifdef TARGET_PC
+    {
+        /* observe only (the project's T16, the project's ORRE_FRAME_TIMES): the battle command menu opens */
+        extern int pc_vi_frame_times_active(void) __attribute__((weak));
+        extern void OSReport(const char*, ...);
+        if (pc_vi_frame_times_active != 0 && pc_vi_frame_times_active()) {
+            OSReport("[frametime] battle command menu opens (menu 0x%X)\n", obj[0x17] != 0 ? 0xF6u : 0x4Bu);
+        }
+    }
+#endif
+    do {
+        if (obj[0x17] != 0) {
+            ret = menuOpenCustom(0xF6, 0, PC_PTR(a1), 0, a2, 1, obj);
+        } else {
+            ret = menuOpenCustom(0x4B, 0, PC_PTR(a1), 0, a2, 1, obj);
+        }
+        if (locked != 0) break;
+        if (ret != 3) break;
+        sp8 = 0;
+        if ((u8)menuIsCheck(0x4B) != 0) {
+            menuCloseCustom(0x4B, 0, 1);
+        }
+        if ((u8)menuIsCheck(0xF6) != 0) {
+            menuCloseCustom(0xF6, 0, 1);
+        }
+        ret2 = menuOpenCustom(0xFB, 0, &sp8, 0, 1, 0);
+        menuCloseCustom(0xFB, 0, 1);
+    } while (ret2 != 0x1207);
+
+    return ret;
+}
+#endif
+
+/* ===== Phase 2 recovery stubs ===== */
+
+/* heroMoveRunEvent - 0x8000D710 | size: 0x398 */
+extern s32 heroMoveCheckEvent();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void heroDispatchEvent(void);
+#endif
+extern void heroMoveInitEvent(void);
+extern void mailMainReceiveTerminate(void);
+extern void GSmodelAllPauseAnimation(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 fn_800D37CC();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuCreateOffScreen(void);
+#endif
+extern u8 menuGetOffScreenFlag();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void soundDuck(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_800D3074(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* std082_flagGetValue();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 floorGetCurrentContext();
+#endif
+extern u32 GSeffectGetUpdateGapp(void);
+extern void GSgappBlock(u32 taskId);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSthreadBlockGroup(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSthreadCreate(void);
+#endif
+extern void GSgappUnblock(u32 taskId);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuClose();
+#endif
+extern void GSmodelAllUnpauseAnimation(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuPokemonOpen(void);
+#endif
+extern void menuPdaOpen(void);
+extern u32 fn_80018F88();
+extern u32 fn_80019070();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void heroMoveAddAutoEvent(void);
+#endif
+extern s32 std223_askYesNoThenWarp395();
+extern void menuOffScreenRelease(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void soundUnduck(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuReleaseOffScreen(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuCloseSync(void);
+#endif
+extern void heroMoveTermEvent(void);
+extern u8 lbl_8047A2A0;
+extern u32 lbl_8047B6F8;
+extern f32 lbl_8047B6F0;
+extern u32 lbl_8047A2A4;
+extern u32 lbl_8047A2A8;
+extern u32 lbl_8047A2AC;
+extern u32 lbl_8047A2B0;
+u32 fn_8000DAB0(void); /* forward decl: referenced by heroMoveRunEvent asm inc */
+#if 0
+asm void fn_8000D710(void) {
+#include "src/game/gs_npc_interact_fn_8000D710.inc"
+}
+#else
+u32 heroMoveRunEvent(u32 mode) {
+    extern s32 heroMoveCheckEvent(void* out);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void heroDispatchEvent(s32 kind, u16 value);
+#endif
+    extern void heroMoveInitEvent(void);
+    extern void mailMainReceiveTerminate(void);
+    extern void GSmodelAllPauseAnimation(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 fn_800D37CC(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuCreateOffScreen(f32 value);
+#endif
+    extern u8 menuGetOffScreenFlag(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void soundDuck(s32, s32, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_800D3074(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* std082_flagGetValue(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 floorGetCurrentContext(void);
+#endif
+    extern u32 GSeffectGetUpdateGapp(void);
+    extern void GSgappBlock(u32 taskId);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSthreadBlockGroup(u32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSthreadCreate(s32, void*, u32, s32, s32, void*);
+#endif
+    extern void GSgappUnblock(u32 taskId);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuClose(s32);
+#endif
+    extern void GSmodelAllUnpauseAnimation(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuPokemonOpen(s32, s32, s32);
+#endif
+    extern void menuPdaOpen(void);
+    extern u32 fn_80018F88(s32, void*, s32);
+    extern u32 fn_80019070(u32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void heroMoveAddAutoEvent(u32, u32, u32, s32, s32);
+#endif
+    extern s32 std223_askYesNoThenWarp395(void);
+    extern void menuOffScreenRelease(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void soundUnduck(s32, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuReleaseOffScreen(f32 value);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuCloseSync(s32, s32);
+#endif
+    extern void heroMoveTermEvent(void);
+    extern f32 lbl_8047B6F0;
+    u8 stackData[0xD8];
+    void* threadEntry;
+    s32 count;
+    s32 i;
+    s32 dialogId;
+    u16 result;
+    u32 work;
+    u32 tmp;
+
+    count = heroMoveCheckEvent(stackData);
+    for (i = 0; i < count; i++) {
+        heroDispatchEvent(4, *(u16*)(stackData + 0x30 + (i * 0x34)));
+    }
+
+    heroMoveInitEvent();
+    mailMainReceiveTerminate();
+    _threadSwitch();
+    GSmodelAllPauseAnimation();
+    lbl_8047A2A0 = 1;
+    tmp = fn_800D37CC();
+    if (tmp != 0) {
+        menuCreateOffScreen(lbl_8047B6F0 / (f32)(s32)tmp);
+    }
+    while ((u8)menuGetOffScreenFlag() == 0) {
+        _threadSwitch();
+    }
+    soundDuck(0x55, 0x1F4, 1, 1);
+    fn_800D3074(1);
+    dialogId = (std082_flagGetValue(0x8AE) == NULL) ? 0x41 : 0x109;
+    result = 0;
+
+    switch ((u8)mode) {
+    case 0:
+        threadEntry = (void*)fn_8000DAB0;
+        do {
+            fn_800D3074(1);
+            lbl_8047A2A4 = dialogId;
+            lbl_8047A2A8 = floorGetCurrentContext();
+            /* r3 from the previous call (assembly) */
+            GSgappBlock(GSeffectGetUpdateGapp());
+            GSthreadBlockGroup(lbl_8047A2A8);
+            lbl_8047A2AC = lbl_8047A2A8 - 0x20;
+            GSthreadCreate(0xF, PC_PTR32_IMPLICIT((void*)PC_PTR(lbl_8047A2AC)), 0x4000, 1, 1, threadEntry);
+            _threadSwitch();
+            /* r3 from the previous call (assembly) */
+            GSgappUnblock(GSeffectGetUpdateGapp());
+
+            if (lbl_8047A2B0 == 0) {
+                menuClose(dialogId);
+                GSmodelAllUnpauseAnimation();
+                menuPokemonOpen(1, 0, 0);
+                GSmodelAllPauseAnimation();
+            } else if (lbl_8047A2B0 == 1) {
+                menuClose(dialogId);
+                GSmodelAllUnpauseAnimation();
+                menuPdaOpen();
+                GSmodelAllPauseAnimation();
+            } else if (lbl_8047A2B0 == 2) {
+                menuClose(dialogId);
+                GSmodelAllUnpauseAnimation();
+                result = fn_80018F88(0, &work, 0);
+                GSmodelAllPauseAnimation();
+                if (((u16)result != 0) && (fn_80019070(result) != 0xFFFFFFFF)) {
+                    heroMoveAddAutoEvent(fn_80019070(result), (u16)result, work, 0, 0);
+                    break;
+                }
+            } else {
+                break;
+            }
+        } while (1);
+        break;
+    case 1:
+        result = fn_80018F88(0, &work, 0);
+        if (((u16)result != 0) && (fn_80019070(result) != 0xFFFFFFFF)) {
+            heroMoveAddAutoEvent(fn_80019070(result), (u16)result, work, 0, 0);
+        }
+        break;
+    default:
+        break;
+    }
+
+    fn_80019070(result);
+    soundUnduck(0x1F4, 1, 1);
+    menuClose(dialogId);
+    tmp = fn_800D37CC();
+    if (tmp != 0) {
+        menuReleaseOffScreen(lbl_8047B6F0 / (f32)(s32)tmp);
+    }
+    menuCloseSync(dialogId, 1);
+    fn_800D3074(2);
+    heroMoveTermEvent();
+    GSmodelAllUnpauseAnimation();
+    lbl_8047A2A0 = 0;
+    return 0;
+}
+#endif
+
+/* fn_8000DAB0 - 0x8000DAB0 | size: 0x38 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 menuOpen(u32, u32);
+#endif
+extern void GSthreadUnblockGroup(u32);
+extern u32 lbl_8047A2A4;
+extern u32 lbl_8047A2A8;
+extern u32 lbl_8047A2B0;
+#if 0
+asm void fn_8000DAB0(void) {
+#include "src/game/gs_npc_interact_fn_8000DAB0.inc"
+}
+#else
+u32 fn_8000DAB0(void) {
+    lbl_8047A2B0 = menuOpen(lbl_8047A2A4, 1);
+    GSthreadUnblockGroup(lbl_8047A2A8);
+    return lbl_8047A2B0;
+}
+#endif
+
+/* menuFightDrawTimer - 0x8000DAE8 | size: 0x1a0 */
+extern void* fn_8001D834(void*, void*);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 GSmsgPrintRect(s32 x, s32 y, s16 width, s16 height, s32 color, u32 key);
+#endif
+extern u16 lbl_802E4B98[];
+extern u16 lbl_803A1B80[];
+#if 0
+asm void menuFightDrawTimer(void) {
+#include "src/game/gs_npc_interact_fn_8000DAE8.inc"
+}
+#else
+void menuFightDrawTimer(u8* ctx, u8* npc) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 windowGetParam(u8* a, s32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void msgctrlSetValue(s32 a, s32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmsgPrintColor();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 GSmsgPrintRect(s32 x, s32 y, s16 width, s16 height, s32 color, u32 key);
+#endif
+    s32 value;
+    s32 hour;
+    s32 minute;
+
+    switch (*(s16*)(npc + 6)) {
+    case 0x12AD:
+        value = windowGetParam(ctx, 0);
+        hour = value / 60;
+        minute = value % 60;
+        lbl_803A1B80[0] = lbl_802E4B98[hour / 10];
+        lbl_803A1B80[2] = 0x3A;
+        lbl_803A1B80[5] = 0;
+        lbl_803A1B80[1] = lbl_802E4B98[hour % 10];
+        lbl_803A1B80[3] = lbl_802E4B98[minute / 10];
+        lbl_803A1B80[4] = lbl_802E4B98[minute % 10];
+        msgctrlSetValue(0x37, (s32)PC_PTR32(lbl_803A1B80));
+        GSmsgPrintColor(0, 0, (s32)PC_PTR32(menuSubCalcColor(ctx, npc)), 0xCF);
+        break;
+    case 0x12AC:
+    case 0x12AE:
+        break;
+    case 0x12AF:
+        msgctrlSetValue(0x34, windowGetParam(ctx, 0));
+        GSmsgPrintRect(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56),
+                    (s32)PC_PTR32(menuSubCalcColor(ctx, npc)), 0xDE);
+        break;
+    }
+}
+#endif
+
+/* menuFightCtrlTimer - 0x8000DC88 | size: 0x84 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fightTimerAllGetNokoriTime(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void windowSetParam(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fightTimerCommandGetNokoriTime(void);
+#endif
+#if 0
+asm void menuFightCtrlTimer(void) {
+#include "src/game/gs_npc_interact_fn_8000DC88.inc"
+}
+#else
+u32 menuFightCtrlTimer(u8* ptr) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern f64 fightTimerAllGetNokoriTime(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern f64 fightTimerCommandGetNokoriTime(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void windowSetParam(u8* a, u32 b, s32 c);
+#endif
+    switch (*(s32*)(ptr + 4)) {
+        case 0x10a:
+            windowSetParam(ptr, 0, (s32)fightTimerAllGetNokoriTime());
+            break;
+        case 0x10b:
+            windowSetParam(ptr, 0, (s32)fightTimerCommandGetNokoriTime());
+            break;
+    }
+    return 0;
+}
+#endif
+
+/* menuFightCloseCheckTotalTimer - 0x8000DD0C | size: 0x24 */
+#if 0
+asm void menuFightCloseCheckTotalTimer(void) {
+#include "src/game/gs_npc_interact_fn_8000DD0C.inc"
+}
+#else
+u32 menuFightCloseCheckTotalTimer(void) { return menuIsCheck(0x10a); }
+#endif
+
+/* menuFightCloseTotalTimer - 0x8000DD30 | size: 0x2c */
+#if 0
+asm void menuFightCloseTotalTimer(void) {
+#include "src/game/gs_npc_interact_fn_8000DD30.inc"
+}
+#else
+void menuFightCloseTotalTimer(void) { menuCloseCustom(0x10a, 0, 0); }
+#endif
+
+/* menuFightOpenTotalTimer - 0x8000DD5C | size: 0x3c */
+#if 0
+asm void menuFightOpenTotalTimer(void) {
+#include "src/game/gs_npc_interact_fn_8000DD5C.inc"
+}
+#else
+void menuFightOpenTotalTimer(void) { menuOpenCustom(0x10a, -1, 0, 0, 0, 0); }
+#endif
+
+/* menuFightCloseCheckCountDown - 0x8000DD98 | size: 0x24 */
+#if 0
+asm void menuFightCloseCheckCountDown(void) {
+#include "src/game/gs_npc_interact_fn_8000DD98.inc"
+}
+#else
+u32 menuFightCloseCheckCountDown(void) { return menuIsCheck(0x10b); }
+#endif
+
+/* menuFightCloseCountDown - 0x8000DDBC | size: 0x2c */
+#if 0
+asm void menuFightCloseCountDown(void) {
+#include "src/game/gs_npc_interact_fn_8000DDBC.inc"
+}
+#else
+void menuFightCloseCountDown(void) { menuCloseCustom(0x10b, 0, 0); }
+#endif
+
+/* menuFightOpenCountDown - 0x8000DDE8 | size: 0x3c */
+#if 0
+asm void menuFightOpenCountDown(void) {
+#include "src/game/gs_npc_interact_fn_8000DDE8.inc"
+}
+#else
+void menuFightOpenCountDown(void) { menuOpenCustom(0x10b, -1, 0, 0, 0, 0); }
+#endif
+
+/* menuFightButtonSecretKousan - 0x8000DE24 | size: 0xa0 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuButtonNormal(void);
+#endif
+#if 0
+asm void menuFightButtonSecretKousan(void) {
+#include "src/game/gs_npc_interact_fn_8000DE24.inc"
+}
+#else
+void menuFightButtonSecretKousan(u8* ptr) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuButtonNormal(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fn_801F18DC(s32 a);
+#endif
+    extern u8 fightFloorIsUseFightTimerCommand(s32 a);
+    extern u8 fightTimerCommandIsOver(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 std103_battleGetResult(void);
+#endif
+    u8 flag;
+    menuButtonNormal(ptr);
+    if (!(u8)fn_801F18DC(0)) goto _zero;
+    if ((u8)fightFloorIsUseFightTimerCommand(0) == 1 && (u8)fightTimerCommandIsOver() == 1) { flag = 1; goto _check; }
+    if ((u16)std103_battleGetResult() == 1) { flag = 1; goto _check; }
+    _zero:
+    flag = 0;
+    _check:
+    if (flag) {
+        ptr[0x98] = 1;
+        ptr[0x99] = 1;
+    }
+}
+#endif
+
+#endif /* !MENU_FIGHT_ONLY */
+
+#if !defined(MENU_FIGHT_ONLY) || defined(MENU_FIGHT_ONLY_8000DEC4)
+/* menuFightDrawTargetSecret - 0x8000DEC4 | size: 0x12c */
+#if 0
+asm void menuFightDrawTargetSecret(void) {
+#include "src/game/gs_npc_interact_fn_8000DEC4.inc"
+}
+#else
+typedef struct MenuFightTargetSprite {
+    u8 pad_00[6];
+    s16 tag;
+} MenuFightTargetSprite;
+
+/* Sprite tag a secret-move target id highlights; 0 for none. */
+/* RULE-EXCEPTION(user-approved): single-use inline helper; its return temp gives retail's value/counter register order - see docs/RULE_EXCEPTIONS.md */
+static inline s32 menuFightTargetSecretTag(s32 target)
+{
+    switch (target) {
+    case 0x45:
+        return 0x125C;
+    case 0x46:
+        return 0x125E;
+    case 0x47:
+        return 0x12BE;
+    case 0x48:
+        return 0x125D;
+    default:
+        return 0;
+    }
+}
+
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+void menuFightDrawTargetSecret(u8* arg1, u8* arg2) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowGetParam(u8* a, u32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void winSpriteSetDisp(u8* a, u32 b);
+#endif
+    s32 value;
+    u8* entry;
+    s32 i;
+    entry = (u8*)PC_PTR(windowGetParam(arg1, 0));
+    for (i = 0; i < 4; i++) {
+        switch (*(s32*)(entry + 4 + i * 8)) {
+            case 0x45: value = 0x125C; break;
+            case 0x46: value = 0x125E; break;
+            case 0x47: value = 0x12BE; break;
+            case 0x48: value = 0x125D; break;
+            default: value = 0; break;
+        }
+        if (value == ((MenuFightTargetSprite*)arg2)->tag) {
+            winSpriteSetDisp(arg2, 1);
+            return;
+        }
+    }
+    winSpriteSetDisp(arg2, 0);
+}
+#else
+void menuFightDrawTargetSecret(u8* arg1, u8* arg2) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowGetParam(u8* a, u32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void winSpriteSetDisp(u8* a, u32 b);
+#endif
+    s32 value;
+    u8* entry;
+    s32 i;
+    entry = (u8*)windowGetParam(arg1, 0);
+    for (i = 0; i < 4; i++) {
+        s32 value = menuFightTargetSecretTag(*(s32*)(entry + 4));
+        if (value == ((MenuFightTargetSprite*)arg2)->tag) {
+            winSpriteSetDisp(arg2, 1);
+            return;
+        }
+        entry += 8;
+    }
+    winSpriteSetDisp(arg2, 0);
+}
+#endif
+#endif
+
+#endif
+
+#ifndef MENU_FIGHT_ONLY
+/* menuFightButtonTargetSecret - 0x8000DFF0 | size: 0x214 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8* windowGetKeyInfo();
+#endif
+#if 0
+asm void menuFightButtonTargetSecret(void) {
+#include "src/game/gs_npc_interact_fn_8000DFF0.inc"
+}
+#else
+/* Target side (0 enemy, 1 self, 2 both) a secret-move target id selects; -1 for none. */
+static inline s32 menuFightTargetSecretSide(s32 target)
+{
+    switch (target) {
+    case 0x45:
+        return 1;
+    case 0x46:
+        return 0;
+    case 0x47:
+        return 2;
+    case 0x48:
+        return 2;
+    default:
+        return -1;
+    }
+}
+
+void menuFightButtonTargetSecret(u8* ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowGetKeyInfo(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetParam(u8* a, s32 b);
+#endif
+    u8* key;
+    u8* entry;
+    u16 bits;
+    s32 selected;
+    s32 i;
+
+    key = windowGetKeyInfo();
+    selected = -1;
+    entry = (u8*)PC_PTR(windowGetParam(ctx, 0));
+    bits = *(u16*)(key + 4);
+    if (bits & MENU_KEY_UP) {
+        selected = 0;
+    } else if (bits & MENU_KEY_RIGHT) {
+        selected = 1;
+    } else if (bits & MENU_KEY_LEFT) {
+        selected = 2;
+    } else if (bits & MENU_KEY_L) {
+        ctx[0x98] = 1;
+        ctx[0x99] = 1;
+        *(s32*)(ctx + 0x80) = -1;
+    }
+
+    if (selected >= 0) {
+        for (i = 0; i < 4; i++) {
+            if (selected == menuFightTargetSecretSide(*(s32*)(entry + 4))) {
+                ctx[0x98] = 1;
+                *(s32*)(ctx + 0x80) = selected;
+                return;
+            }
+            entry += 8;
+        }
+    }
+
+    if (menuFightIsTimeUp() != 0) {
+        ctx[0x98] = 1;
+        ctx[0x99] = 1;
+    }
+}
+#endif
+
+/* menuFightDrawTargetCursor - 0x8000E204 | size: 0x88 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuItemBiosGetSelectFlag(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuGetCursorItemID(void);
+#endif
+#if 0
+asm void menuFightDrawTargetCursor(void) {
+#include "src/game/gs_npc_interact_fn_8000E204.inc"
+}
+#else
+void menuFightDrawTargetCursor(u8* arg1, u8* arg2) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 menuItemBiosGetSelectFlag(s16 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 menuGetCursorItemID(u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void winSpriteSetDisp(u8* a, u32 b);
+#endif
+    if ((u8)menuItemBiosGetSelectFlag(*(s16*)(arg2 + 6)) != 0) {
+        if (*(s16*)(arg2 + 6) == menuGetCursorItemID(*(u32*)(arg1 + 4))) {
+            winSpriteSetDisp(arg2, 1);
+        } else {
+            winSpriteSetDisp(arg2, 0);
+        }
+    } else {
+        winSpriteSetDisp(arg2, 0);
+    }
+}
+#endif
+
+/* menuFightCtrlTarget - 0x8000E28C | size: 0x4 */
+#if 0
+asm void menuFightCtrlTarget(void) {
+#include "src/game/gs_npc_interact_fn_8000E28C.inc"
+}
+#else
+void menuFightCtrlTarget(void) {}
+#endif
+
+#endif /* !MENU_FIGHT_ONLY */
+
+/* menuFightDrawSecretPokemonStatus - 0x8000E290 | size: 0x780 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* pokemonDataBiosGetPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 pokemonDataBiosGetZokuseiDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16 fn_8010C46C();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 wazaGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 pokemonWazaGetMaxPP();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 GSmsgGetGSchar();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16 pokemonGetSoubiItemDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* itemDataBiosGetPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 itemDataBiosGetName();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 pokemonDataBiosGetName();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8 menuSubGetPokemonSexForDisp();
+#endif
+
+/* Draw one field in the six-party secret-Pokemon status panel. */
+/* Party pokemon in battle slot `slot` of `trainer` (the hero's when 0), or 0. */
+static inline u32 menuFightGetSecretPokemon(u32 trainer, s32 slot)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightFloorGetGcHeroFightTrainerPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerGetValidFightPokemonPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonCheckValid();
+#endif
+    u32 pokemon;
+    u16 index = slot;
+
+    if (index >= 6) {
+        return 0;
+    }
+    if (trainer == 0) {
+        trainer = fightFloorGetGcHeroFightTrainerPtr(0);
+    }
+    if (trainer == 0) {
+        return 0;
+    }
+    pokemon = PC_PTR32_IMPLICIT(fightTrainerGetValidFightPokemonPtr(trainer, index));
+    if (pokemon == 0) {
+        return 0;
+    }
+    pokemon = pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_RECORD_COPY_PTR, 0);
+    if ((u8)pokemonCheckValid(PC_PTR(pokemon)) == 0) {
+        return 0;
+    }
+    return pokemon;
+}
+
+#if !defined(MENU_FIGHT_ONLY) || defined(MENU_FIGHT_ONLY_8000E290)
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+void menuFightDrawSecretPokemonStatus(u8* ctx, u8* sprite)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetParam();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightFloorGetGcHeroFightTrainerPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerGetValidFightPokemonPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonGetStatus(u32, u32, u32, u16);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonCheckValid();
+#endif
+    extern u32 menuPokemonGetStatusSprite();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonDataBiosGetPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonDataBiosGetZokuseiDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fn_8010C46C();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 wazaGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonWazaGetMaxPP(u32, u16);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonGetSoubiItemDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 itemDataBiosGetPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 itemDataBiosGetName();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonDataBiosGetName();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSmsgGetGSchar();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 menuSubGetPokemonSexForDisp();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmsgPrintRect();
+#endif
+    u32 trainer;
+    u32 activeTrainer;
+    s32* selection;
+    u32 pokemon;
+    s32 color;
+    s32 id;
+    s32 slot;
+
+    slot = -1;
+    trainer = windowGetParam(ctx, 0);
+    selection = (s32*)PC_PTR(windowGetParam(ctx, 1));
+    if (*selection < 0) {
+        return;
+    }
+
+    pokemon = menuFightGetSecretPokemon(trainer, *selection);
+    if (pokemon == 0) {
+        return;
+    }
+
+    color = (s32)PC_PTR32(menuSubCalcColor(ctx, sprite));
+    id = *(s16*)(sprite + 6);
+    switch (id) {
+    case 0x1235:
+    case 0x1236:
+    case 0x1237:
+    case 0x1238:
+    case 0x1239:
+    case 0x123A:
+        switch (id) {
+        case 0x1238: slot = 0; break;
+        case 0x1235: slot = 1; break;
+        case 0x1236: slot = 3; break;
+        case 0x1237: slot = 2; break;
+        case 0x123A: slot = 4; break;
+        case 0x1239: slot = 5; break;
+        default: break;
+        }
+        if (slot == *selection) {
+            winSpriteSetDisp(sprite, 1);
+        } else {
+            winSpriteSetDisp(sprite, 0);
+        }
+        break;
+
+    case 0x123B:
+        windowDrawSprite(0, 0, ctx, menuPokemonGetStatusSprite(pokemon, 1), 0);
+        break;
+
+    case 0x123D: {
+        u32 data = PC_PTR32_IMPLICIT(pokemonDataBiosGetPtr((u16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_SPECIES, 0)));
+        u8 type = pokemonDataBiosGetZokuseiDataId(PC_PTR(data), 0);
+        windowDrawSprite(0, 0, ctx, (u16)fn_8010C46C(type), 0);
+        break;
+    }
+
+    case 0x123C: {
+        u8 first;
+        u8 second;
+        u32 data = PC_PTR32_IMPLICIT(pokemonDataBiosGetPtr((u16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_SPECIES, 0)));
+        first = pokemonDataBiosGetZokuseiDataId(PC_PTR(data), 0);
+        second = pokemonDataBiosGetZokuseiDataId(PC_PTR(data), 1);
+        if (first != second) {
+            windowDrawSprite(0, 0, ctx, (u16)fn_8010C46C(second), 0);
+        }
+        break;
+    }
+
+    case 0x123E:
+    case 0x123F:
+    case 0x1240:
+    case 0x1241: {
+        u16 move;
+        switch (id) {
+        case 0x123E: slot = 3; break;
+        case 0x123F: slot = 2; break;
+        case 0x1240: slot = 1; break;
+        case 0x1241: slot = 0; break;
+        }
+        move = (u16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_MOVE, slot);
+        if (move != 0) {
+            u16 icon = (u16)wazaGetStatus(0, move, 3, 0);
+            windowDrawSprite(0, 0, ctx, (u16)fn_8010C46C(icon), 0);
+        }
+        break;
+    }
+
+    case 0x1242:
+    case 0x1243:
+    case 0x1244:
+    case 0x1245: {
+        s32 x;
+        u16 move;
+        switch (id) {
+        case 0x1242: slot = 3; break;
+        case 0x1243: slot = 2; break;
+        case 0x1244: slot = 1; break;
+        case 0x1245: slot = 0; break;
+        }
+        move = (u16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_MOVE, slot);
+        if (move == 0) {
+            break;
+        }
+        x = (*(s16*)(sprite + 0x54) - (s16)(GSmsgGetRect(0x197) >> 16)) / 2;
+        GSmsgPrintColor((s16)x, 0, color, 0x197);
+        msgctrlSetValue(0x34, pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_MOVE_PP, slot));
+        GSmsgPrintRect(0, 0, (s16)x, *(s16*)(sprite + 0x56), color, 0xDE);
+        msgctrlSetValue(0x34, (u8)pokemonWazaGetMaxPP(PC_PTR(pokemon), slot));
+        GSmsgPrintRect(0, 0, *(s16*)(sprite + 0x54), *(s16*)(sprite + 0x56),
+                    color, 0xDE);
+        break;
+    }
+
+    case 0x1246:
+    case 0x1247:
+    case 0x1248:
+    case 0x1249: {
+        u16 move;
+        u32 name;
+        switch (id) {
+        case 0x1246: slot = 3; break;
+        case 0x1247: slot = 2; break;
+        case 0x1248: slot = 1; break;
+        case 0x1249: slot = 0; break;
+        }
+        move = (u16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_MOVE, slot);
+        if (move == 0) {
+            break;
+        }
+        name = wazaGetStatus(0, move, 1, 0);
+        if (name == 0) {
+            break;
+        }
+        msgctrlSetValue(0x37, PC_PTR32_IMPLICIT(GSmsgGetGSchar(name)));
+        GSmsgPrintRect(0, 0, *(s16*)(sprite + 0x54), *(s16*)(sprite + 0x56),
+                    color, 0xE7);
+        break;
+    }
+
+    case 0x124A: {
+        u16 item = (u16)pokemonGetSoubiItemDataId(pokemon);
+        if (item != 0) {
+            u32 data = PC_PTR32_IMPLICIT(itemDataBiosGetPtr(item));
+            msgctrlSetValue(0x37, PC_PTR32_IMPLICIT(GSmsgGetGSchar(itemDataBiosGetName(data))));
+            GSmsgPrintRect(0, 0, *(s16*)(sprite + 0x54), *(s16*)(sprite + 0x56),
+                        color, 0xE7);
+        }
+        break;
+    }
+
+    case 0x124B: {
+        s32 x;
+        x = (s16)((s16)(GSmsgGetRect(0x1A8) >> 16) + 2);
+        GSmsgPrintColor(0, 0, color, 0x1A8);
+        x += (s16)((*(s16*)(sprite + 0x54) - x - (s16)(GSmsgGetRect(0x197) >> 16)) / 2);
+        GSmsgPrintColor(x, 0, color, 0x197);
+        msgctrlSetValue(0x34, (s16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_HP, 0));
+        GSmsgPrintRect(0, 0, (s16)x, *(s16*)(sprite + 0x56), color, 0xDE);
+        msgctrlSetValue(0x34, (s16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_MAX_HP, 0));
+        GSmsgPrintRect(0, 0, *(s16*)(sprite + 0x54), *(s16*)(sprite + 0x56),
+                    color, 0xDE);
+        break;
+    }
+
+    case 0x124C: {
+        s16 width = (s16)(GSmsgGetRect(0x1A7) >> 16);
+        GSmsgPrintColor(0, 0, color, 0x1A7);
+        msgctrlSetValue(0x34, (u8)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_LEVEL, 0));
+        GSmsgPrintRect(width, 0, *(s16*)(sprite + 0x54), *(s16*)(sprite + 0x56),
+                    color, 0xD2);
+        break;
+    }
+
+    case 0x124D: {
+        s16 width = 0;
+        u32 data = PC_PTR32_IMPLICIT(pokemonDataBiosGetPtr((u16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_SPECIES, 0)));
+        if (data != 0) {
+            u32 name = pokemonDataBiosGetName(PC_PTR(data));
+            if (name != 0) {
+                msgctrlSetValue(0x37, PC_PTR32_IMPLICIT(GSmsgGetGSchar(name)));
+                GSmsgPrintColor(0, 0, color, 0xE7);
+                width = (s16)(GSmsgGetRect(0xE7) >> 16);
+            }
+            switch ((u8)menuSubGetPokemonSexForDisp(PC_PTR(pokemon))) {
+            case 0: name = 0xD67; break;
+            case 1: name = 0xD68; break;
+            case 2:
+            default: name = 0; break;
+            }
+            if (name != 0) {
+                msgctrlSetValue(0x37, PC_PTR32_IMPLICIT(GSmsgGetGSchar(name)));
+                GSmsgPrintColor(width, 0, color, 0xCF);
+            }
+        }
+        break;
+    }
+
+    case 0x124E: {
+        u32 value = pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_NICKNAME, 0);
+        msgctrlSetValue(0x37, value);
+        GSmsgPrintRect(0, 0, *(s16*)(sprite + 0x54), *(s16*)(sprite + 0x56),
+                    color, 0xE7);
+        break;
+    }
+    }
+}
+#else
+void menuFightDrawSecretPokemonStatus(u8* ctx, u8* sprite)
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetParam();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightFloorGetGcHeroFightTrainerPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightTrainerGetValidFightPokemonPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonGetStatus(u32, u32, u32, u16);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonCheckValid();
+#endif
+    extern u32 menuPokemonGetStatusSprite();
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonDataBiosGetPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonDataBiosGetZokuseiDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fn_8010C46C();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 wazaGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonWazaGetMaxPP(u32, u16);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonGetSoubiItemDataId();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 itemDataBiosGetPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 itemDataBiosGetName();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonDataBiosGetName();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSmsgGetGSchar();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 menuSubGetPokemonSexForDisp();
+    extern s32 GSmsgPrintRect(s32 x, s32 y, s16 width, s16 height, s32 color, u32 key);
+#endif
+    u32 trainer;
+    u32 activeTrainer;
+    s32* selection;
+    u32 pokemon;
+    s32 color;
+    s32 id;
+    s32 slot;
+
+    slot = -1;
+    trainer = windowGetParam(ctx, 0);
+    selection = (s32*)PC_PTR(windowGetParam(ctx, 1));
+    if (*selection < 0) {
+        return;
+    }
+
+    pokemon = menuFightGetSecretPokemon(trainer, *selection);
+    if (pokemon == 0) {
+        return;
+    }
+
+    color = (s32)PC_PTR32(menuSubCalcColor(ctx, sprite));
+    id = *(s16*)(sprite + 6);
+    switch (id) {
+    case 0x1235:
+    case 0x1236:
+    case 0x1237:
+    case 0x1238:
+    case 0x1239:
+    case 0x123A:
+        switch (id) {
+        case 0x1238: slot = 0; break;
+        case 0x1235: slot = 1; break;
+        case 0x1236: slot = 3; break;
+        case 0x1237: slot = 2; break;
+        case 0x123A: slot = 4; break;
+        case 0x1239: slot = 5; break;
+        default: break;
+        }
+        if (slot == *selection) {
+            winSpriteSetDisp(sprite, 1);
+        } else {
+            winSpriteSetDisp(sprite, 0);
+        }
+        break;
+
+    case 0x123B:
+        windowDrawSprite(0, 0, ctx, menuPokemonGetStatusSprite(pokemon, 1), 0);
+        break;
+
+    case 0x123D: {
+        u32 data = PC_PTR32_IMPLICIT(pokemonDataBiosGetPtr((u16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_SPECIES, 0)));
+        u8 type = pokemonDataBiosGetZokuseiDataId(PC_PTR(data), 0);
+        windowDrawSprite(0, 0, ctx, (u16)fn_8010C46C(type), 0);
+        break;
+    }
+
+    case 0x123C: {
+        u8 first;
+        u8 second;
+        u32 data = PC_PTR32_IMPLICIT(pokemonDataBiosGetPtr((u16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_SPECIES, 0)));
+        first = pokemonDataBiosGetZokuseiDataId(PC_PTR(data), 0);
+        second = pokemonDataBiosGetZokuseiDataId(PC_PTR(data), 1);
+        if (first != second) {
+            windowDrawSprite(0, 0, ctx, (u16)fn_8010C46C(second), 0);
+        }
+        break;
+    }
+
+    case 0x123E:
+    case 0x123F:
+    case 0x1240:
+    case 0x1241: {
+        u16 move;
+        switch (id) {
+        case 0x123E: slot = 3; break;
+        case 0x123F: slot = 2; break;
+        case 0x1240: slot = 1; break;
+        case 0x1241: slot = 0; break;
+        }
+        move = (u16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_MOVE, slot);
+        if (move != 0) {
+            u16 icon = (u16)wazaGetStatus(0, move, 3, 0);
+            windowDrawSprite(0, 0, ctx, (u16)fn_8010C46C(icon), 0);
+        }
+        break;
+    }
+
+    case 0x1242:
+    case 0x1243:
+    case 0x1244:
+    case 0x1245: {
+        s16 x;
+        u16 move;
+        switch (id) {
+        case 0x1242: slot = 3; break;
+        case 0x1243: slot = 2; break;
+        case 0x1244: slot = 1; break;
+        case 0x1245: slot = 0; break;
+        }
+        move = (u16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_MOVE, slot);
+        if (move == 0) {
+            break;
+        }
+        x = (*(s16*)(sprite + 0x54) - (s16)(GSmsgGetRect(0x197) >> 16)) / 2;
+        GSmsgPrintColor(x, 0, color, 0x197);
+        msgctrlSetValue(0x34, pokemonGetStatus(pokemon, 0, POKEMON_STATUS_MOVE_PP, slot));
+        GSmsgPrintRect(0, 0, x, *(s16*)(sprite + 0x56), color, 0xDE);
+        msgctrlSetValue(0x34, (u8)pokemonWazaGetMaxPP(pokemon, slot));
+        GSmsgPrintRect(0, 0, *(s16*)(sprite + 0x54), *(s16*)(sprite + 0x56),
+                    color, 0xDE);
+        break;
+    }
+
+    case 0x1246:
+    case 0x1247:
+    case 0x1248:
+    case 0x1249: {
+        u16 move;
+        u32 name;
+        switch (id) {
+        case 0x1246: slot = 3; break;
+        case 0x1247: slot = 2; break;
+        case 0x1248: slot = 1; break;
+        case 0x1249: slot = 0; break;
+        }
+        move = (u16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_MOVE, slot);
+        if (move == 0) {
+            break;
+        }
+        name = wazaGetStatus(0, move, 1, 0);
+        if (name == 0) {
+            break;
+        }
+        /* RULE-EXCEPTION(user-approved): scalar reuse; the move name ID local also carries its GS string, an extra merged temporary live across sprite that gives retail's sprite/colour/ctx registers - see docs/RULE_EXCEPTIONS.md */
+        name = GSmsgGetGSchar(name);
+        msgctrlSetValue(0x37, name);
+        GSmsgPrintRect(0, 0, *(s16*)(sprite + 0x54), *(s16*)(sprite + 0x56),
+                    color, 0xE7);
+        break;
+    }
+
+    case 0x124A: {
+        u16 item = (u16)pokemonGetSoubiItemDataId(pokemon);
+        if (item != 0) {
+            u32 data = itemDataBiosGetPtr(item);
+            /* RULE-EXCEPTION(user-approved): scalar reuse; the item record local also carries the item name's GS string, the second merged temporary live across sprite - see docs/RULE_EXCEPTIONS.md */
+            data = GSmsgGetGSchar(itemDataBiosGetName(data));
+            msgctrlSetValue(0x37, data);
+            GSmsgPrintRect(0, 0, *(s16*)(sprite + 0x54), *(s16*)(sprite + 0x56),
+                        color, 0xE7);
+        }
+        break;
+    }
+
+    case 0x124B: {
+        s16 w;
+        s32 x;
+        w = (s16)(GSmsgGetRect(0x1A8) >> 16) + 2;
+        GSmsgPrintColor(0, 0, color, 0x1A8);
+        x = w + (s16)((*(s16*)(sprite + 0x54) - w - (s16)(GSmsgGetRect(0x197) >> 16)) / 2);
+        GSmsgPrintColor(x, 0, color, 0x197);
+        msgctrlSetValue(0x34, (s16)pokemonGetStatus(pokemon, 0, POKEMON_STATUS_HP, 0));
+        GSmsgPrintRect(0, 0, x, *(s16*)(sprite + 0x56), color, 0xDE);
+        msgctrlSetValue(0x34, (s16)pokemonGetStatus(pokemon, 0, POKEMON_STATUS_MAX_HP, 0));
+        GSmsgPrintRect(0, 0, *(s16*)(sprite + 0x54), *(s16*)(sprite + 0x56),
+                    color, 0xDE);
+        break;
+    }
+
+    case 0x124C: {
+        s16 width = (s16)(GSmsgGetRect(0x1A7) >> 16);
+        GSmsgPrintColor(0, 0, color, 0x1A7);
+        msgctrlSetValue(0x34, (u8)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_LEVEL, 0));
+        GSmsgPrintRect(width, 0, *(s16*)(sprite + 0x54), *(s16*)(sprite + 0x56),
+                    color, 0xD2);
+        break;
+    }
+
+    case 0x124D: {
+        s16 width = 0;
+        u32 data = PC_PTR32_IMPLICIT(pokemonDataBiosGetPtr((u16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_SPECIES, 0)));
+        if (data != 0) {
+            u32 name = pokemonDataBiosGetName(PC_PTR(data));
+            if (name != 0) {
+                msgctrlSetValue(0x37, PC_PTR32_IMPLICIT(GSmsgGetGSchar(name)));
+                GSmsgPrintColor(0, 0, color, 0xE7);
+                width = (s16)(GSmsgGetRect(0xE7) >> 16);
+            }
+            switch ((u8)menuSubGetPokemonSexForDisp(PC_PTR(pokemon))) {
+            case 0: name = 0xD67; break;
+            case 1: name = 0xD68; break;
+            case 2:
+            default: name = 0; break;
+            }
+            if (name != 0) {
+                msgctrlSetValue(0x37, PC_PTR32_IMPLICIT(GSmsgGetGSchar(name)));
+                GSmsgPrintColor(width, 0, color, 0xCF);
+            }
+        }
+        break;
+    }
+
+    case 0x124E: {
+        u32 value = pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_NICKNAME, 0);
+        msgctrlSetValue(0x37, value);
+        GSmsgPrintRect(0, 0, *(s16*)(sprite + 0x54), *(s16*)(sprite + 0x56),
+                    color, 0xE7);
+        break;
+    }
+    }
+}
+#endif
+
+#endif
+
+#ifndef MENU_FIGHT_ONLY
+/* menuFightDrawSecretPokemon - 0x8000EA10 | size: 0x324 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fightFloorGetGcHeroFightTrainerPtr(s32 arg);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fightTrainerGetValidFightPokemonPtr(u32 warpId, u16 variant);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 pokemonCheckValid();
+#endif
+extern u32 menuPokemonGetStatusSprite();
+extern void jumptable_802E4C20();
+#if 0
+asm void menuFightDrawSecretPokemon(void) {
+#include "src/game/gs_npc_interact_fn_8000EA10.inc"
+}
+#else
+
+void menuFightDrawSecretPokemon(u8* ctx, u8* npc) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetParam(u8* a, s32 b);
+#endif
+    extern u32 menuPokemonGetStatusSprite(u32, s32);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 GSmsgPrintRect(s32 x, s32 y, s16 width, s16 height, s32 color, u32 key);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmsgPrintColor();
+#endif
+    s32 slot;
+    u32 trainer;
+    u32 pokemon;
+    s32 color;
+    s32 y;
+
+    slot = -1;
+    trainer = windowGetParam(ctx, 0);
+    switch (*(s16*)(npc + 6)) {
+    case 0x121A:
+    case 0x1220:
+    case 0x1226:
+    case 0x122C:
+        slot = 0;
+        break;
+    case 0x1219:
+    case 0x121F:
+    case 0x1225:
+    case 0x122B:
+        slot = 1;
+        break;
+    case 0x1218:
+    case 0x121E:
+    case 0x1224:
+    case 0x122A:
+        slot = 2;
+        break;
+    case 0x1217:
+    case 0x121D:
+    case 0x1223:
+    case 0x1229:
+        slot = 3;
+        break;
+    case 0x1216:
+    case 0x121C:
+    case 0x1222:
+    case 0x1228:
+        slot = 4;
+        break;
+    case 0x1215:
+    case 0x121B:
+    case 0x1221:
+    case 0x1227:
+        slot = 5;
+        break;
+    }
+    if (slot < 0) {
+        return;
+    }
+    pokemon = menuFightGetSecretPokemon(trainer, slot);
+    if (pokemon == 0) {
+        return;
+    }
+    color = (s32)PC_PTR32(menuSubCalcColor(ctx, npc));
+    switch (*(s16*)(npc + 6)) {
+    case 0x1215:
+    case 0x1216:
+    case 0x1217:
+    case 0x1218:
+    case 0x1219:
+    case 0x121A:
+        windowDrawSprite(0, 0, ctx, menuPokemonGetStatusSprite(pokemon, 1), 0);
+        break;
+    case 0x121B:
+    case 0x121C:
+    case 0x121D:
+    case 0x121E:
+    case 0x121F:
+    case 0x1220:
+        y = (s16)((s16)(GSmsgGetRect(0x1A8) >> 16) + 2);
+        GSmsgPrintColor(0, 0, color, 0x1A8);
+        y += (s16)((*(s16*)(npc + 0x54) - y - (s16)(GSmsgGetRect(0x197) >> 16)) / 2);
+        GSmsgPrintColor(y, 0, color, 0x197);
+        msgctrlSetValue(0x34, (s16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_HP, 0));
+        GSmsgPrintRect(0, 0, y, *(s16*)(npc + 0x56), color, 0xDE);
+        msgctrlSetValue(0x34, (s16)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_MAX_HP, 0));
+        GSmsgPrintRect(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0xDE);
+        break;
+    case 0x1221:
+    case 0x1222:
+    case 0x1223:
+    case 0x1224:
+    case 0x1225:
+    case 0x1226:
+        y = (s16)(GSmsgGetRect(0x1A7) >> 16);
+        GSmsgPrintColor(0, 0, color, 0x1A7);
+        msgctrlSetValue(0x34, (u8)pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_LEVEL, 0));
+        GSmsgPrintRect(y, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0xD2);
+        break;
+    case 0x1227:
+    case 0x1228:
+    case 0x1229:
+    case 0x122A:
+    case 0x122B:
+    case 0x122C: {
+        u32 value = pokemonGetStatus(PC_PTR(pokemon), 0, POKEMON_STATUS_NICKNAME, 0);
+        msgctrlSetValue(0x37, value);
+        GSmsgPrintRect(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0xE7);
+        break;
+    }
+    }
+}
+#endif
+
+#endif /* !MENU_FIGHT_ONLY */
+
+#if !defined(MENU_FIGHT_ONLY) || defined(MENU_FIGHT_ONLY_8000ED34)
+/* menuFightButtonSecretPokemonTop - 0x8000ED34 | size: 0x5dc */
+#ifndef TARGET_PC /* PC: canonical prototypes in pc/prototypes.h */
+extern void menuClose(s32 id);
+extern void menuSetDisp(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSinputGetRightStickYData(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSinputGetRightStickXData(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern f64 atan2(f64, f64);
+#endif
+extern f32 lbl_8047B700;
+extern f32 lbl_8047B704;
+extern f32 lbl_8047B708;
+extern f64 lbl_8047B710;
+extern u8 lbl_8047885C[4];
+#if 0
+asm void menuFightButtonSecretPokemonTop(void) {
+#include "src/game/gs_npc_interact_fn_8000ED34.inc"
+}
+#else
+/* |angle| */
+static inline f32 menuFightAbsAngle(f32 angle)
+{
+    return angle > 0.0f ? angle : -angle;
+}
+
+/* |value| of a stick axis */
+static inline s32 menuFightAbsS8(s8 value)
+{
+    if (value < 0) {
+        return -value;
+    }
+    return value;
+}
+
+void menuFightButtonSecretPokemonTop(u8* ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowGetKeyInfo(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetParam(u8* a, s32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuSetDisp(u32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 menuIsCheck(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s8 GSinputGetRightStickYData(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s8 GSinputGetRightStickXData(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonCheckValid(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 menuOpenCustom(s32, ...);
+#endif
+    u8* flags;
+    u16 bits;
+    s32 selected;
+    s32 activeMenu;
+    s32 targetMenu;
+    u32 base;
+    u8 aux;
+    s8 sx;
+    s8 sy;
+    f32 angle;
+    f32 fy;
+    f32 fx;
+
+    flags = windowGetKeyInfo();
+    selected = -1;
+    activeMenu = 0;
+    targetMenu = 0;
+    base = windowGetParam(ctx, 0);
+    windowGetParam(ctx, 1);
+    aux = (u8)windowGetParam(ctx, 2);
+    menuSetDisp(*(u32*)(ctx + 4), 1);
+    if ((u8)menuIsCheck(0xFC) != 0) {
+        activeMenu = 0xFC;
+    } else if ((u8)menuIsCheck(0xFD) != 0) {
+        activeMenu = 0xFD;
+    }
+
+    bits = 0;
+    sx = GSinputGetRightStickYData(1, 0);
+    sy = GSinputGetRightStickXData(1, 0);
+    if (menuFightAbsS8(sy) > 0x20 || menuFightAbsS8(sx) > 0x20) {
+        fy = sy;
+        fx = sx;
+        angle = (f32)atan2(fy, fx);
+        if (menuFightAbsAngle(angle) < 0.7853982f) {
+            bits |= 2;
+        } else if (menuFightAbsAngle(angle) > 2.3561945f) {
+            bits |= 1;
+        }
+        if (0.7853982f < menuFightAbsAngle(angle) &&
+            menuFightAbsAngle(angle) < 2.3561945f) {
+            if (angle < 0.0f) {
+                bits |= 4;
+            } else {
+                bits |= 8;
+            }
+        }
+    }
+    if (bits & 1) {
+        selected = 0;
+    } else if (bits & 8) {
+        selected = 1;
+    } else if (bits & 2) {
+        selected = 2;
+    } else if (bits & 4) {
+        selected = 3;
+    } else if (*(u16*)(flags + 4) & MENU_KEY_Y) {
+        selected = 4;
+    } else if (*(u16*)(flags + 4) & MENU_KEY_X) {
+        selected = 5;
+    }
+
+    if (selected >= 0) {
+        /* RULE-EXCEPTION(user-approved): codegen-only (u16) cast on the slot argument - see docs/RULE_EXCEPTIONS.md */
+        if (menuFightGetSecretPokemon(base, (u16)selected) == 0) {
+            selected = -1;
+        }
+        if (selected >= 0) {
+            ctx[0x98] = 1;
+            *(s32*)(ctx + 0x80) = selected;
+        }
+    }
+
+    if (selected < 0) {
+        if (*(u16*)(flags + 4) & MENU_KEY_L) {
+            if (aux != 0) {
+                ctx[0x98] = 1;
+                ctx[0x99] = 1;
+                *(s32*)(ctx + 0x80) = -1;
+            }
+        } else if (*(u16*)flags & MENU_KEY_R) {
+            menuSetDisp(*(u32*)(ctx + 4), 0);
+            *(s32*)lbl_8047885C = -1;
+            bits = *(u16*)flags;
+            if (bits & MENU_KEY_UP) {
+                if (bits & MENU_KEY_RIGHT) {
+                    *(s32*)lbl_8047885C = 5;
+                } else if (bits & MENU_KEY_LEFT) {
+                    *(s32*)lbl_8047885C = 4;
+                } else {
+                    *(s32*)lbl_8047885C = 0;
+                }
+            } else if (bits & MENU_KEY_DOWN) {
+                *(s32*)lbl_8047885C = 2;
+            } else if (bits & MENU_KEY_RIGHT) {
+                *(s32*)lbl_8047885C = 1;
+            } else if (bits & MENU_KEY_LEFT) {
+                *(s32*)lbl_8047885C = 3;
+            }
+            if (*(s32*)lbl_8047885C >= 0) {
+                /* RULE-EXCEPTION(user-approved): codegen-only (u16) cast on the slot argument - see docs/RULE_EXCEPTIONS.md */
+                if (menuFightGetSecretPokemon(base, (u16)*(s32*)lbl_8047885C) == 0) {
+                    *(s32*)lbl_8047885C = -1;
+                }
+            }
+            if (*(s32*)lbl_8047885C < 0) {
+                targetMenu = 0xFC;
+            } else {
+                targetMenu = 0xFD;
+            }
+        }
+    }
+
+    if (menuFightIsTimeUp() != 0) {
+        ctx[0x98] = 1;
+        ctx[0x99] = 1;
+    }
+
+    if (activeMenu != targetMenu) {
+        if (activeMenu != 0) {
+            menuClose(activeMenu);
+        }
+        if (ctx[0x98] == 0) {
+            if (targetMenu == 0xFC) {
+                menuOpenCustom(0xFC, *(u32*)(ctx + 4), 0, 0, 0, 1, base);
+                menuSetDisp(0xFC, 1);
+                menuSetDisp(0xFD, 0);
+            } else if (targetMenu == 0xFD) {
+                menuOpenCustom(0xFD, *(u32*)(ctx + 4), 0, 0, 0, 2, base, lbl_8047885C);
+                menuSetDisp(0xFD, 1);
+                menuSetDisp(0xFC, 0);
+            }
+        }
+    }
+}
+#endif
+
+#endif
+
+#ifndef MENU_FIGHT_ONLY
+/* menuFightCtrlSecretPokemonTop - 0x8000F310 | size: 0x4c */
+#if 0
+asm void menuFightCtrlSecretPokemonTop(void) {
+#include "src/game/gs_npc_interact_fn_8000F310.inc"
+}
+#else
+u32 menuFightCtrlSecretPokemonTop(u32 arg) {
+    windowGetParam((void*)PC_PTR(arg), 0);
+    windowGetParam((void*)PC_PTR(arg), 1);
+    windowGetParam((void*)PC_PTR(arg), 2);
+    return 0;
+}
+#endif
+
+/* menuFightDrawSecretSelect - 0x8000F35C | size: 0xa4 */
+extern void jumptable_802E4C80();
+#if 0
+asm void menuFightDrawSecretSelect(void) {
+#include "src/game/gs_npc_interact_fn_8000F35C.inc"
+}
+#else
+void menuFightDrawSecretSelect(u8* ctx, u8* npc) {
+    s32 visible;
+    s32 id;
+    s32 idx;
+    s32 state;
+
+    visible = 1;
+    state = *(s32*)(ctx + 4);
+    if (state == 0xF7) {
+        goto visibility_done;
+    }
+    if (state == 0xF8) {
+        if ((u8)windowGetParam(ctx, 2) == 0) {
+            visible = 0;
+        }
+    }
+visibility_done:
+    id = *(s16*)(npc + 6);
+    idx = id - 0x11CE;
+    switch (idx) {
+    case 1:
+    case 5:
+    case 8:
+        winSpriteSetDisp(npc, 1);
+        break;
+    case 0:
+    case 6:
+    case 9:
+        winSpriteSetDisp(npc, visible);
+        break;
+    default:
+        break;
+    }
+}
+#endif
+
+#endif /* !MENU_FIGHT_ONLY */
+
+#if !defined(MENU_FIGHT_ONLY) || defined(MENU_FIGHT_ONLY_8000F400)
+/* menuFightDrawSecretWazaDoc - 0x8000F400 | size: 0x368 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fightOutPokemonGetPokemonPtr();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSmsgPrintRight(void);
+#endif
+extern void jumptable_802E4CA8();
+#if 0
+asm void menuFightDrawSecretWazaDoc(void) {
+#include "src/game/gs_npc_interact_fn_8000F400.inc"
+}
+#else
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+void menuFightDrawSecretWazaDoc(u8* ctx, u8* npc) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowSearchID();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowGetAllocPtr(u32 window);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetParam(u8* a, s32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightOutPokemonGetPokemonPtr(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonCheckValid(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 wazaGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 GSmsgPrintRect(s32 x, s32 y, s16 width, s16 height, s32 color, u32 key);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmsgPrintRight();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmsgPrintColor();
+#endif
+    s16 delta;
+    u8* party; u32 window; /* the window windowSearchID found, passed on in r3 */
+    s32 id;
+    u8* state;
+    s32 value;
+    u32 battle;
+    s32 color;
+    s16 y0;
+    s16 y1;
+    u16 result;
+
+    value = -1;
+    if ((window = PC_PTR32_IMPLICIT(windowSearchID(windowGetParam(ctx, 0)))) == 0) return;
+    party = windowGetAllocPtr(PC_PTR(window));
+    if (party == NULL) return;
+    state = (u8*)PC_PTR(windowGetParam(ctx, 1));
+    if (*(s32*)state < 0) return;
+    battle = PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(*(void**)(party + 0x40)));
+    if (battle == 0) return;
+    result = pokemonGetStatus(PC_PTR(battle), 0, POKEMON_STATUS_MOVE, (u16)*(s32*)state);
+    color = (s32)PC_PTR32(menuSubCalcColor(ctx, npc));
+    id = *(s16*)(npc + 6);
+
+    switch (id) {
+    case 0x11F4:
+    case 0x11F5:
+    case 0x11F6:
+    case 0x11F7:
+        switch (id) {
+        case 0x11F7:
+            value = 0;
+            break;
+        case 0x11F4:
+            value = 1;
+            break;
+        case 0x11F6:
+            value = 2;
+            break;
+        case 0x11F5:
+            value = 3;
+            break;
+        default:
+            break;
+        }
+        if (value == *(s32*)state) {
+            winSpriteSetDisp(npc, 1);
+        } else {
+            winSpriteSetDisp(npc, 0);
+        }
+        break;
+    case 0x11F8: {
+        u8* entry = party + (*(s32*)state * 0xC);
+
+        windowDrawSprite(0, 0, ctx,
+                         *(u16*)(entry + 0xC), 0);
+        break;
+    }
+    case 0x11F9:
+        value = wazaGetStatus(0, (u16)result, 0x22, 0);
+        GSmsgPrintRect(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, value);
+        break;
+    case 0x11FA:
+        value = wazaGetStatus(0, (u16)result, 6, 0);
+        if ((u32)value <= 1) {
+            GSmsgPrintRight(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0x2BE2);
+        } else {
+            msgctrlSetValue(0x34, value);
+            GSmsgPrintRight(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0xD2);
+        }
+        break;
+    case 0x11FC:
+        value = wazaGetStatus(0, (u16)result, 7, 0);
+        if ((u32)value <= 1) {
+            GSmsgPrintRight(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0x2BE2);
+        } else {
+            msgctrlSetValue(0x34, value);
+            GSmsgPrintRight(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0xD2);
+        }
+        break;
+    case 0x11FF: {
+        u8* entry = party + (*(s32*)state * 0xC);
+
+        msgctrlSetValue(0x37, *(u32*)(entry + 4));
+        GSmsgPrintColor(0, 0, color, 0xCF);
+        break;
+    }
+    case 0x11FE: {
+        u8* entry;
+
+        y0 = (s16)(GSmsgGetRect(0x1A4) >> 16);
+        delta = (s16)(*(s16*)(npc + 0x54) - y0);
+        GSmsgPrintColor(0, 0, color, 0x1A4);
+        y1 = (s16)((delta - (s16)(GSmsgGetRect(0x197) >> 16)) / 2);
+        GSmsgPrintColor(y0 + y1, 0, color, 0x197);
+        entry = party + (*(s32*)state * 0xC);
+        msgctrlSetValue(0x34, *(u8*)(entry + 0xF));
+        GSmsgPrintRect(y0, 0, y1, *(s16*)(npc + 0x56), color, 0xDE);
+        entry = party + (*(s32*)state * 0xC);
+        msgctrlSetValue(0x34, *(u8*)(entry + 0xE));
+        GSmsgPrintRect(y0, 0, delta, *(s16*)(npc + 0x56), color, 0xDE);
+        break;
+    }
+    default:
+        break;
+    }
+}
+#else
+void menuFightDrawSecretWazaDoc(u8* ctx, u8* npc) {
+#ifndef TARGET_PC /* PC: canonical prototypes in pc/prototypes.h */
+    extern u32 windowSearchID(void);
+    extern u8* windowGetAllocPtr(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetParam(u8* a, s32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightOutPokemonGetPokemonPtr(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonCheckValid(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 wazaGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 GSmsgPrintRect(s32 x, s32 y, s16 width, s16 height, s32 color, u32 key);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmsgPrintRight();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmsgPrintColor();
+#endif
+    u8* party;
+    u8* state;
+    u32 battle;
+    s32 id;
+    s16 delta;
+    s32 color;
+    s32 value;
+    s16 y0;
+    s16 y1;
+    u16 result;
+
+    value = -1;
+#ifdef TARGET_PC
+    {
+        /* PC: the window id and the window as arguments; on the GameCube each call's result stays in r3 for the
+         * next (missing-argument class) */
+        void* window = windowSearchID(windowGetParam(ctx, 0));
+        if (window == NULL) return;
+        party = windowGetAllocPtr(window);
+    }
+#else
+    windowGetParam(ctx, 0);
+    if (windowSearchID() == 0) return;
+    party = windowGetAllocPtr();
+#endif
+    if (party == NULL) return;
+    state = (u8*)PC_PTR(windowGetParam(ctx, 1));
+    if (*(s32*)state < 0) return;
+    battle = PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(*(void**)(party + 0x40)));
+    if (battle == 0) return;
+    result = pokemonGetStatus(PC_PTR(battle), 0, POKEMON_STATUS_MOVE, (u16)*(s32*)state);
+    color = (s32)PC_PTR32(menuSubCalcColor(ctx, npc));
+    id = *(s16*)(npc + 6);
+
+    switch (id) {
+    case 0x11F4:
+    case 0x11F5:
+    case 0x11F6:
+    case 0x11F7:
+        switch (id) {
+        case 0x11F7:
+            value = 0;
+            break;
+        case 0x11F4:
+            value = 1;
+            break;
+        case 0x11F6:
+            value = 2;
+            break;
+        case 0x11F5:
+            value = 3;
+            break;
+        default:
+            break;
+        }
+        if (value == *(s32*)state) {
+            winSpriteSetDisp(npc, 1);
+        } else {
+            winSpriteSetDisp(npc, 0);
+        }
+        break;
+    case 0x11F8: {
+        u8* entry = party + (*(s32*)state * 0xC);
+
+        windowDrawSprite(0, 0, ctx,
+                         *(u16*)(entry + 0xC), 0);
+        break;
+    }
+    case 0x11F9:
+        value = wazaGetStatus(0, (u16)result, 0x22, 0);
+        GSmsgPrintRect(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, value);
+        break;
+    case 0x11FA:
+        value = wazaGetStatus(0, (u16)result, 6, 0);
+        if ((u32)value <= 1) {
+            GSmsgPrintRight(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0x2BE2);
+        } else {
+            msgctrlSetValue(0x34, value);
+            GSmsgPrintRight(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0xD2);
+        }
+        break;
+    case 0x11FC:
+        value = wazaGetStatus(0, (u16)result, 7, 0);
+        if ((u32)value <= 1) {
+            GSmsgPrintRight(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0x2BE2);
+        } else {
+            msgctrlSetValue(0x34, value);
+            GSmsgPrintRight(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0xD2);
+        }
+        break;
+    case 0x11FF: {
+        u8* entry = party + (*(s32*)state * 0xC);
+
+        msgctrlSetValue(0x37, *(u32*)(entry + 4));
+        GSmsgPrintColor(0, 0, color, 0xCF);
+        break;
+    }
+    case 0x11FE: {
+        u8* entry;
+
+        y0 = (s16)(GSmsgGetRect(0x1A4) >> 16);
+        delta = (s16)(*(s16*)(npc + 0x54) - y0);
+        GSmsgPrintColor(0, 0, color, 0x1A4);
+        y1 = (s16)((delta - (s16)(GSmsgGetRect(0x197) >> 16)) / 2);
+        GSmsgPrintColor(y0 + y1, 0, color, 0x197);
+        entry = party + (*(s32*)state * 0xC);
+        msgctrlSetValue(0x34, *(u8*)(entry + 0xF));
+        GSmsgPrintRect(y0, 0, y1, *(s16*)(npc + 0x56), color, 0xDE);
+        entry = party + (*(s32*)state * 0xC);
+        msgctrlSetValue(0x34, *(u8*)(entry + 0xE));
+        GSmsgPrintRect(y0, 0, delta, *(s16*)(npc + 0x56), color, 0xDE);
+        break;
+    }
+    default:
+        break;
+    }
+}
+#endif
+#endif
+
+#endif
+
+#if !defined(MENU_FIGHT_ONLY) || defined(MENU_FIGHT_ONLY_8000F768)
+/* menuFightDrawSecretWazaSelect - 0x8000F768 | size: 0x1fc */
+extern void jumptable_802E4CD8();
+#if 0
+asm void menuFightDrawSecretWazaSelect(void) {
+#include "src/game/gs_npc_interact_fn_8000F768.inc"
+}
+#else
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+void menuFightDrawSecretWazaSelect(u8* ctx, u8* npc) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowSearchID();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowGetAllocPtr(u32 window);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetParam(u8* a, s32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 GSmsgPrintRect(s32 x, s32 y, s16 width, s16 height, s32 color, u32 key);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmsgPrintColor();
+#endif
+    u8* entries; u32 window; /* the window windowSearchID found, passed on in r3 */
+    u8* entry;
+    s32 idx;
+    s32 color;
+    s32 y;
+    s32 offset;
+    s32 slot;
+    s32 delta;
+
+    slot = -1;
+    if ((window = PC_PTR32_IMPLICIT(windowSearchID(windowGetParam(ctx, 0)))) == 0) return;
+    entries = windowGetAllocPtr(PC_PTR(window));
+    if (entries == NULL) return;
+    color = (s32)PC_PTR32(menuSubCalcColor(ctx, npc));
+    idx = *(s16*)(npc + 6) - 0x11D9;
+    switch (idx) {
+    case 3:
+    case 7:
+    case 11:
+    case 15:
+    case 19:
+        slot = 0;
+        break;
+    case 0:
+    case 4:
+    case 8:
+    case 12:
+    case 16:
+    case 20:
+        slot = 1;
+        break;
+    case 1:
+    case 5:
+    case 9:
+    case 13:
+    case 17:
+        slot = 2;
+        break;
+    case 2:
+    case 6:
+    case 10:
+    case 14:
+    case 18:
+        slot = 3;
+        break;
+    default:
+        break;
+    }
+    if (slot < 0) return;
+    offset = slot * 0xC;
+    entry = entries + offset;
+    if (*(u32*)(entry + 4) != 0) {
+        winSpriteSetDisp(npc, 1);
+    } else {
+        winSpriteSetDisp(npc, 0);
+        return;
+    }
+
+    switch (*(s16*)(npc + 6)) {
+    case 0x11D9:
+    case 0x11DA:
+    case 0x11DB:
+    case 0x11DC:
+        break;
+    case 0x11DD:
+        return;
+    case 0x11DE:
+    case 0x11DF:
+    case 0x11E0:
+    case 0x11E1:
+        break;
+    case 0x11E2:
+    case 0x11E3:
+    case 0x11E4:
+    case 0x11E5:
+        windowDrawSprite(0, 0, ctx, *(u16*)(entry + 0xC), 0);
+        break;
+    case 0x11E6:
+    case 0x11E7:
+    case 0x11E8:
+    case 0x11E9:
+        y = (s16)(GSmsgGetRect(0x197) >> 16);
+        delta = *(s16*)(npc + 0x54) - y;
+        y = (s16)(delta / 2);
+        GSmsgPrintColor(y, 0, color, 0x197);
+        msgctrlSetValue(0x34, entries[offset + 0xF]);
+        GSmsgPrintRect(0, 0, y, *(s16*)(npc + 0x56), color, 0xDE);
+        msgctrlSetValue(0x34, entries[offset + 0xE]);
+        GSmsgPrintRect(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0xDE);
+        break;
+    case 0x11EA:
+    case 0x11EB:
+    case 0x11EC:
+    case 0x11ED:
+        msgctrlSetValue(0x37, *(u32*)(entry + 4));
+        GSmsgPrintColor(0, 0, color, 0xE7);
+        break;
+    default:
+        break;
+    }
+}
+#else
+void menuFightDrawSecretWazaSelect(u8* ctx, u8* npc) {
+#ifndef TARGET_PC /* PC: canonical prototypes in pc/prototypes.h */
+    extern void* windowSearchID(s32 id);
+    extern u8* windowGetAllocPtr(void* window);
+    extern u32 windowGetParam(u8* a, s32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 GSmsgPrintRect(s32 x, s32 y, s16 width, s16 height, s32 color, u32 key);
+    extern void GSmsgPrintColor(s32 x, s32 y, s32 color, u32 key);
+    extern void windowDrawSprite(void* x, void* y, void* context, u32 spriteId, u32 flags);
+    extern u32 GSmsgGetRect(u32 id);
+    extern void msgctrlSetValue(u32 id, u32 value);
+#endif
+    void* window;
+    u8* entries;
+    s32 offset;
+    u8* entry;
+    s32 idx;
+    s32 color;
+    s16 y;
+    s32 slot;
+    s16 h;
+    s32 diff;
+
+    slot = -1;
+    window = windowSearchID(windowGetParam(ctx, 0));
+    if (window == NULL) return;
+    entries = windowGetAllocPtr(window);
+    if (entries == NULL) return;
+    color = (s32)PC_PTR32(menuSubCalcColor(ctx, npc));
+    idx = *(s16*)(npc + 6) - 0x11D9;
+    switch (idx) {
+    case 3:
+    case 8:
+    case 12:
+    case 16:
+    case 20:
+        slot = 0;
+        break;
+    case 0:
+    case 5:
+    case 9:
+    case 13:
+    case 17:
+        slot = 1;
+        break;
+    case 1:
+    case 6:
+    case 10:
+    case 14:
+    case 18:
+        slot = 2;
+        break;
+    case 2:
+    case 7:
+    case 11:
+    case 15:
+    case 19:
+        slot = 3;
+        break;
+    default:
+        break;
+    }
+    if (slot < 0) return;
+    offset = slot * 0xC;
+    entry = entries + offset;
+    if (*(u32*)(entry + 4) != 0) {
+        winSpriteSetDisp(npc, 1);
+    } else {
+        winSpriteSetDisp(npc, 0);
+        return;
+    }
+
+    switch (*(s16*)(npc + 6)) {
+    case 0x11D9:
+    case 0x11DA:
+    case 0x11DB:
+    case 0x11DC:
+        break;
+    case 0x11DE:
+    case 0x11DF:
+    case 0x11E0:
+    case 0x11E1:
+        break;
+    case 0x11E2:
+    case 0x11E3:
+    case 0x11E4:
+    case 0x11E5:
+        windowDrawSprite(0, 0, ctx, *(u16*)&entries[offset + 0xC], 0);
+        break;
+    case 0x11E6:
+    case 0x11E7:
+    case 0x11E8:
+    case 0x11E9:
+        h = (s16)(GSmsgGetRect(0x197) >> 16);
+        diff = *(s16*)(npc + 0x54) - h;
+        /* diff / 2, rounded toward zero */
+        y = (s16)(((s32)((u32)diff >> 31) + diff) >> 1);
+        GSmsgPrintColor(y, 0, color, 0x197);
+        msgctrlSetValue(0x34, entries[offset + 0xF]);
+        GSmsgPrintRect(0, 0, y, *(s16*)(npc + 0x56), color, 0xDE);
+        msgctrlSetValue(0x34, entries[offset + 0xE]);
+        GSmsgPrintRect(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0xDE);
+        break;
+    case 0x11EA:
+    case 0x11EB:
+    case 0x11EC:
+    case 0x11ED:
+        msgctrlSetValue(0x37, *(u32*)(entry + 4));
+        GSmsgPrintColor(0, 0, color, 0xE7);
+        break;
+    default:
+        break;
+    }
+}
+#endif
+#endif
+
+#endif
+
+#ifndef MENU_FIGHT_ONLY
+/* menuFightButtonSecretWazaTop - 0x8000F964 | size: 0x474 */
+extern f64 lbl_8047B710;
+extern f32 lbl_8047B700;
+extern f32 lbl_8047B704;
+extern f32 lbl_8047B708;
+extern u8 lbl_80478858[4];
+#if 0
+asm void menuFightButtonSecretWazaTop(void) {
+#include "src/game/gs_npc_interact_fn_8000F964.inc"
+}
+#else
+/* One 0xC-byte secret-move row in the window's allocated copy. */
+typedef struct MenuFightSecretWazaEntry {
+    u32 id;
+    u32 used;
+    u32 pad8;
+} MenuFightSecretWazaEntry;
+
+void menuFightButtonSecretWazaTop(u8* ctx) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowGetKeyInfo(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowGetAllocPtr(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuSetDisp(u32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 menuIsCheck(s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s8 GSinputGetRightStickYData(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s8 GSinputGetRightStickXData(s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 menuOpenCustom(s32, ...);
+#endif
+    u8* flags;
+    MenuFightSecretWazaEntry* entries;
+    s32 selected;
+    s32 activeMenu;
+    s32 targetMenu;
+    s8 sx;
+    s8 sy;
+    f32 fx;
+    f32 fy;
+    f32 angle;
+    u16 bits;
+    u8 pressed;
+
+    flags = windowGetKeyInfo();
+    entries = (MenuFightSecretWazaEntry*)windowGetAllocPtr(ctx);
+    selected = -1;
+    activeMenu = 0;
+    targetMenu = 0;
+    menuSetDisp(*(u32*)(ctx + 4), 1);
+    if ((u8)menuIsCheck(0xF9) != 0) {
+        activeMenu = 0xF9;
+    } else if ((u8)menuIsCheck(0xFA) != 0) {
+        activeMenu = 0xFA;
+    }
+
+    bits = 0;
+    sx = GSinputGetRightStickYData(1, 0);
+    sy = GSinputGetRightStickXData(1, 0);
+    if ((sy < 0 ? -sy : sy) > 0x20 || (sx < 0 ? -sx : sx) > 0x20) {
+        fy = sy;
+        fx = sx;
+        angle = atan2(fy, fx);
+        if ((angle > 0.0f ? angle : -angle) < 0.7853982f) {
+            bits |= 2;
+        } else if ((angle > 0.0f ? angle : -angle) > 2.3561945f) {
+            bits |= 1;
+        }
+        if (0.7853982f < (angle > 0.0f ? angle : -angle) &&
+            (angle > 0.0f ? angle : -angle) < 2.3561945f) {
+            if (angle < 0.0f) {
+                bits |= 4;
+            } else {
+                bits |= 8;
+            }
+        }
+    }
+    if (bits != 0) {
+        if (bits & 1) {
+            selected = 0;
+        } else if (bits & 8) {
+            selected = 1;
+        } else if (bits & 2) {
+            selected = 2;
+        } else if (bits & 4) {
+            selected = 3;
+        }
+        if (entries[selected].used == 0) {
+            selected = -1;
+        }
+        if (selected >= 0) {
+            ctx[0x98] = 1;
+            *(s32*)(ctx + 0x80) = selected;
+        }
+    } else if (*(u16*)(flags + 4) & MENU_KEY_L) {
+        ctx[0x98] = 1;
+        ctx[0x99] = 1;
+        *(s32*)(ctx + 0x80) = -1;
+    } else if (*(u16*)flags & MENU_KEY_R) {
+        menuSetDisp(*(u32*)(ctx + 4), 0);
+        bits = *(u16*)flags;
+        if (bits & MENU_KEY_UP) {
+            *(s32*)lbl_80478858 = 0;
+        } else if (bits & MENU_KEY_RIGHT) {
+            *(s32*)lbl_80478858 = 1;
+        } else if (bits & MENU_KEY_DOWN) {
+            *(s32*)lbl_80478858 = 2;
+        } else if (bits & MENU_KEY_LEFT) {
+            *(s32*)lbl_80478858 = 3;
+        } else {
+            *(s32*)lbl_80478858 = -1;
+        }
+        if (entries[*(s32*)lbl_80478858].used == 0) {
+            *(s32*)lbl_80478858 = -1;
+        }
+        if (*(s32*)lbl_80478858 < 0) {
+            targetMenu = 0xF9;
+        } else {
+            targetMenu = 0xFA;
+        }
+    }
+
+    if ((u8)fn_801F18DC(0) != 0) {
+        if ((u8)fightFloorIsUseFightTimerCommand(0) == 1 && (u8)fightTimerCommandIsOver() == 1) {
+            pressed = 1;
+            goto check_pressed;
+        }
+        if ((u16)std103_battleGetResult() == 1) {
+            pressed = 1;
+            goto check_pressed;
+        }
+    }
+    pressed = 0;
+check_pressed:
+    if (pressed != 0) {
+        ctx[0x98] = 1;
+        ctx[0x99] = 1;
+    }
+
+    if (activeMenu != targetMenu) {
+        if (activeMenu != 0) {
+            menuClose(activeMenu);
+        }
+        if (ctx[0x98] == 0) {
+            if (targetMenu == 0xF9) {
+                menuOpenCustom(0xF9, *(u32*)(ctx + 4), 0, 0, 0, 1, *(u32*)(ctx + 4));
+                menuSetDisp(0xF9, 1);
+                menuSetDisp(0xFA, 0);
+            } else if (targetMenu == 0xFA) {
+                menuOpenCustom(0xFA, *(u32*)(ctx + 4), 0, 0, 0, 2, *(u32*)(ctx + 4), lbl_80478858);
+                menuSetDisp(0xFA, 1);
+                menuSetDisp(0xF9, 0);
+            }
+        }
+    }
+}
+#endif
+
+/* menuFightCtrlSecretWazaTop - 0x8000FDD8 | size: 0x60 */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void windowAllocMemory(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* memcpy(void* dst, const void* src, u32 n);
+#endif
+#if 0
+asm void menuFightCtrlSecretWazaTop(void) {
+#include "src/game/gs_npc_interact_fn_8000FDD8.inc"
+}
+#else
+u32 menuFightCtrlSecretWazaTop(u8* ptr) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowAllocMemory(u8* a, u32 size);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void windowGetAllocPtr(u8* a);
+#endif
+    if ((s8)ptr[1] == 0) {
+        void* dst = windowAllocMemory(ptr, 0x48);
+        if (dst != NULL) {
+            memcpy(dst, PTR32_AT_T(void, ptr, 0x60), 0x48); /* window +0x60: a 32-bit slot (pc/ptr32.h) */
+        }
+    }
+    windowGetAllocPtr(ptr);
+    return 0;
+}
+#endif
+
+/* menuFightButtonSecretMain - 0x8000FE38 | size: 0x118 */
+#if 0
+asm void menuFightButtonSecretMain(void) {
+#include "src/game/gs_npc_interact_fn_8000FE38.inc"
+}
+#else
+void menuFightButtonSecretMain(u8* arg1) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowGetKeyInfo(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 fn_801F18DC(s32 a);
+#endif
+    extern u8 fightFloorIsUseFightTimerCommand(s32 a);
+    extern u8 fightTimerCommandIsOver(void);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 std103_battleGetResult(void);
+#endif
+    void* data;
+    u16 flags;
+    s32 flag_val;
+    u8 flag;
+    data = windowGetKeyInfo();
+    flags = *(u16*)((u8*)data + 4);
+    flag_val = -1;
+    if (flags & MENU_KEY_A) {
+        flag_val = 0;
+    } else if (flags & MENU_KEY_B) {
+        flag_val = 2;
+    } else if (flags & MENU_KEY_START) {
+        flag_val = 3;
+    } else if (flags & MENU_KEY_L) {
+        arg1[0x98] = 1;
+        arg1[0x99] = 1;
+        *(s32*)(arg1 + 0x80) = -1;
+    }
+    if (flag_val >= 0) {
+        arg1[0x98] = 1;
+        *(s32*)(arg1 + 0x80) = flag_val;
+    }
+    if ((u8)fn_801F18DC(0) != 0) {
+        if ((u8)fightFloorIsUseFightTimerCommand(0) == 1) {
+            if ((u8)fightTimerCommandIsOver() == 1) {
+                flag = 1;
+                goto got_flag;
+            }
+        }
+        if ((u16)std103_battleGetResult() == 1) {
+            flag = 1;
+            goto got_flag;
+        }
+    }
+    flag = 0;
+got_flag:
+    if (flag) {
+        arg1[0x98] = 1;
+        arg1[0x99] = 1;
+    }
+}
+#endif
+
+/* menuFightCtrlSecretMain - 0x8000FF50 | size: 0x58 */
+#if 0
+asm void menuFightCtrlSecretMain(void) {
+#include "src/game/gs_npc_interact_fn_8000FF50.inc"
+}
+#else
+u32 menuFightCtrlSecretMain(u8* ptr) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowAllocMemory(u8* a, u32 size);
+#endif
+    if ((s8)ptr[1] == 0) {
+        void* dst = windowAllocMemory(ptr, 0x18);
+        if (dst != NULL) {
+            memcpy(dst, PTR32_AT_T(void, ptr, 0x60), 0x18); /* window +0x60: a 32-bit slot (pc/ptr32.h) */
+        }
+    }
+    return 0;
+}
+#endif
+
+/* menuFightDrawBall - 0x8000FFA8 | size: 0x118 */
+extern void jumptable_802E4D2C();
+#if 0
+asm void menuFightDrawBall(void) {
+#include "src/game/gs_npc_interact_fn_8000FFA8.inc"
+}
+#else
+void menuFightDrawBall(u8* ctx, u8* npc) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowGetFreeWork(u8* a);
+#endif
+    s32 msg;
+    s32 slot;
+    u8* state;
+
+    msg = 0;
+    slot = -1;
+    state = windowGetFreeWork(ctx);
+    switch (*(s16*)(npc + 6)) {
+    case 0x11AA:
+    case 0x11B0:
+    case 0x11B6:
+    case 0x11BC:
+        slot = 0;
+        break;
+    case 0x11AB:
+    case 0x11B1:
+    case 0x11B7:
+    case 0x11BD:
+        slot = 1;
+        break;
+    case 0x11AC:
+    case 0x11B2:
+    case 0x11B8:
+    case 0x11BE:
+        slot = 2;
+        break;
+    case 0x11AD:
+    case 0x11B3:
+    case 0x11B9:
+    case 0x11BF:
+        slot = 3;
+        break;
+    case 0x11AE:
+    case 0x11B4:
+    case 0x11BA:
+    case 0x11C0:
+        slot = 4;
+        break;
+    case 0x11AF:
+    case 0x11B5:
+    case 0x11BB:
+    case 0x11C1:
+        slot = 5;
+        break;
+    }
+    if (slot >= 0) {
+        switch (state[slot]) {
+        case 0:
+            msg = 0x1B4;
+            break;
+        case 1:
+            msg = 0x3AC;
+            break;
+        case 2:
+            msg = 0x3AE;
+            break;
+        case 3:
+            msg = 0x3AD;
+            break;
+        }
+        if ((u16)msg != 0) {
+            windowDrawSprite(0, 0, ctx, msg, 0);
+        }
+    }
+}
+#endif
+
+/* menuFightCtrlBall - 0x800100C0 | size: 0x68 */
+#if 0
+asm void menuFightCtrlBall(void) {
+#include "src/game/gs_npc_interact_fn_800100C0.inc"
+}
+#else
+u32 menuFightCtrlBall(u8* ptr) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowGetFreeWork(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowGetParam(u8* a, u32 b);
+#endif
+    void* dst = windowGetFreeWork(ptr);
+    if ((s8)ptr[1] == 0) {
+        memcpy(dst, PC_PTR(windowGetParam(ptr, 0)), 6);
+    }
+    return 0;
+}
+#endif
+
+/* _menuFightIsUse__FP16MENU_WAZA_STATUSUs - 0x80010128 | size: 0x16c */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fightOutPokemonCheckCanOutOkWazaBanme();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fightOutPokemonGetSoubiItemDataId();
+#endif
+#if 0
+asm void _menuFightIsUse__FP16MENU_WAZA_STATUSUs(void) {
+#include "src/game/gs_npc_interact_fn_80010128.inc"
+}
+#else
+u32 _menuFightIsUse__FP16MENU_WAZA_STATUSUs(ctx, arg)
+u8* ctx;
+u16 arg;
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightOutPokemonGetPokemonPtr(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightOutPokemonCheckCanOutOkWazaBanme(void*, u16, s32, void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 pokemonGetStatus(u32, s32, s32, u16);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 wazaGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSmsgGetGSchar();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 fightOutPokemonGetSoubiItemDataId(void*);
+#endif
+    u16 stackValue;
+    u8* obj;
+    u32 battle;
+    u32 state;
+    u32 result;
+    u32 msg;
+    u32 item;
+
+    obj = *(u8**)(ctx + 0x40);
+    battle = PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(obj));
+    state = fightOutPokemonCheckCanOutOkWazaBanme(obj, arg, 1, &stackValue);
+    result = pokemonGetStatus(PC_PTR(battle), 0, POKEMON_STATUS_MOVE, arg);
+    if ((u8)state != 0) {
+        msgctrlSetValue(0x11, (s32)PC_PTR32(obj));
+        msg = wazaGetStatus(0, result, 1, 0);
+        msgctrlSetValue(0x28, PC_PTR32_IMPLICIT(GSmsgGetGSchar(msg)));
+        item = fightOutPokemonGetSoubiItemDataId(obj);
+        fightFloorSetStatus(0, 0, 0x56, 0, (u16)item);
+    }
+    if ((u8)state == 6) {
+        msg = BATTLE_MSG_NO_PP_LEFT;
+    } else if ((u8)state == 5) {
+        msgctrlSetValue(0x28, PC_PTR32_IMPLICIT(GSmsgGetGSchar(wazaGetStatus(0, stackValue, 1, 0))));
+        msg = 0x76BB;
+    } else if ((u8)state == 4) {
+        msg = 0x7600;
+    } else if ((u8)state == 3) {
+        msg = BATTLE_MSG_TAUNT_BLOCKS_MOVE;
+    } else if ((u8)state == 2) {
+        msg = 0x75FE;
+    } else if ((u8)state == 1) {
+        msg = 0x75FD;
+    }
+    if ((u8)state != 0) {
+        return msg;
+    }
+    return 0;
+}
+#endif
+
+/* Fight-menu window work: the four move slots shown by DrawPP/DrawType. */
+typedef struct MenuFightMoveSlot {
+    u32 valid;
+    u32 unk_04;
+    u16 type;
+    u8 unk_0A;
+    u8 unk_0B;
+} MenuFightMoveSlot;
+
+typedef struct MenuFightMoveWork {
+    u32 unk_00;
+    MenuFightMoveSlot slots[4];
+    u8 unk_34[0xc];
+    void* fightPokemon;
+} MenuFightMoveWork;
+
+/* menuFightDrawPP - 0x80010294 | size: 0x1e8 */
+#ifdef TARGET_PC
+/* PC: windowGetCursor returns the 2-byte cursor record (x at +0x94, y at +0x95) by value. MWCC hands it back
+ * left-justified in r3, hence the GameCube's ">> 16"; x86-64 returns it in the low 16 bits, so the PC takes it as a
+ * u16 with no shift. The union then sees the record's bytes in memory order on both. (Before 2026-10-18 the shift
+ * left the cursor at 0, so the PP and type boxes always showed the first move.) */
+extern u16 windowGetCursor(u32 val);
+#define MENU_FIGHT_CURSOR(id) windowGetCursor(id)
+#else
+extern u32 windowGetCursor();
+#define MENU_FIGHT_CURSOR(id) (windowGetCursor(id) >> 16)
+#endif
+#if 0
+asm void menuFightDrawPP(void) {
+#include "src/game/gs_npc_interact_fn_80010294.inc"
+}
+#else
+void menuFightDrawPP(u8* ctx, u8* npc) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowGetAllocPtr(u8* a);
+    extern u32 windowGetCursor(u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* fightOutPokemonGetPokemonPtr(void* obj);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonGetStatus(void* pokemon, s32 p2, s32 p3, s32 p4);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmsgPrintRight();
+#endif
+    union {
+        u16 raw;
+        struct {
+            s8 x;
+            s8 y;
+        } pos;
+    } cursor;
+    MenuFightMoveWork* entries;
+    u32 color;
+    s32 x;
+    u16 status;
+    void* pokemon;
+
+    entries = (MenuFightMoveWork*)windowGetAllocPtr(ctx);
+    color = PC_PTR32(menuSubCalcColor(ctx, npc));
+    cursor.raw = MENU_FIGHT_CURSOR(*(u32*)(ctx + 4));
+    x = *(s16*)(npc + 0x54) - (s16)(GSmsgGetRect(0x197) >> 16);
+    x = (s16)(x / 2);
+    GSmsgPrintColor(x, 0, color, 0x197);
+
+    if (cursor.pos.y >= 0 && cursor.pos.y < 4) {
+        if (entries->slots[cursor.pos.y].valid != 0) {
+            pokemon = fightOutPokemonGetPokemonPtr(entries->fightPokemon);
+            if (pokemon != 0) {
+                status = pokemonGetStatus(pokemon, 0, POKEMON_STATUS_MOVE, *(s8*)(ctx + 0x95));
+            } else {
+                status = 0;
+            }
+            switch (status) {
+            case 0x164:
+            case 0:
+                GSmsgPrintRight(0, 0, x, *(s16*)(npc + 0x56), color, 0x2BE1);
+                GSmsgPrintRight(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0x2BE1);
+                break;
+            case 0x165:
+                GSmsgPrintRight(0, 0, x, *(s16*)(npc + 0x56), color, 0x2B6D);
+                GSmsgPrintRight(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0x2B6D);
+                break;
+            default:
+                msgctrlSetValue(0x34, entries->slots[cursor.pos.y].unk_0B);
+                GSmsgPrintRight(0, 0, x, *(s16*)(npc + 0x56), color, 0xD2);
+                msgctrlSetValue(0x34, entries->slots[cursor.pos.y].unk_0A);
+                GSmsgPrintRight(0, 0, *(s16*)(npc + 0x54), *(s16*)(npc + 0x56), color, 0xD2);
+                break;
+            }
+        }
+    }
+}
+#endif
+
+/* menuFightDrawType - 0x8001047C | size: 0x10c */
+#if 0
+asm void menuFightDrawType(void) {
+#include "src/game/gs_npc_interact_fn_8001047C.inc"
+}
+#else
+void menuFightDrawType(u8* arg1) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowGetAllocPtr(u8* a);
+    extern u32 windowGetCursor(u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* fightOutPokemonGetPokemonPtr(void* obj);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonGetStatus(void* pokemon, s32 p2, s32 p3, s32 p4);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void windowDrawSprite(s32 p1, s32 p2, u8* p3, u16 p4, s32 p5);
+#endif
+    union {
+        u16 raw;
+        struct {
+            s8 x;
+            s8 y;
+        } pos;
+    } cursor;
+    MenuFightMoveWork* participant;
+    u16 status;
+    u16 type;
+    void* pokemon;
+
+    participant = windowGetAllocPtr(arg1);
+    cursor.raw = MENU_FIGHT_CURSOR(*(u32*)(arg1 + 4));
+    if (cursor.pos.y >= 0 && cursor.pos.y < 4) {
+        if (participant->slots[cursor.pos.y].valid != 0) {
+            pokemon = fightOutPokemonGetPokemonPtr(participant->fightPokemon);
+            if (pokemon != 0) {
+                status = pokemonGetStatus(pokemon, 0, POKEMON_STATUS_MOVE, *(s8*)(arg1 + 0x95));
+            } else {
+                status = 0;
+            }
+            switch (status) {
+            case 0x164:
+            case 0:
+                type = 0;
+                break;
+            case 0x165:
+                type = 0x5d;
+                break;
+            default:
+                /* The move work's type-icon halfword is stored natively on the PC (2026-10-18 dump: +0C 0F0F004F, sprite
+                 * 0x4F), so it needs no swap. */
+                type = participant->slots[cursor.pos.y].type;
+                break;
+            }
+            if (type != 0) {
+                windowDrawSprite(0, PC_PTR(2), arg1, type, 0);
+            }
+        }
+    }
+}
+#endif
+
+/* menuFightDrawWaza - 0x80010588 | size: 0x11c */
+#if 0
+asm void menuFightDrawWaza(void) {
+#include "src/game/gs_npc_interact_fn_80010588.inc"
+}
+#else
+void menuFightDrawWaza(u8* arg1, u8* arg2) {
+    typedef struct {
+        u32 unk_00;
+        u32 value;
+        u32 unk_08;
+    } NpcInteractEntry;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern NpcInteractEntry* windowGetAllocPtr(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowGetFreeWork(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmsgPrintColor(s32 a, s32 b, s32 c, u32 d);
+#endif
+    NpcInteractEntry* participant;
+    void* npc_data;
+    s32 idx;
+    s16 npc_id;
+    s32 offset;
+    u32 result;
+    participant = windowGetAllocPtr(arg1);
+    npc_data = windowGetFreeWork(arg1);
+    npc_id = *(s16*)(arg2 + 6);
+    idx = 0;
+    switch (npc_id) {
+    case 0xC4:
+        idx = 0;
+        break;
+    case 0xC5:
+        idx = 1;
+        break;
+    case 0xC6:
+        idx = 2;
+        break;
+    case 0xC7:
+        idx = 3;
+        break;
+    }
+    if ((s8)*((u8*)npc_data + 2) == idx) {
+        windowDrawSprite(0, 0, arg1, 0x49, 0);
+        windowDrawSprite(0, 0, arg1, 0x4A, 0);
+    }
+    offset = idx * 0xc;
+    participant = (NpcInteractEntry*)PC_PTR((PC_PTR32(participant) + offset));
+    result = participant->value;
+    if (result != 0) {
+        msgctrlSetValue(0x37, result);
+        GSmsgPrintColor(0, 0, (s32)PC_PTR32(menuSubCalcColor(arg1, arg2)), 0xE7);
+    }
+}
+#endif
+
+/* menuFightDrawCmdMsg - 0x800106A4 | size: 0x1a0 */
+#if 0
+asm void menuFightDrawCmdMsg(void) {
+#include "src/game/gs_npc_interact_fn_800106A4.inc"
+}
+#else
+void menuFightDrawCmdMsg(u8* arg1, u8* arg2) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetAllocPtr(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetFreeWork(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetParam(u8* a, s32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void msgctrlSetValue(s32 p1, s32 val);
+#endif
+    extern void* fn_8001D834(void* a, void* b); /* same as the file-scope declaration (menuSubCalcColor) */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmsgPrintColor(s32 a, s32 b, s32 c, u32 d);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* fightOutPokemonGetNicknamePtr(void* a);
+#endif
+    void* participant;
+    void* npc_data;
+    u32 r30;
+    s16 npc_id;
+    s32 sub;
+    s32 val;
+    u8* p1;
+    u32 t1;
+    u32 t2;
+    npc_id = *(s16*)(arg2 + 6);
+    r30 = 0;
+    switch (npc_id) {
+    case 0xb4:
+        t1 = PC_PTR32_IMPLICIT(windowGetAllocPtr(arg1));
+        msgctrlSetValue(0x37, (s32)t1);
+        r30 = 0xcf;
+        break;
+    case 0x11cd:
+        t2 = PC_PTR32_IMPLICIT(windowGetAllocPtr(arg1));
+        msgctrlSetValue(0x36, (s32)t2);
+        r30 = 0x196;
+        break;
+    case 0xc1:
+        participant = (void*)PC_PTR(windowGetAllocPtr(arg1));
+        npc_data = (void*)PC_PTR(windowGetFreeWork(arg1));
+        sub = (s32)*(u8*)npc_data;
+        switch (sub) {
+        case 0:
+            msgctrlSetValue(0x36, *(s32*)participant);
+            r30 = 0x196;
+            break;
+        case 1:
+            r30 = 0x199;
+            break;
+        }
+        break;
+    case 0x11d8:
+        r30 = 0x196;
+        val = (s32)*(u32*)(arg1 + 4);
+        if (val == 0xf7) {
+            msgctrlSetValue(0x36, *(s32*)PC_PTR(windowGetAllocPtr(arg1)));
+        } else if (val == 0xf8) {
+            p1 = (u8*)PC_PTR(windowGetParam(arg1, 1));
+            if ((u8)windowGetParam(arg1, 2) != 0) {
+                msgctrlSetValue(0x36, (s32)PC_PTR32(fightOutPokemonGetNicknamePtr(p1)));
+            } else {
+                r30 = 0x1a9;
+            }
+        } else {
+            return;
+        }
+        break;
+    }
+    if (r30 != 0) {
+        GSmsgPrintColor(0, -2, (s32)PC_PTR32(menuSubCalcColor(arg1, arg2)), r30);
+    }
+}
+#endif
+
+/* menuFightWazaButton - 0x80010844 | size: 0x15c */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void pokemonWazaReplace(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void pokemonToMenuWazaStatus(void);
+#endif
+#if 0
+asm void menuFightWazaButton(void) {
+#include "src/game/gs_npc_interact_fn_80010844.inc"
+}
+#else
+u32 menuFightWazaButton(u8* ctx) {
+    typedef struct MenuWindow {
+        u8 pad_00[0x95];
+        s8 selectedWaza;
+        u8 pad_96[2];
+        u8 done;
+        u8 canceled;
+    } MenuWindow;
+    typedef struct MenuFightWazaStatus {
+        u8 pad_00[0x40];
+        void* outPokemon;
+    } MenuFightWazaStatus;
+    typedef struct MenuFightWazaWork {
+        u8 mode;
+        u8 unk_01;
+        s8 selectedSlot;
+    } MenuFightWazaWork;
+    typedef struct MenuKeyInfo {
+        u8 pad_00[4];
+        u16 buttons;
+    } MenuKeyInfo;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern MenuFightWazaStatus* windowGetAllocPtr(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern MenuFightWazaWork* windowGetFreeWork(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern MenuKeyInfo* windowGetKeyInfo(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightOutPokemonGetPokemonPtr(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 pokemonGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuButtonNormal(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void pokemonWazaReplace(void*, s32, s32);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void pokemonToMenuWazaStatus(void*, MenuFightWazaStatus*);
+#endif
+    MenuWindow* window;
+    MenuFightWazaStatus* participant;
+    MenuFightWazaWork* state;
+    MenuKeyInfo* flagsObj;
+    u32 model;
+    u16 flags;
+    void* saved;
+
+    window = (MenuWindow*)ctx;
+    participant = windowGetAllocPtr(ctx);
+    state = windowGetFreeWork(ctx);
+    model = PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(participant->outPokemon));
+    flagsObj = windowGetKeyInfo();
+    flags = flagsObj->buttons;
+
+    switch (state->mode) {
+    case 0:
+        if (model != 0 && ((u16)pokemonGetStatus(PC_PTR(model), 0, POKEMON_STATUS_MOVE, window->selectedWaza) == MOVE_SHADOW_LOCKED)) {
+            if ((((MenuKeyInfo*)windowGetKeyInfo())->buttons & MENU_KEY_B) != 0) {
+                window->done = 1;
+                window->canceled = 1;
+            }
+        } else {
+            menuButtonNormal(ctx);
+        }
+        break;
+    case 1: {
+        s32 flagBits = flags & 0xFFFF;
+        if ((flagBits & (MENU_KEY_A | MENU_KEY_X | MENU_KEY_Y)) != 0) {
+            if (model != 0) {
+                pokemonWazaReplace((void*)PC_PTR(model), state->selectedSlot, window->selectedWaza);
+                saved = participant->outPokemon;
+                pokemonToMenuWazaStatus((void*)PC_PTR(model), participant);
+                participant->outPokemon = saved;
+            }
+            state->selectedSlot = -1;
+            state->mode = 0;
+        } else if ((flagBits & MENU_KEY_B) != 0) {
+            state->selectedSlot = -1;
+            state->mode = 0;
+        }
+        break;
+    }
+    }
+    return 0;
+}
+#endif
+
+/* menuFightWazaCtrl - 0x800109A0 | size: 0x190 */
+extern u16 lbl_80478850[4];
+#if 0
+asm void menuFightWazaCtrl(void) {
+#include "src/game/gs_npc_interact_fn_800109A0.inc"
+}
+#else
+u32 menuFightWazaCtrl(u8* ctx) {
+    typedef struct MenuWindow {
+        u8 pad_00;
+        s8 state;
+        u8 pad_02[2];
+        u32 menuId;
+        u8 pad_08[0x78];
+        s32 selected;
+    } MenuWindow;
+    typedef struct MenuFightWazaRow {
+        u32 unk_00;
+        u32 wazaId;
+        u32 unk_08;
+    } MenuFightWazaRow;
+    typedef struct MenuFightWazaWork {
+        u8 mode;
+        u8 unk_01;
+        s8 selectedSlot;
+    } MenuFightWazaWork;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowAllocMemory(u8* a, u32 size);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 windowGetParam(u8* a, s32 b);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern MenuFightWazaWork* windowGetFreeWork(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern MenuFightWazaRow* windowGetAllocPtr(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 menuGetCursorItemID(u32 val);
+#endif
+    MenuWindow* window;
+    void* dst;
+    MenuFightWazaWork* state;
+    MenuFightWazaRow* party;
+    s32 i;
+    s32 id;
+
+    window = (MenuWindow*)ctx;
+    if (window->state == 0) {
+        dst = windowAllocMemory(ctx, 0x48);
+        if (dst != NULL) {
+            memcpy(dst, (void*)PC_PTR(windowGetParam(ctx, 0)), 0x48);
+        }
+        state = windowGetFreeWork(ctx);
+        state->mode = 0;
+        state->unk_01 = 0;
+        state->selectedSlot = -1;
+    }
+
+    party = windowGetAllocPtr(ctx);
+    if (window->state == 5) {
+        for (i = 0; i < 4; i++) {
+            menuItemBiosSetSelectFlag(lbl_80478850[i], 1);
+        }
+    } else {
+        for (i = 0; i < 4; i++) {
+            if (party[i].wazaId != 0) {
+                menuItemBiosSetSelectFlag(lbl_80478850[i], 1);
+            } else {
+                menuItemBiosSetSelectFlag(lbl_80478850[i], 0);
+            }
+        }
+    }
+
+    id = menuGetCursorItemID(window->menuId);
+    switch (id) {
+    case 0xC4:
+        window->selected = 0;
+        break;
+    case 0xC5:
+        window->selected = 1;
+        break;
+    case 0xC6:
+        window->selected = 2;
+        break;
+    case 0xC7:
+        window->selected = 3;
+        break;
+    default:
+        window->selected = -1;
+        break;
+    }
+    return 0;
+}
+#endif
+
+/* menuFightMainCtrl - 0x80010B30 | size: 0x168 */
+u32 menuFightMainCtrl(u8* arg) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowAllocMemory(u8* a, u32 size);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowGetAllocPtr(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 menuGetCursorItemID(u32 val);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8* windowSearchItemID(u8* a, s32 id);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void menuItemBiosSetSelectFlag(s32 id, s32 flag);
+#endif
+    void* entry;
+    void* participant;
+    s32 trainer_id;
+    u8* r;
+    if ((s8)arg[1] == 0) {
+        entry = windowAllocMemory(arg, 0x18);
+        if (entry != NULL) {
+            memcpy(entry, PTR32_AT_T(void, arg, 0x60), 0x18); /* window +0x60: a 32-bit slot (pc/ptr32.h) */
+        }
+        if (*(u8*)((u8*)entry + 0x16) != 0) {
+            r = windowSearchItemID(arg, 0xB6);
+            *(s32*)(r + 0x4C) = 0x13D;
+            r = windowSearchItemID(arg, 0xB8);
+            *(s32*)(r + 0x4C) = 0x140;
+            menuItemBiosSetSelectFlag(0xB8, 1);
+        } else {
+            r = windowSearchItemID(arg, 0xB6);
+            *(s32*)(r + 0x4C) = 0x13F;
+            r = windowSearchItemID(arg, 0xB8);
+            *(s32*)(r + 0x4C) = 0;
+            menuItemBiosSetSelectFlag(0xB8, 0);
+        }
+    }
+    participant = windowGetAllocPtr(arg);
+    trainer_id = menuGetCursorItemID(*(u32*)(arg + 4));
+    switch (trainer_id) {
+    case 0xB5:
+        *(s32*)(arg + 0x80) = 0;
+        break;
+    case 0xB6:
+        if (*(u8*)((u8*)participant + 0x16) != 0) {
+            *(s32*)(arg + 0x80) = 1;
+        } else {
+            *(s32*)(arg + 0x80) = 3;
+        }
+        break;
+    case 0xB7:
+        *(s32*)(arg + 0x80) = 2;
+        break;
+    case 0xB8:
+        *(s32*)(arg + 0x80) = 3;
+        break;
+    default:
+        *(s32*)(arg + 0x80) = -1;
+        break;
+    }
+    return 0;
+}
+
+/* menuPokemonCheckPokemonChange - 0x80010C98 | size: 0x52c */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fightOutPokemonGetTokuseiDataId(void* arg);
+#endif
+extern u8 fightTrainerCheckCanIrekaeFightPokemon(u32 warpId, u32 arg);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 fightPokemonGetNicknamePtr(u32 arg);
+#endif
+extern void GSlogWrite(const char* fmt, ...);
+extern u8 lbl_80266788[];
+extern u8 lbl_802E4B78[];
+#if 0
+asm void menuPokemonCheckPokemonChange(void) {
+#include "src/game/gs_npc_interact_fn_80010C98.inc"
+}
+#else
+u32 menuPokemonCheckPokemonChange(void* npc, u32 warpId, u32 variant) {
+#define WAIT_FOR_DIALOG(waitLabel, checkLabel, haveLabel, doneLabel) \
+    goto checkLabel; \
+waitLabel: \
+    advance = fn_801F18DC(0); \
+    if (advance != 0) { \
+        if ((fightFloorIsUseFightTimerCommand(0) == 1) && (fightTimerCommandIsOver() == 1)) { \
+            advance = 1; \
+            goto haveLabel; \
+        } else if (std103_battleGetResult() == 1) { \
+            advance = 1; \
+            goto haveLabel; \
+        } \
+    } \
+    advance = 0; \
+haveLabel: \
+    if (advance != 0) { \
+        goto doneLabel; \
+    } \
+    _threadSwitch(); \
+checkLabel: \
+    inputFlags = GSinputButtonsChanged(1); \
+    maskedFlags = fn_800F7BC4(1); \
+    maskedFlags &= inputFlags; \
+    if ((maskedFlags & 0x300) == 0) { \
+        goto waitLabel; \
+    } \
+doneLabel:
+
+    void* linkedNpc;
+    u32 inputFlags;
+    u32 maskedFlags;
+    u8 relation;
+    u8 advance;
+    u8 kind;
+
+    relation = fightFloorCheckFightActionFightOutPokemonIrekaeSelect(0, npc, &linkedNpc);
+    if (relation == 1) {
+        msgctrlSetValue(0xD, (s32)PC_PTR32(fightOutPokemonGetNicknamePtr(npc)));
+        winMsgOpen(1, 0x76FB, 1, 0);
+        WAIT_FOR_DIALOG(waitRelationOne, checkRelationOne, haveRelationOne, doneRelationOne);
+        winMsgClose(1);
+        return 0;
+    }
+    if (relation == 2) {
+        fightFloorSetStatus(0, 0, 0x57, 0, (u16)fightOutPokemonGetTokuseiDataId(linkedNpc));
+        msgctrlSetValue(0xD, (s32)PC_PTR32(fightOutPokemonGetNicknamePtr(linkedNpc)));
+        msgctrlSetValue(0xE, (s32)PC_PTR32(fightOutPokemonGetNicknamePtr(npc)));
+        winMsgOpen(1, 0x761F, 1, 0);
+        WAIT_FOR_DIALOG(waitRelationTwo, checkRelationTwo, haveRelationTwo, doneRelationTwo);
+        winMsgClose(1);
+        return 0;
+    }
+    if (warpId == 0) {
+        warpId = fightFloorGetGcHeroFightTrainerPtr(0);
+    }
+    if (warpId == 0) {
+        return 0;
+    }
+    variant = PC_PTR32_IMPLICIT(fightTrainerGetValidFightPokemonPtr(warpId, (u16)variant));
+    if (variant == 0) {
+        return 0;
+    }
+    kind = fightTrainerCheckCanIrekaeFightPokemon(warpId, variant);
+    if (kind == 1) {
+        msgctrlSetValue(0xD, fightPokemonGetNicknamePtr(PC_PTR(variant)));
+        winMsgOpen(1, 0x76FE, 1, 0);
+        WAIT_FOR_DIALOG(waitKindOne, checkKindOne, haveKindOne, doneKindOne);
+        winMsgClose(1);
+        return 0;
+    }
+    if (kind == 2) {
+        msgctrlSetValue(0xD, fightPokemonGetNicknamePtr(PC_PTR(variant)));
+        winMsgOpen(1, 0x76FC, 1, 0);
+        WAIT_FOR_DIALOG(waitKindTwo, checkKindTwo, haveKindTwo, doneKindTwo);
+        winMsgClose(1);
+        return 0;
+    }
+    if (kind == 3) {
+        msgctrlSetValue(0xD, fightPokemonGetNicknamePtr(PC_PTR(variant)));
+        winMsgOpen(1, 0x76FD, 1, 0);
+        WAIT_FOR_DIALOG(waitKindThree, checkKindThree, haveKindThree, doneKindThree);
+        winMsgClose(1);
+        return 0;
+    }
+    if (kind == 0) {
+        return 1;
+    }
+    GSlogWrite((const char*)lbl_80266788, (const char*)lbl_802E4B78);
+#undef WAIT_FOR_DIALOG
+    return 0;
+}
+#endif
+#endif /* !MENU_FIGHT_ONLY */

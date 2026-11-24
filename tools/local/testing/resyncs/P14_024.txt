@@ -1,0 +1,8 @@
+# P14 (sitting 024_20261022_1525): logged resyncs for the second pass (2026-10-29; match ledger, P14 rows).
+# No hand edits, no Wes placements, no per-sitting seeds: settings only, to the end on the first run (p2_P14a):
+#   replay_check.py --replay 1 --window-frameat --cursor-sync all --fadein --fade-lag 1 --fadein-hero-room
+#     --entry-lag-rooms 0x390,0x38F --windows-rooms 0x38F --windows-rooms-unroomed --window-seed-burst 20
+#     --window-seed-keep 1 --window-seed-blink
+#   + the usual --extra-env (DVD dolphin, short model, unrecorded 0) and ORRE_ROLL_SEEDS for all 30 battles
+#   (roll_resync_spec.py --all-battles on replay_3 to replay_10, four battles per PLAYREC_RNGCALL capture, each
+#   playrec.py check'ed: all events identical, 973 flag changes in order; the eight files concatenated).

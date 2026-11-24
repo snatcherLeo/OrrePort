@@ -1,0 +1,3 @@
+#!/bin/sh
+# Blocks committing game data from the disc (tools/local/hooks/check_game_data.py).
+exec python -I "$(git rev-parse --show-toplevel)/tools/local/hooks/check_game_data.py" --staged

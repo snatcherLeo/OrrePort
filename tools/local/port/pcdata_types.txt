@@ -1,0 +1,360 @@
+# Hand-written type information for tools/local/port/pcdata.py (committed; contains no game data, only types).
+# One line per symbol: <symbol> <C type>   e.g.  lbl_80478AC0 f32   or   lbl_80268DC0 u16[]
+# Use it to settle a symbol from build-pc/generated/unsure_data.txt once its type is known (from the code, or from a
+# Dolphin comparison); give the evidence in a comment. pcdata.py then converts it per field instead of copying raw bytes.
+
+# 2026-10-15 (B, boot run 1): the message system pointer. gs_msg.c declares it struct MessageSystem* (= &lbl_804024E8, the
+# relocation at +0); gs_thread.c reads it as u32 (the low half of the pointer: fine under the low-4 GB rule).
+_pMw void*
+
+# 2026-10-15 (A, checked): GX lookup tables the gfx layer reads only as u32 words
+# (gs_gfx_layer_exact_800D76A8.c `((u32*)lbl_80314370)[i]`, gs_gfx_layer_candidate_800D892C.c, gs_gfx_candidate_800D67BC.c).
+lbl_80314350 u32[]
+lbl_80314370 u32[]
+lbl_803143A8 u32[]
+lbl_803143B4 u32[]
+lbl_803143D8 u32[]
+lbl_80314404 u32[]
+lbl_803144F0 u32[]
+# 2026-10-15 (A, checked): GS pool pointers in .sbss, zero at start (real types GSRenderCamera*, GSgfxDLCapture*,
+# GSlight*, GSmaterial*, GSmodel*: e.g. gs_model_anim_exact_800EC4D0.c `extern GSmodel* lbl_8047AB74`). The remaining u32
+# declarations are in code no unit compiles or unused; as raw 4-byte slots an 8-byte pointer store would overwrite the
+# next variable.
+lbl_8047AA6C void*
+_activeCamera void*
+lbl_8047AAD4 void*
+_lightStructList void*
+lbl_8047AB1C void*
+lbl_8047AB74 void*
+
+# 2026-10-15 (A, checked): more GX lookup tables read only as u32 words (gs_gfx_layer_state.c
+# `((u32*)lbl_80314424)[mode]`, gs_gfx_exact_800D9D68.c, gs_gfx_layer_candidate_800D85D4.c).
+lbl_80314424 u32[]
+lbl_80314454 u32[]
+lbl_803144A8 u32[]
+lbl_803144D0 u32[]
+lbl_80314510 u32[]
+lbl_80314530 u32[]
+lbl_8031453C u32[]
+lbl_8031454C u32[]
+lbl_8031456C u32[]
+lbl_8031457C u32[]
+lbl_8031459C u32[]
+lbl_803145A8 u32[]
+lbl_803145D0 u32[]
+lbl_80314610 u32[]
+# 2026-10-15 (A, withdrawn the same evening): lbl_80270350 (16 zero bytes: raw is right) and lbl_8047CA48 (MWCC's
+# int-to-float double 0x4330000080000000, read as f32 only in a dead copy) need no entry.
+# 2026-10-15 (A): pointers in .sbss: GSMtxStackEntry* x3, HSD_DObj*
+lbl_8047AABC void*
+lbl_8047AAC0 void*
+lbl_8047AAC4 void*
+current_dobj void*
+
+# 2026-10-15 (A's float scan, readers checked): tables whose non-zero words all decode as big-endian floats.
+# Swapping as f32[] is per 4-byte word, so it is also right if a word were a u32. Readers: typed f32 / Vec declarations
+# (MusyX volume ramp, gs_colsys axes, PDA menu angles and positions, battle-intro and billboard Vecs, toolentry
+# level / rank tables), ColorTriple copies (gbaCommunication.c), GSmodelSetScale vectors (wazaSequenceEntry.c,
+# sequence.c), and the PDA people tables copied in 0x18-byte float records (pda_range_80037158.c). Same bug class as
+# GSmtx's identity matrix (A, 918a4b272): raw big-endian 1.0 read natively is 4.6e-41.
+lbl_8036984C f32[]
+lbl_80272020 f32[]
+lbl_802E5288 f32[]
+lbl_802E52A8 f32[]
+lbl_802E52B8 f32[]
+lbl_8027932C f32[]
+lbl_80271F38 f32[]
+lbl_8027306C f32[]
+lbl_8039A648 f32[]
+lbl_8039A664 f32[]
+lbl_8026F5C0 f32[]
+lbl_802E51C8 f32[]
+# 2026-10-21 (Count-Sheep merge): their symbols split our 0xC0-byte lbl_802E51C8 into two 0x60-byte people tables;
+# the second half is the same float records (pda_candidate_8003842C.cpp copies both in 0x18-byte rows).
+lbl_802E5228 f32[]
+lbl_803725BC f32[]
+lbl_803727BC f32[]
+
+# 2026-10-15 (B's boot run 35): tables of {number, function} records that the code walks as native structs. As raw
+# big-endian bytes the PC read the handler at +8 of a 16-byte native record (crash in fsysUpdateSlot). Record form:
+# pcdata.py converts each GameCube record field by field into a native struct array.
+# fsys slot status dispatch: FSYSDispatchEntry {s32 status; handler} (fsys_system_8017AAA4.c), 33 records ending {-1, 0}
+lbl_8036C3E0 {s32, void*}[]
+# 2026-10-18 (snatcherLeo's "a battle camera angle I've never seen"): the battle camera's FOV patterns, 8 short + 13 long
+# records of 0x4C bytes: f32 duration, then two WazaSequenceCameraFovPattern {s32 mode, s32 durationMode, f32
+# thresholds[4], u32 initialFlags, u32 flags, s32 timingMode} (wazaSequenceCamera.c, _wazaSequenceCameraDoFOV reads
+# getPattern() + 4 and walks two of them). As {f32, u8 x 72} the 72 bytes stayed big-endian, so mode 3 read as 0x03000000
+# and every pattern fell to the wrong switch case (verified: the generated table and the reader; the effect on screen likely)
+lbl_80371F60 {f32, s32, s32, f32, f32, f32, f32, u32, u32, s32, s32, s32, f32, f32, f32, f32, u32, u32, s32}[]
+lbl_803721C0 {f32, s32, s32, f32, f32, f32, f32, u32, u32, s32, s32, s32, f32, f32, f32, f32, u32, u32, s32}[]
+# floor / fsys resource-type callbacks: FSYSGroup {u32, u32 group id, alloc, done} (include/game/fsys/fsys_entry.h)
+lbl_8036C2A0 {u32, u32, void*, void*}[]
+# 2026-10-15 night: the battle move-script command table, one handler per opcode (255 entries), called as
+# `lbl_8027A00C[*lbl_8047B610]()` (fight_range_80211A00.c; fight_range_exact_8022FE20.c has a PC branch indexing it
+# the same way). Declared u8[] and void*[] (conflict): a native function-pointer array.
+lbl_8027A00C void*[]
+# 2026-10-15 night: pointer tables the battle code reads as u32 words and turns into pointers with PC_PTR:
+# native 32-bit slots holding the address (low-4 GB layout). battle_main.c `data[0] = lbl_80279B78[0]` (scene
+# callbacks); fight_range_80211A00.c `PC_PTR(lbl_80399F58[v])` (message / script targets).
+lbl_80279B78 u32[]
+lbl_80399F58 u32[]
+# 2026-10-15 night: the per-move handler table, 358 records of five function addresses (0x14 bytes), read as
+# u32 words in waza.c (`*(u32*)(entry + 0x10)` and similar) and called through PC_PTR: native 32-bit slots.
+waza_func_data u32[]
+# 2026-10-15 night: pointer tables left raw because of void*[] / u32[] / char*[] declaration conflicts:
+# - read as u32 words (then PC_PTR): cry data addresses (pokemonNakigoeDataBiosGetDataAddress), field_range's 3 words;
+pokemon_nakigoe_data u32[]
+lbl_802727C8 u32[]
+# - read as char* arrays (native pointers): menu_range_8007109C.c's string list, main_tail.c's error-name list.
+lbl_802EE608 void*[]
+lbl_802E2888 void*[]
+# 2026-10-15 night: executable tables read only through struct casts in pokemon_data.c (so no wide declaration
+# proved their width); the override names the numbers-only struct and pcdata converts per field.
+# experience growth curves: 8 x PokemonGrowData (101 u32 each) -- battle EXP and level-up
+pokemon_grow_data PokemonGrowData[]
+# abilities: 78 x PokemonTokuseiData {u8 x4, u32 name, u32 doc}
+pokemon_tokusei_data PokemonTokuseiData[]
+# 2026-10-15 night: tables the code reads only through casts to numbers-only structs (found by matching
+# `(Struct*)lbl_x` casts against B's unsure list); converted per field by the struct's layout.
+lbl_80266DB0 TitleBgmTable[]
+lbl_80266E90 NpcPokemonEvent[]
+lbl_802676B4 Tbl14[]
+# lbl_80267EA8: corrected 2026-10-18 (datawidth.py triage), see the "read at another width" block at the end: only its
+# first 0x28 bytes are {open, close} u16 pairs
+lbl_80267F68 Entry_80070318[]
+lbl_80268234 MenuIconEntry[]
+lbl_8026864C MenuDisplayEntry[]
+lbl_80268AA8 MenuExDiscLoadData[]
+lbl_802727B8 GSFieldVec[]
+lbl_802729C0 HeroMoveFloorTable[]
+lbl_80272A10 HeroMoveThemeTable[]
+lbl_80273060 BillboardVec[]
+lbl_802757F0 BattleCameraVec[]
+lbl_802E4E10 MenuPokemonSlotPos[]
+lbl_802E4F68 ShopPositionEntry[]
+lbl_80375D30 FightActionData[]
+# 2026-10-17: the end-of-battle action table (kinds 0x0E-0x11, fn_801EFA08), the sister of lbl_80375D30. Left
+# raw, the "Syuuryou" action (kind 0x0F) never matched: Willie's defeat line and the prize money were skipped
+lbl_80375D80 FightActionData[]
+lbl_80478838 GsTaskFlagCursor[]
+# 2026-10-15 night: zero-filled work records declared u8[N] at their GameCube size but used through structs with
+# native pointers (bigger on the PC): naming the struct makes pcdata reserve twice the size (its unsure-zero rule).
+# Fade camera work: 0x20 on the GameCube, 40 bytes on the PC (two texture pointers).
+lbl_80467030 FadeCameraWork
+# Fade fluid work: 0x40 on the GameCube, 88 bytes on the PC (five buffer pointers).
+_fadeFluidWork FadeFluidWork
+# GBA link status-menu work: 72 bytes on the GameCube, 80 needed on the PC (bssfit.py)
+lbl_803FB380 PokemonStatusMenuWork
+# purification (pokemon_relive.c): four u16 ids passed as (u16*) to loadSequence / fn_8025DE54
+lbl_8039A6A8 u16[]
+# 2026-10-29 (P11's second pass): the other purification table, two {group, index} u16 pairs that reliveMain
+# passes as (u16*)&lbl_80478DA8 to loadSequence / effectPlayWaza (the ceremony's sequence). The C declares it u32, so it
+# was generated as two native u32 words and read back as swapped u16 halves ({4, 77} for {77, 4}): loadSequence
+# failed and the PC never ran the Relic Stone's ceremony (verified: "[relive] mode 0: valid 1, sequence loaded 0").
+lbl_80478DA8 u16[]
+# 2026-10-29 (P11's second pass, the same class): its sibling, one {group, index} u16 pair passed as
+# (u16*)&lbl_80478DB0 to loadSequence / effectPlayWaza after the purification's level-up, forget-move screen,
+# evolution and nickname steps (the Pokémon's "look" sequence). Generated as one u32 it read back as {4, 122} for
+# {122, 4}: the sequence never loaded, so the PC skipped its fade-in and wait and showed the next message 123 frames
+# early (console: fade-in at +876, message at +995 after the forget-move screen; PC: no fade-in, message at +869)
+lbl_80478DB0 u16[]
+# 2026-10-15 night: raw byte arrays the code reads only through scalar casts ((u16*)lbl_x, *(s32*)lbl_x):
+lbl_80267680 u32[]
+lbl_8026768C u32[]
+lbl_802EDE58 u32[]
+# fight_waza_hit_kakuritu_data: corrected 2026-10-18 (datawidth.py triage), see the "read at another width" block at the end: it is
+# {numerator, denominator} byte pairs, not u16
+lbl_80478858 s32
+lbl_8047885C s32
+lbl_80478870 u16[]
+# GBA character conversion tables (gs_msg.c msgGBAFromGSchar / msgGScharFromGBA)
+lbl_80271300 u16[]
+lbl_80271500 u16[]
+lbl_803752A0 u16[]	# battle preloader: 44 u16 (record index, wanted id) pairs read through (u16*) casts at battle_main.c:528-529 (B handover 38: index 0x0040 read natively as 0x4000 -> archive id not found, assertion at ~420 frames)
+
+# 2026-10-16 (A, for Main to check): the up axis (0, 1, 0), three floats. Readers: win_sprite.c winSpriteDrawTexture
+# (the rotation axis for fn_800E0718) and camera.c:667 (`const GSSceneVec3`). As raw big-endian bytes the PC read y as a
+# denormal, the axis normalised to NaN and every textured window sprite got NaN corners (the title's PRESS START, the
+# copyright line and the Wes / Rui / Pokemon art never drew; boot log of the quad corners, 2026-10-16).
+lbl_8031554C f32[]
+
+# 2026-10-16 (after A's lbl_8031554C find): 12-byte vectors the code declares as Vec3 (and u8[] elsewhere), emitted
+# as raw big-endian bytes before; read as floats they would be denormals / NaN. No relocations (unsure_data.txt reason:
+# conflicting declarations only).
+lbl_802758A0 f32[]
+lbl_8035B430 f32[]
+lbl_8035B43C f32[]
+
+# 2026-10-16 (A, for Main to check; same bug as lbl_8031554C): more (0, 1, 0) up vectors kept as raw big-endian bytes,
+# each passed as the `up` argument of GScameraLookAt (their target vectors beside them are all zero, so harmless either
+# way). Read natively the up vector is (0, denormal, 0), so the view matrix degenerates and those cameras' 3D views
+# would draw nothing (likely; not yet seen on the PC). Readers: P*DA menus (pda_range_80037158.c 5433 / 5962 / 6216 /
+# 6488, pda_exact_80047CC0.c 328, pda_exact_800484A4.c 871), a 3D menu camera (gs_range_80109C88.c 1319, declared Vec3
+# there) and the move viewer's camera (wazaViewer.c 1634; 16 bytes, the fourth word zero).
+lbl_802E53F4 f32[]
+lbl_802E540C f32[]
+lbl_802E5424 f32[]
+lbl_802E543C f32[]
+lbl_803725A0 f32[]
+
+# 2026-10-17 (A, for Main to check): no relocations (pcdata.py `norelocs`). dtk's split relocated words in these tables
+# that are numbers, not pointers: each targets the middle of a function (__OSDoHotReset+64, fn_8002FC58+936, ...), 68
+# in all. On the PC the startup relocation overwrote them with PC addresses:
+#  - _menu_seq: the menu-sequence commands (12-byte records; 38 command headers like 0x80030000 = relative move,
+#    duration 0). The top menu's cards lost their -200 / +200 start offset and slid into each other (verified by log;
+#    Dolphin shows them side by side);
+#  - lbl_8027A500 / lbl_802C0CB0: the two message fonts' data (GSmsgFontOpen in main.c): 17 + 10 words of glyph data;
+#  - lbl_803156E0: a menu texture (GStextureLoad in menu.c): 2 words of texels.
+# (lbl_803632F8, a 0x2C debug-menu record with one such relocation, is left as is: not checked.)
+_menu_seq norelocs
+lbl_8027A500 norelocs
+lbl_802C0CB0 norelocs
+lbl_803156E0 norelocs
+# 2026-10-17 (A): lbl_803632F8, the fifth table with a relocation into a function's middle (_dbgMenuGetItemNo+184 at
+# +0x14): 44 bytes of small signed values with the word 0x80133F24 inside; no code names the symbol. A number, not a
+# pointer (likely).
+lbl_803632F8 norelocs
+# 2026-10-17: the move-animation resource tables sequence.c reads natively (fn_801DDEE4 and its sibling), left
+# raw because data_8036E150.c declares them as bytes and sequence.c's structs nest arrays. Raw, the move effect file
+# came out byte-reversed (0x000003CC -> 0xCC030000: "(null).fsys", Willie's battle stopped at "ESPEON used CONFUSION!").
+# SequenceKindEntry {key; 3 x {group, resource}}: 356 x 28 bytes
+lbl_8036E150 {u32, u32, u32, u32, u32, u32, u32}[]
+# SequenceVariantEntry {group; variant; 3 x {group, resource}}: 42 x 32 bytes
+lbl_80373210 {u32, u32, u32, u32, u32, u32, u32, u32}[]
+# per-model overrides read through byte offsets: +0 variant (u8), +2 model id (u16), +4 group (u16), +8 resource group,
+# +0x0C resource id (u32); +1 and +6 unread (u8 / u16, guess): 367 x 16 bytes
+lbl_80373750 {u8, u8, u16, u16, u16, u32, u32}[]
+
+# 2026-10-17 (snatcherLeo's playtest: opening ITEMS in Willie's battle crashed): the summary / item menu page table and
+# its action lists keep the GameCube layout on the PC, because four views read them at GameCube offsets (stride 0x4C;
+# gs_event_exec.c and menuPokemon.c by byte offset, gs_pokemon_summary*.c through 4-byte cells). Page entry, 0x4C:
+# +0 colour bytes R, G, B, 0; +4 data source (s32, -1 default); +8, +0x0C, +0x10 ids; +0x14 page draw function and
+# +0x18 item draw handler (p32); +0x1C cursor / message id; +0x20 title id; then five {action list (p32), count} pairs.
+lbl_80266918 {u8, u8, u8, u8, u32, u32, u32, u32, p32, p32, u32, u32, p32, u32, p32, u32, u32, u32, u32, u32, u32, u32}[]
+# 2026-10-17 (the pause-menu route: Umbreon's summary crashed on a type icon): the type table, 18 x 0x2C:
+# {u8 category, u8, u16 icon sprite id, u32 name message id, u16 matchup x 18} (e.g. 01 00 0056 00000BB9 003F ...),
+# read natively by every reader (gs_colsys.c: fn_8010C46C icon, fn_8010C4A0 category, zokuseiDataBiosGetName name, fn_8010C508
+# the matchup the battle uses); left raw big-endian, the icon id 0x0056 read as 0x5600 and each matchup byte-swapped
+lbl_8035B500 {u8, u8, u16, u32, u16, u16, u16, u16, u16, u16, u16, u16, u16, u16, u16, u16, u16, u16, u16, u16, u16, u16}[]
+# 2026-10-17 (snatcherLeo's playtest: "Use on which POKéMON?" showed no Pokémon): the party menu's slot layout, two layouts
+# x 6 slots x {menu id, item id, x, y}, all s16, read natively in menuPokemon.c (`*(s16*)(slot + n)`, the 0x63 setup
+# callback); left raw big-endian, slot 0's menu id 0x0064 read as 0x6400 and no slot window opened
+lbl_802E4E58 s16[]
+# action lists, 0x0C each: {label id, callback (p32), flags (u16, read at +8 as SummaryMenuItem.flags), pad (u16)}
+lbl_802667B0 {u32, p32, u16, u16}[]
+lbl_802667EC {u32, p32, u16, u16}[]
+lbl_80266810 {u32, p32, u16, u16}[]
+lbl_80266834 {u32, p32, u16, u16}[]
+lbl_80266864 {u32, p32, u16, u16}[]
+lbl_8026687C {u32, p32, u16, u16}[]
+lbl_802668AC {u32, p32, u16, u16}[]
+lbl_802668C4 {u32, p32, u16, u16}[]
+lbl_802668DC {u32, p32, u16, u16}[]
+lbl_802668E8 {u32, p32, u16, u16}[]
+lbl_80266900 {u32, p32, u16, u16}[]
+lbl_8026690C {u32, p32, u16, u16}[]
+
+# ---- 2026-10-18 (datawidth.py triage, the "read at another width" family; golden-slice M33): raw tables the code reads
+# at a wider width than pcdata.py could prove, so they stayed raw big-endian (or were converted at the wrong width).
+# Each line: what the code reads, where, and what went wrong on the PC. `bytes` = read byte by byte: keep the disc bytes.
+# Battle: the countdown lengths of timed conditions, 10 x {s32 min, s32 max} (kaisuuBiosGetMin / Max, kaisuuGetKaisuu:
+# sleep 2-5, Reflect / weather 5 turns, ...); raw, a length of 5 read as 0x05000000: fixed lengths came out 0 and ranges
+# random 0-255 (the (s8) store keeps the low byte)
+kaisuu_data s32[]
+# Battle: accuracy / evasion stage multipliers, 13 x {u8 numerator, u8 denominator} (fightWazaHitKakurituDataBiosGetKake
+# reads ptr[0], ...GetWaru ptr[1], through a u16* returned by ...GetPtr). The earlier `u16[]` swapped each pair on the PC:
+# every changed stage inverted (-6 gave 100/33 instead of 33/100); the neutral stage (1/1) was unaffected
+fight_waza_hit_kakuritu_data bytes
+# Battle: effort (EV) gain rows, 6 x {u16 effort status, u16 species status, u16 value} (PokemonEffortTable, copied
+# whole in pokemon_range_8011F5FC.c and read as u16); raw, every id read byte-swapped (dtk's hint says 4byte: the copy)
+lbl_80272948 u16[]
+# Battle: the abilities checked when a Pokemon is sent out, u16[11] + pad (struct AbilityList, copied in u32 pieces in
+# fight_range_80211A00.c / fight_range_exact_8021D9C0.c and read as u16); raw, 0x0016 read as 0x1600: none matched
+lbl_80279FE0 u16[]
+# Pickup (ability 0x35): 10 x {u16 item, u16 cumulative chance} + 4 zero bytes (MonohiroiTable, pokemon_range_8011F77C.c);
+# raw, every chance read as n * 256 (always the first item, byte-swapped)
+lbl_8027296C u16[]
+# Battle messages: the text-speed percentages {0, 10, 25, 50, 75, 100, 125, 150, 175, 200}, 10 bytes + pad, copied into a
+# byte buffer in u32 / u16 pieces and read by byte (gs_task.c dbgMenuFightGetMsgSpeedToFrame, called by battle_main.c);
+# converted as u32 words, the default setting 5 read 125 instead of 100: battle message waits 25% longer
+lbl_80266678 bytes
+# Collision: the rotation axis order, u32[3] (ColAxisOrder, gs_colsys.c, copied then used as an index into the axis
+# table); raw, index 2 read as 0x02000000: an out-of-range axis for every rotated collision triangle
+lbl_80272044 u32[]
+# NPC party events, 2 x {u16 kind; u16 ids[9]} (NpcPartyEvent, gs_npc_event.c fn_800307A8 reads them as u16); raw,
+# kind 1 read as 0x0100: no NPC id ever matched
+lbl_80266F68 u16[]
+# The player's foot-part indices, s32[2][4] (HeroMovePartTable, hero_move.c, copied whole); raw, part 1 read as 0x01000000
+lbl_80272A38 s32[]
+# Item parameter conversion, 32 x {u32 field, u32 source offset, u8 mask, 3 pad, s32 type} (ItemParamConvertTable,
+# people_data.c, copied whole and read natively); raw, every offset and type byte-swapped
+lbl_802730E0 {u32, u32, u8, u8, u8, u8, s32}[]
+# Menus (menu_middle.c): 10 {open, close} u16 sequence pairs, then u32 message-id lists from +0x28 (the help-text lists
+# lbl_8047A5F8 points at: menuData + 0x28 / 0x64 / 0x78 / 0x90, read as u32). The earlier Sequence_80070318[] (all u16
+# pairs) swapped the halves of every message id
+lbl_80267EA8 {u16*20, u32*38}[]
+# Menus (menu_middle.c fn_8006E18C): 6 x {u16 item id, u8 threshold, u8 pad} (Entry_8006E18C); converted as u16, the
+# threshold byte read the wrong half
+lbl_80268574 {u16, u8, u8}[]
+# Menu callbacks (menuCB): item id lists s32[3][30] (menuCB_80055E38.c, compared with a sprite's item id), per-state
+# counts s32[7] (fn_80057538: `<= 0` returns early), slot info {s32 item, kind, slot}[32] (MenuCBSlotInfo), tween frames
+# {s16 x, y, w, h; s32 alpha}[2] (MenuCBTweenFrame) and the two battle-start order tables u32[6][6]; all raw big-endian,
+# every value read byte-swapped (a count of 0xD3 read as 0xD3000000, negative)
+lbl_80267518 s32[]
+lbl_80267698 s32[]
+lbl_80267398 s32[]
+lbl_80267338 {s16, s16, s16, s16, s32}[]
+lbl_80267AF8 u32[]
+lbl_80267B88 u32[]
+# Battle-start menu: 72 x {u16 command, u16 slot} (menuCB_range_80062948.c fn_800688C4_GetEntrySlot; declared
+# u16[][2], which pcdata.py's declaration scan does not read); raw, no command ever matched
+lbl_802EDA20 u16[]
+# Unown: the 28 forms' menu ids {u32 normal, u32 shiny} (ColosseumUnownMenuIds, menuColosseumBattle) and model ids
+# {u16, u16} (gs_range_80109C88.c, declared u16[][2]); raw, every id byte-swapped
+lbl_802676F0 u32[]
+lbl_8035B478 u16[]
+# Battle: 8 x 0x18 pair rows {u8 result function, u8, u16 first link; 2 x {u8 value mode, u8 scale mode, s16 numerator,
+# s16 denominator, u16 min, u16 max}} (ColosseumEventPairRow, fight_out_pokemon_exact_802096E8.c fightJoukenDataBiosGetValueWaru and its
+# neighbours; likely the move-effect value rows: fractions and limits, a guess); raw, every s16 / u16 byte-swapped
+lbl_80375A08 {u8, u8, u16, u8, u8, s16, s16, u16, u16, u8, u8, s16, s16, u16, u16}[]
+# Name entry: 2 x {u8 r, g, b, pad; u32 X-button message; u32 letter-list messages[4]} (NameEntryModeEntry,
+# menuNameEntry.c and its split units), then 16 bytes kept as raw bytes, because menuNameEntry_exact_80028FBC.c already
+# reads them big-endian (DISC_S32, four s32 at +0x30); raw, every message id byte-swapped
+lbl_80266E18 {u8*4, u32*5, u8*4, u32*5, u8*16}[]
+# P*DA: 0x12C bytes of 4-byte fields (PdaOrbitPoint {f32 angle, ..., alpha}, PdaCryTrail {u32 voice, f32, s32, ...});
+# pcdata.py's automatic PdaOrbitPoint conversion failed (0x12C is not a multiple of 0x24), so it stayed raw: floats and
+# ids read byte-swapped. u32 swaps every 4-byte field exactly, float or integer
+lbl_802E52C8 u32[]
+# Card-e (e-Reader) menus: the matrix item ids u16[3][2][36] then sprite ids s32[2][8] (MenuCardEMatrixTable,
+# menu_carde_matrix.c), and the 3 x 3 grid {u16 tiles[9], u16; 9 x {u32 model, s16 select, s16 reset}; s16 cursor[9],
+# u16} (CardGridData, cardesavedata.c; its CardEGridTable view is unused); raw, every id byte-swapped
+lbl_80268B88 {u16*216, s32*16}[]
+lbl_8026F488 {u16*10, u32, s16, s16, u32, s16, s16, u32, s16, s16, u32, s16, s16, u32, s16, s16, u32, s16, s16, u32, s16, s16, u32, s16, s16, u32, s16, s16, s16*9, u16}[]
+# Developer tools: the move viewer's camera presets and forward vector (27 floats, then its message strings as bytes;
+# wazaViewer.c) and etctool's sequence data {u32 object ids[13]; 4 vectors} + 4 zero bytes (EtcToolSequenceData)
+lbl_80279338 {u32*27, u8*204}[]
+lbl_80279A00 u32[]
+
+# 2026-10-18 (upstream merge 4e36aa0de): the debug menu's float (dbgMenu.c reads `*(f32*)lbl_80478AC4`; value
+# 0x7F800000 = +infinity). Generated as f32 before the merge; upstream's new sdata_80478AC0.c declares it u32, which
+# would leave it raw big-endian bytes on the PC.
+lbl_80478AC4 f32
+
+# 2026-10-21 (battle camera): the move camera's pattern tables, 8 and 13 records of 0x4C bytes
+# (wazaSequenceCameraGetPattern__Fbi: f32 duration + WazaSequenceCameraFovPattern and friends, every field a 4-byte
+# int or float; wazaSequenceCamera.c reads them natively, no DISC accessors). Left raw, every duration read as garbage
+# on the PC, the weighted pick fell through to a uniform random pattern (one extra draw), and the random camera shots
+# came out with other angles and FOVs (snatcherLeo: "that weird side profile"; P01's Willie battle, shot 3: FOV 17.4 on the PC
+# vs 69.6 in Dolphin from the same random state, verified).
+lbl_80371F60 u32[]
+lbl_803721C0 u32[]
+
+# 2026-10-25 (the unsure-table audit after the battle item list): the battle-mode menus' window lists, passed to
+# menuTaisenSetSequence (menu_middle.c), which walks them as native MenuMiddleEntry {u16 id; u8 pad[2]; u32 kind}
+# records. Left raw, kind 3 read as 0x03000000 and indexed lbl_80267EA8 far out of bounds (likely, not seen: no replay
+# has reached battle mode). lbl_80267FE8 holds 17 such records (the call passes 0x11), then 276 bytes no PC code reads,
+# kept as bytes.
+lbl_80267FE8 {u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u16, u8, u8, u32, u8*276}[]
+lbl_80268184 {u16, u8, u8, u32}[]
+lbl_802681B4 {u16, u8, u8, u32}[]
+lbl_8026860C {u16, u8, u8, u32}[]

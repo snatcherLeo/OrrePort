@@ -1,0 +1,1628 @@
+/**
+ * @file wazaSequenceEntry.c
+ * @brief wazaSequenceEntry: per-entry (particle/model/camera/sound) dispatchers
+ * for a waza sequence.
+ *
+ * Split from the former game/battle/battle_waza.c CodeCandidate bucket
+ * (0x801D1470-0x801DE698); see config/GC6E01/splits.txt for the exact
+ * address range of this translation unit. Shared typedefs and cross-TU
+ * forward declarations live in include/game/battle/battle_waza_types.h.
+ */
+
+#include "game/battle/battle_waza_types.h"
+#include "pc/disc_types.h" /* DISC_SLOT: scene_data lists are disc slots (floor-resources.md) */
+#include "game/gs_bound_offsets.h" /* the model box's minimum / maximum offsets (larger on the PC) */
+
+#if !defined(WAZA_SEQUENCE_ENTRY_UPDATE_START_ONLY) && \
+    !defined(WAZA_SEQUENCE_EFFECT_ENTRY_START_ONLY) && \
+    !defined(WAZA_SEQUENCE_PARTICLE_ENTRY_START_ONLY) && \
+    !defined(WAZA_SEQUENCE_MODEL_ENTRY_START_ONLY) && \
+    !defined(WAZA_SEQUENCE_PARTICLE_TO_SCALE_ONLY) && \
+    !defined(WAZA_SEQUENCE_FN_801D97F0_ONLY) && \
+    !defined(WAZA_SEQUENCE_POKEMON_MOTION_START_ONLY)
+
+/**
+ * wazaSequenceEntryStop / wazaSequenceEntryStop - Stop a single waza entry.
+ * Address: 0x801D7E58 | Size: 0x374
+ * Proposed name from symbols: wazaSequenceEntryStop.
+ */
+u8 wazaSequenceEntryStop(void* entry, BOOL immediate) {
+#ifndef TARGET_PC /* PC: canonical prototypes in pc/prototypes.h */
+    extern void GSmodelGetPosition(void* model, void* out);
+    extern void GSmodelGetRotation(void* model, void* out);
+    extern void GSvecSub(void* dst, void* lhs, void* rhs);
+    extern void GSvecCopy(void* dst, void* src);
+    extern void GSeffectStop(u32 effectId);
+    extern void soundKill(u32 id);
+    extern void GSmodelStopTexAnimation(void* model);
+#endif
+    extern void GSmodelGetScale(void* model, void* out);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetPosition(void* model, void* position);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetRotation(void* model, void* rotation);
+#endif
+    extern void GSmodelSetScale(void* model, void* scale);
+    extern void* GSmodelGetBound(void* model);
+    extern void GSmodelDetachFromGSpart(void* model, s32 applyTransform);
+    extern void GSmodelSetModulationColor(void* model, void* color);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSlerpGetLinearInterpolationVector(void* dst, void* src,
+                                                   void* target, f32 t);
+#endif
+    extern void modelRemoveCenterNull(void* model);
+    extern void* GSeffectGetData(u32 arg);
+    /* RULE-EXCEPTION(title-path): shared log/vector/scalar pool stand-ins;
+     * see docs/RULE_EXCEPTIONS.md. */
+    extern const char lbl_80279588[];
+    extern u8 lbl_803725B0[];
+    extern u8 lbl_803725BC[];
+    extern f32 lbl_8047E348;
+    extern s32 lbl_8047B408;
+    u8* node = entry;
+    void* ownerModel;
+
+    if (*(s32*)(node + 0x6C) == 2) {
+        return TRUE;
+    }
+    if (!(u8)immediate && *(s32*)(node + 0x6C) != 1) {
+        return FALSE;
+    }
+
+    ownerModel = PTR32_AT_T(void, PTR32_AT_T(u8, PTR32_AT_T(u8, node, 0xB0), 0x3C), 0x24);
+    switch (*(s32*)(node + 0x04)) {
+    case 0:
+    case 1:
+    case 6:
+        break;
+
+    case 2: {
+        void* model = PTR32_AT_T(void, node, 0xA4);
+
+        if (model != NULL) {
+            GSmodelStopAnimation(model);
+            GSmodelStopTexAnimation(model);
+            GSmodelSetVisibility(model, 0);
+
+            if (*(s32*)(node + 0x94) != 0) {
+                f32 position[3];
+                f32 rotation[3];
+                f32 scale[3];
+                f32 ownerPosition[3];
+                f32 boundCenter[3];
+
+                GSmodelGetPosition(model, position);
+                GSmodelGetRotation(model, rotation);
+                GSmodelGetScale(model, scale);
+                GSmodelGetPosition(ownerModel, ownerPosition);
+                GSvecSub(ownerPosition, ownerPosition, position);
+                if (*(s32*)(node + 0xA0) != 0) {
+                    GSmodelDetachFromGSpart(ownerModel, 0);
+                }
+                GSmodelSetPosition(ownerModel, position);
+                GSmodelSetRotation(ownerModel, rotation);
+                GSmodelSetScale(ownerModel, lbl_803725BC);
+                if ((*(s32*)(node + 0x9C) & 0x10) == 0x10) {
+                    void* bound = GSmodelGetBound(ownerModel);
+
+                    GSlerpGetLinearInterpolationVector(
+                        boundCenter, (u8*)bound + GS_BOUND_OFF_MIN, (u8*)bound + GS_BOUND_OFF_MAX,
+                        lbl_8047E348);
+                    GSvecSub(position, position, boundCenter);
+                    GSmodelSetPosition(ownerModel, position);
+                    GSmodelRemoveNull(ownerModel);
+                }
+                if ((*(s32*)(node + 0x9C) & 8) == 8) {
+                    GSmodelAddNull(ownerModel, (GSvec*)ownerPosition, NULL, NULL);
+                    GSvecCopy(PTR32_AT_T(u8, PTR32_AT_T(u8, node, 0xB0), 0x3C) + 0x5C,
+                              ownerPosition);
+                }
+            } else {
+                if (*(s32*)(node + 0xA0) != 0) {
+                    GSmodelDetachFromGSpart(model, 0);
+                    if ((*(s32*)(node + 0x1C) & 1) != 1 &&
+                        *(s32*)(node + 0x20) == 0x10) {
+                        modelRemoveCenterNull(ownerModel);
+                    }
+                }
+            }
+
+            GSmodelSetPosition(model, lbl_803725B0);
+            GSmodelSetRotation(model, lbl_803725B0);
+            GSmodelSetScale(model, lbl_803725BC);
+        }
+        break;
+    }
+
+    case 3:
+        if (*(s32*)(node + 0x90) != 0 &&
+            (*(s32*)(node + 0x1C) & 1) != 1 &&
+            *(s32*)(node + 0x20) == 0x10) {
+            modelRemoveCenterNull(ownerModel);
+        }
+        break;
+
+    case 4:
+        if (*(s32*)(node + 0x78) != 0) {
+            switch (*(s32*)(node + 0x88)) {
+            case 6: {
+                u8* effect = GSeffectGetData(*(u32*)(node + 0x78));
+
+                if (*(s32*)(effect + 0xA8) != 0) {
+                    f32 position[3];
+
+                    GSmodelGetPosition(ownerModel, position);
+                    GSvecSub(position, position, effect + 0x48);
+                    GSmodelSetPosition(ownerModel, position);
+                }
+                break;
+            }
+            case 0: {
+                u8* effect = GSeffectGetData(*(u32*)(node + 0x78));
+
+                if (*(u8*)(effect + 0x4D) != 0) {
+                    GSmodelSetModulationColor(ownerModel, effect + 0x44);
+                }
+                break;
+            }
+            }
+        }
+        GSeffectStop(*(u32*)(node + 0x78));
+        break;
+
+    case 5:
+        if ((*(s32*)(node + 0x7C) & 1) == 1) {
+            lbl_8047B408 = 0;
+        }
+        soundKill(*(u32*)(node + 0x78));
+        break;
+
+    default:
+        GSlogWrite(lbl_80279588);
+        *(s32*)(node + 0x6C) = -1;
+        return FALSE;
+    }
+
+    *(s32*)(node + 0x6C) = 2;
+    return TRUE;
+}
+
+#endif
+
+#if !defined(WAZA_SEQUENCE_ENTRY_STOP_ONLY)
+#if !defined(WAZA_SEQUENCE_EFFECT_ENTRY_START_ONLY) && \
+    !defined(WAZA_SEQUENCE_PARTICLE_ENTRY_START_ONLY) && \
+    !defined(WAZA_SEQUENCE_MODEL_ENTRY_START_ONLY) && \
+    !defined(WAZA_SEQUENCE_PARTICLE_TO_SCALE_ONLY) && \
+    !defined(WAZA_SEQUENCE_FN_801D97F0_ONLY) && \
+    !defined(WAZA_SEQUENCE_POKEMON_MOTION_START_ONLY)
+
+/* RULE-EXCEPTION(title-path): preserve timing-address temporaries;
+ * see docs/RULE_EXCEPTIONS.md. */
+#pragma push
+#pragma opt_dead_assignments off
+
+/* RULE-EXCEPTION(title-path): single-use sound-status inline helper;
+ * see docs/RULE_EXCEPTIONS.md. */
+static inline u8 wazaEntrySoundRunning(u32 id) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 GSsndGetStatus(u32 id);
+#endif
+    s32 status = GSsndGetStatus(id);
+#ifdef TARGET_PC
+    {
+        /* ORRE_SNDWAIT_LOG=1 (2026-10-25; observes only): a move sequence's sound entry, whenever the status it
+         * reads changes: "[sndwait] retrace,id,status". P01's Folly battle: Uproar's sequence ended a frame before the
+         * console's although its sound stopped in the same frame */
+        static int enabled = -1;
+        static u32 last_id = 0xFFFFFFFFu;
+        static s32 last_status = -99;
+        if (enabled < 0) {
+            extern char* getenv(const char*);
+            const char* env = getenv("ORRE_SNDWAIT_LOG");
+            enabled = env != NULL && *env != '\0' && *env != '0';
+        }
+        if (enabled && (id != last_id || status != last_status)) {
+            extern void OSReport(const char*, ...);
+            extern u32 VIGetRetraceCount(void);
+            OSReport("[sndwait] %u,%u,%d\n", (unsigned)VIGetRetraceCount(), (unsigned)id, (int)status);
+            last_id = id;
+            last_status = status;
+        }
+    }
+#endif
+    return status == 2 || status == 3;
+}
+
+/**
+ * wazaSequenceEntryUpdate / wazaSequenceEntryUpdate - Update a single waza entry.
+ * Address: 0x801D81CC | Size: 0x328
+ * Proposed name from symbols: wazaSequenceEntryUpdate.
+ */
+u8 wazaSequenceEntryUpdate(void* entry, s32 elapsed) {
+    extern u8 GSmodelHasAnimationEnded(void* model);
+    extern u8 GSmodelHasTexAnimationEnded(void* model);
+    extern s32 fn_80118DA8(void* ptr);
+    extern u32 fn_80118D84(void* obj);
+    extern u8 GSthreadIsRunning(u32 task);
+    extern BOOL GSeffectIsRunning(u32 effectId);
+    extern void* GSeffectGetData(u32 arg);
+    extern u32 filterIsHolding(void* ptr);
+    /* RULE-EXCEPTION(title-path): shared log-pool stand-in, nodeadstore
+     * compilation, and kind reused for texture comparison allocation;
+     * see docs/RULE_EXCEPTIONS.md. */
+    extern const char lbl_802795B4[];
+    extern s32 lbl_8047B408;
+    u8 done;
+    u8* node = entry;
+    u32 kind;
+
+    *(s32*)(node + 0x74) += elapsed;
+    kind = *(u32*)(node + 0x04);
+
+    switch (kind) {
+    case 2: {
+        void* model = PTR32_AT_T(void, node, 0xA4);
+
+        if (model == NULL) {
+            break;
+        }
+
+        if (*(s32*)(node + 0x88) < 0) {
+            done = TRUE;
+        } else {
+            switch (*(s32*)(node + 0x84)) {
+            case 1: {
+                WazaSequenceNode* timing =
+                    (WazaSequenceNode*)(node + *(s32*)(node + 0x14) * 4);
+                s32 time = *(s32*)(node + 0x70) + timing->positionType;
+                done = time >= *(s32*)PTR32_AT_T(u8, node, 0xB0);
+                break;
+            }
+            case 0:
+            default:
+                done = GSmodelHasAnimationEnded(model);
+                break;
+            }
+        }
+
+        if (*(s32*)(node + 0x88) != (s32)(kind = *(u32*)(node + 0x90)) &&
+            (s32)kind >= 0) {
+            u8 texDone;
+
+            switch (*(s32*)(node + 0x8C)) {
+            case 1: {
+                WazaSequenceNode* timing =
+                    (WazaSequenceNode*)(node + *(s32*)(node + 0x14) * 4);
+                s32 time = *(s32*)(node + 0x70) + timing->positionType;
+                texDone = time >= *(s32*)PTR32_AT_T(u8, node, 0xB0);
+                break;
+            }
+            case 0:
+            default:
+                texDone = GSmodelHasTexAnimationEnded(PTR32_AT_T(void, node, 0xA4));
+                break;
+            }
+
+            done = done && texDone;
+        }
+
+        if (!done) {
+            break;
+        }
+        if ((*(u32*)(node + 0x9C) & 2) != 0) {
+            *(s32*)(node + 0x6C) = 3;
+            return TRUE;
+        }
+        return FALSE;
+    }
+
+    case 5:
+        if ((*(s32*)(node + 0x7C) & 1) == 1) {
+            if ((u32)lbl_8047B408 != 0) {
+                return GSthreadIsRunning(lbl_8047B408);
+            }
+            return FALSE;
+        } else {
+            return wazaEntrySoundRunning(*(u32*)(node + 0x78));
+        }
+
+    case 4:
+        if (*(s32*)(node + 0x78) == 0) {
+            break;
+        } else {
+            u32 effectId = *(u32*)(node + 0x78);
+
+            if ((u8)GSeffectIsRunning(effectId)) {
+                switch (*(s32*)(node + 0x88)) {
+                default:
+                    break;
+                case 0:
+                    if ((u8)filterIsHolding(GSeffectGetData(effectId))) {
+                        *(s32*)(node + 0x6C) = 3;
+                    }
+                    break;
+                }
+                return TRUE;
+            }
+            return FALSE;
+        }
+
+    case 3:
+        if (PTR32_AT_T(void, node, 0x8C) == NULL) {
+            break;
+        }
+        if ((u32)fn_80118DA8(PTR32_AT_T(void, node, 0x8C)) != 0 ||
+            fn_80118D84(PTR32_AT_T(void, node, 0x8C)) != 0) {
+            return TRUE;
+        }
+        return FALSE;
+
+    case 1:
+        switch (*(s32*)(node + 0x78)) {
+        case 0:
+            if ((*(s32*)(node + 0x74) - *(s32*)(node + 0x70)) < *(s32*)(node + 0x7C)) {
+                break;
+            } else {
+                u8* sequence = PTR32_AT_T(u8, node, 0xB0);
+                u8* current = PTR32_AT_T(u8, sequence, 0x24);
+
+                while (current != NULL) {
+                    if (*(s32*)(current + 0x6C) == 3) {
+                        *(s8*)(sequence + 0x15) = -1;
+                        return FALSE;
+                    }
+                    current = PTR32_AT_T(u8, current, 0xA8);
+                }
+                *(u8*)(sequence + 0x15) = 1;
+                return FALSE;
+            }
+        case 1:
+        case 2:
+        case 3:
+        default:
+            return FALSE;
+        }
+        break;
+
+    case 6:
+        return FALSE;
+
+    case 0:
+    default:
+        if (GSgetVersionMinor() == 2) {
+            wazaViewerSetErrorFlag(1);
+        }
+        GSlogWrite(lbl_802795B4);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+#pragma pop
+
+/**
+ * wazaSequenceEntryStart / wazaSequenceEntryStart - Start a single waza entry.
+ * Address: 0x801D84F4 | Size: 0x2BC
+ * Proposed name from symbols: wazaSequenceEntryStart.
+ * Referenced by battle_logic.c.
+ */
+u8 wazaSequenceEntryStart(void* entry) {
+    extern void GSthreadSetArgs(void* thread, s32 priority, ...);
+#ifndef TARGET_PC /* PC: canonical prototypes in pc/prototypes.h */
+    extern struct GSThread* GSthreadCreate(u32 affinity, u32 priority,
+                                           u32 stackSize, u8 usesFPU,
+                                           u32 autoStart, void* entryFunc);
+    extern u32 soundStartRaw(u32 id, u32 arg1, u32 arg2);
+    extern void std130_soundUnk_801653cc(u32 id, void* buffer, u32 size);
+#endif
+    extern s32 lbl_8047B408;
+    /* RULE-EXCEPTION(title-path): shared log-pool stand-ins;
+     * see docs/RULE_EXCEPTIONS.md. */
+    extern const char lbl_80279610[];
+    extern const char lbl_802795E4[];
+    WazaSequenceNode* node = entry;
+
+    if ((s32)(P32(node->sequence)->flags & 0x2000) != 0x2000 &&
+        (P32(P32(node->sequence)->owner)->flags & 1) != 1 &&
+        node->kind != 5 && node->kind != 6 && node->kind != 1) {
+        node->runtimeState = 2;
+        node->currentTime = node->startTime;
+        return TRUE;
+    }
+
+    switch (node->kind) {
+    case 0:
+        break;
+    case 1: {
+        u8 valid;
+        switch (node->resourceId) {
+        default:
+            valid = FALSE;
+            break;
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+            valid = TRUE;
+            break;
+        }
+        if (!valid) {
+            goto failed;
+        }
+        break;
+    }
+    case 2:
+        if (!_wazaSequenceModelEntryStart(node)) {
+            goto failed;
+        }
+        break;
+    case 3:
+        if (!_wazaSequenceParticleEntryStart(node)) {
+            goto failed;
+        }
+        break;
+    case 4:
+        if (!_wazaSequenceEffectEntryStart(node)) {
+            goto failed;
+        }
+        break;
+    case 5: {
+        s32 started = FALSE;
+
+        if ((s32)(node->runtimeFlags & 1) == 1) {
+            if ((u32)lbl_8047B408 == 0) {
+                lbl_8047B408 = (s32)PC_PTR32(GSthreadCreate(0x15, 0x4E20, 0x2000,
+                                                    1, 1, std130_soundUnk_801653cc));
+                if ((u32)lbl_8047B408 != 0) {
+                    GSthreadSetArgs((void*)PC_PTR(lbl_8047B408), 3,
+                                    node->resourceId, 0, 0xFF);
+                    started = TRUE;
+                }
+            }
+        } else {
+            started = soundStartRaw(node->resourceId, 0, 0);
+        }
+        if (!(u8)started) {
+            if (GSgetVersionMinor() == 2) {
+                wazaViewerSetErrorFlag(0x100);
+            }
+            goto failed;
+        }
+        break;
+    }
+    case 6: {
+        WazaSequenceOwner* owner = P32(P32(node->sequence)->owner);
+        u8 valid;
+
+        switch (node->resourceId) {
+        case 0:
+            wazaSequenceOwnerSetAura(owner);
+            break;
+        case 1:
+            wazaSequenceOwnerClearAura(owner);
+            break;
+        case 2:
+            wazaSequenceOwnerSetVisibility(owner, 0);
+            break;
+        case 3:
+            wazaSequenceOwnerSetVisibility(owner, 1);
+            break;
+        case 4:
+            GSmodelRemoveNull(P32(owner->model));
+            break;
+        case 5:
+            wazaSequenceOwnerSetNull(owner);
+            break;
+        case 6:
+            wazaSequenceOwnerClearNull(owner);
+            break;
+        case 7:
+            wazaSequenceOwnerSetStop(owner);
+            break;
+        case 9:
+            wazaSequenceOwnerClearStop(owner);
+            break;
+        case 8:
+            if (P32(node->sequence) == P32(owner->currentSequence)) {
+                wazaSequenceReleaseOwner(P32(owner->currentSequence));
+            }
+            break;
+        default:
+            valid = FALSE;
+            goto control_checked;
+        }
+        valid = TRUE;
+control_checked:
+        if (!valid) {
+            goto failed;
+        }
+        break;
+    }
+    default:
+        GSlogWrite(lbl_802795E4);
+        if (GSgetVersionMinor() == 2) {
+            wazaViewerSetErrorFlag(1);
+        }
+        goto failed;
+    }
+
+    node->runtimeState = 1;
+    node->currentTime = node->startTime;
+    return TRUE;
+
+failed:
+    GSlogWrite(lbl_80279610);
+    node->runtimeState = 2;
+    return FALSE;
+}
+#endif
+
+#if !defined(WAZA_SEQUENCE_ENTRY_UPDATE_START_ONLY)
+#if !defined(WAZA_SEQUENCE_PARTICLE_ENTRY_START_ONLY) && \
+    !defined(WAZA_SEQUENCE_MODEL_ENTRY_START_ONLY) && \
+    !defined(WAZA_SEQUENCE_PARTICLE_TO_SCALE_ONLY) && \
+    !defined(WAZA_SEQUENCE_FN_801D97F0_ONLY) && \
+    !defined(WAZA_SEQUENCE_POKEMON_MOTION_START_ONLY)
+/**
+ * _wazaSequenceEffectEntryStart / wazaSequenceStartEntry - Initialize entry resources.
+ * Address: 0x801D87B0 | Size: 0x388
+ * Proposed name from symbols: wazaSequenceStartEntry.
+ */
+u8 _wazaSequenceEffectEntryStart(void* entry) {
+    extern const char lbl_8027964C[];
+    extern BOOL GSeffect(u32 effectId);
+    extern void* GSeffectGetData(u32 arg);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* GSresGetResource(u32 group, u32 resource);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 std093_getCurrentGroupID(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* floorDataBiosGetCurrentPtr(void);
+#endif
+    extern u32 floorReadMakeModelResID(u32 value);
+    extern void* HSD_ArchiveGetPublicAddress(void* archive, const char* symbols);
+    extern u8 GSmodelIsModulationEnabled(void* model);
+    extern void GSmodelGetModulationColor(void* model, void* color);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelGetRotation(void* model, void* out);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelGetPosition(void* model, void* out);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetPosition(void* model, void* position);
+    extern void GSvecCopy(void* dst, void* src);
+    extern void GSvecAdd(void* dst, void* lhs, void* rhs);
+#endif
+    u8* node = entry;
+    u8* owner;
+    WazaEffectTblEntry* table;
+    u32 owner0;
+    u32 owner1;
+    s32 effectId;
+    u8* effect;
+    f32 scale[3];
+    f32 position[3];
+    u32 group;
+    s32 offset;
+    u8* out;
+    u32 index;
+    u16 count;
+    u32** list;
+    u32 baseId;
+    void* floor;
+    void* archive;
+    void* resource;
+
+    effectId = *(u32*)(node + 0x78);
+    owner = PTR32_AT_T(u8, PTR32_AT_T(u8, node, 0xB0), 0x3C);
+    owner0 = *(u32*)(owner + 0x00);
+    owner1 = *(u32*)(owner + 0x04);
+    table = (WazaEffectTblEntry*)((void*)PTR32_AT(owner, 0x2C)) + *(u16*)(owner + 0x32);
+
+    if (effectId != 0) {
+        effect = GSeffectGetData((u32)effectId);
+        if (effect == NULL) {
+            if (GSgetVersionMinor() == 2) {
+                wazaViewerSetErrorFlag(0x80);
+            }
+            return FALSE;
+        }
+
+        wazaSequenceGetEffectScale(PTR32_AT_T(void, node, 0xB0), scale, *(s32*)(owner + 0x10));
+
+        switch (*(s32*)(node + 0x88)) {
+        case 0:
+            switch (*(u8*)(effect + 0x4C)) {
+            case 0:
+                break;
+
+            case 1: {
+                floor = floorDataBiosGetCurrentPtr();
+                group = std093_getCurrentGroupID();
+                index = 0;
+                count = 0;
+                archive = GSresGetResource(std093_getCurrentGroupID(), DISC_U32((u8*)floor + 0x08) /* the floor record's room resource id: big-endian */);
+
+                if (archive != NULL) {
+                    list = HSD_ArchiveGetPublicAddress(archive, (char*)lbl_8027964C);
+
+                    if (list != NULL && DISC_SLOT(list, 0) != NULL) { /* scene_data +0x00: the model list (disc slot) */
+                        baseId = floorReadMakeModelResID(DISC_U32((u8*)floor + 0x08) /* the floor record's room resource id: big-endian */);
+                        out = effect;
+                        offset = 0;
+
+                        while (*(u32*)((u8*)DISC_SLOT(list, 0) + offset) != 0) {
+                            resource = GSresGetResource(group, baseId | index);
+
+                            if (resource != NULL) {
+#ifdef TARGET_PC /* the parameter block keeps its GameCube layout: 4-byte slots */
+                                out += 4;
+                                PTR32_AT_SET_T(void, out, 0, resource);
+#else
+                                *(void**)(out += 4) = resource;
+#endif
+                                count++;
+                            }
+                            offset += 4;
+                            index++;
+                        }
+                    }
+                }
+                *(u32*)(effect + 0x48) = (u16)count;
+                break;
+            }
+
+            case 2:
+                PTR32_AT_SET_T(void, effect, 0x04, PTR32_AT_T(void, owner, 0x24));
+                *(u32*)(effect + 0x48) = 1;
+                if ((u8)wazaSequenceOwnerGetColorSwapActive(owner) && GSmodelIsModulationEnabled(PTR32_AT_T(void, owner, 0x24))) {
+                    *(u8*)(effect + 0x4D) = 1;
+                    *(u8*)(effect + 0x4F) = 1;
+                    GSmodelGetModulationColor(PTR32_AT_T(void, owner, 0x24), effect + 0x44);
+                } else {
+                    *(u8*)(effect + 0x4D) = 0;
+                    *(u8*)(effect + 0x4F) = 0;
+                }
+                break;
+            }
+            break;
+
+        case 1:
+            *(u16*)(effect + 0x4C) = owner0;
+            *(u16*)(effect + 0x4E) = owner1;
+            *(u32*)(effect + 0x50) = table->field_4C[*(u32*)(node + 0x80)];
+            break;
+
+        case 2:
+            *(f32*)(effect + 0x10) = scale[0];
+            *(u16*)(effect + 0x0C) = owner0;
+            *(u16*)(effect + 0x0E) = owner1;
+            break;
+
+        case 3:
+            GSvecCopy(effect + 0x28, scale);
+            *(u16*)(effect + 0x0A) = owner0;
+            *(u16*)(effect + 0x0C) = owner1;
+            *(u16*)(effect + 0x0E) = table->field_4C[*(u32*)(node + 0x80)];
+            break;
+
+        case 4:
+            *(u16*)(effect + 0x24) = owner0;
+            *(u16*)(effect + 0x26) = owner1;
+            *(u16*)(effect + 0x28) = table->field_4C[*(u32*)(node + 0x80)];
+            *(u16*)(effect + 0x2A) = table->field_4C[*(u32*)(node + 0x84)];
+            break;
+
+        case 5:
+            *(u16*)(effect + 0x46) = owner0;
+            *(u16*)(effect + 0x48) = owner1;
+            *(u16*)(effect + 0x4A) = table->field_4C[*(u32*)(node + 0x80)];
+            *(f32*)(effect + 0x0C) = scale[0];
+            break;
+
+        case 6:
+            GSmodelGetRotation(PTR32_AT_T(void, owner, 0x24), effect + 0x54);
+            if (*(s32*)(effect + 0xA8) != 0) {
+                GSmodelGetPosition(PTR32_AT_T(void, owner, 0x24), position);
+                GSvecAdd(position, position, effect + 0x48);
+                GSmodelSetPosition(PTR32_AT_T(void, owner, 0x24), position);
+            }
+            break;
+
+        case 7:
+            GSmodelGetRotation(PTR32_AT_T(void, owner, 0x24), effect + 0x30);
+            break;
+
+        case 8:
+            PTR32_AT_SET_T(void, effect, 0x00, PTR32_AT_T(void, owner, 0x24));
+            break;
+
+        case 9:
+            if (*(s32*)(effect + 0x10) == 0) {
+                PTR32_AT_SET_T(void, effect, 0x00, PTR32_AT_T(void, owner, 0x24));
+            }
+            break;
+
+        case 10:
+            PTR32_AT_SET_T(void, effect, 0x00, PTR32_AT_T(void, owner, 0x24));
+            break;
+
+        case 11:
+            break;
+
+        case 12:
+            PTR32_AT_SET_T(void, effect, 0x08, PTR32_AT_T(void, owner, 0x24));
+            *(u32*)(effect + 0x0C) = *(u32*)(((u8*)PTR32_AT(owner, 0x2C)) + 0x54);
+            *(f32*)(effect + 0x14) = *(f32*)(effect + 0x18) * scale[0];
+            break;
+
+        case -1:
+        default:
+            if (GSgetVersionMinor() == 2) {
+                wazaViewerSetErrorFlag(0x80);
+            }
+            return FALSE;
+        }
+
+        GSeffect((u32)effectId);
+    } else {
+        if (GSgetVersionMinor() == 2) {
+            wazaViewerSetErrorFlag(0x80);
+        }
+        return FALSE;
+    }
+    return TRUE;
+}
+#endif
+
+#if !defined(WAZA_SEQUENCE_EFFECT_ENTRY_START_ONLY)
+
+#if !defined(WAZA_SEQUENCE_MODEL_ENTRY_START_ONLY) && \
+    !defined(WAZA_SEQUENCE_FN_801D97F0_ONLY) && \
+    !defined(WAZA_SEQUENCE_POKEMON_MOTION_START_ONLY)
+/**
+ * _wazaSequenceParticleEntryStart / _wazaSequenceParticleEntryStart - Particle entry init.
+ * Address: 0x801D8B38 | Size: 0x6B4
+ * Proposed name from symbols: _wazaSequenceParticleEntryStart.
+ * Large function that initializes a particle effect for a move animation.
+ */
+u8 _wazaSequenceParticleEntryStart(WazaSequenceNode* node) {
+    void* resource;
+    WazaSequenceNode* linked;
+    register s32 selector;
+    void* owner;
+    void* part;
+    f32 position[3];
+    f32 rotation[3];
+    f32 scale[3];
+    f32 temp[3];
+    f32 offset[3];
+    u32 animationMode;
+    u32 angleRadiusScale;
+    u32 applyToGenerator;
+    void* model;
+
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelGetPosition(void* model, void* out);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelGetRotation(void* model, void* out);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSpartGetTransform(void* part, void* pos, void* rot,
+                                   void* scale);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_800E0108(void* dst, void* lhs, void* rhs);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSvecAdd(void* dst, void* lhs, void* rhs);
+#endif
+    extern void fn_80118CF4(void* particleNode, u8 enabledA, u8 enabledB,
+                           u8 applyToGenerator);
+    extern const char lbl_80279658[];
+#ifndef TARGET_PC /* PC: canonical prototypes in pc/prototypes.h */
+    extern void fn_80118D3C(void* obj, u8 enabledA, u8 enabledB);
+    extern void fn_80118D60(void* obj, u8 enabled);
+    extern void fn_80118CD0(void* obj, u8 enabled);
+    extern void fn_80118F7C(u8* obj, f32* arg);
+    extern void clear__5GSvecFv(f32* vec);
+    extern void gsParticleSetVecB(u8* obj, f32* vec);
+    extern void fn_80118E8C(u8* obj, f32* vec);
+#endif
+
+    resource = P32(node->resource);
+    owner = P32(P32(node->sequence)->owner);
+
+    switch ((u32)node->positionType) {
+    case 1: selector = 1; break;
+    case 2: selector = 2; break;
+    case 3: selector = 3; break;
+    case 4: selector = 4; break;
+    case 5: selector = 5; break;
+    case 6: selector = 6; break;
+    case 7: selector = 7; break;
+    default: selector = 0; break;
+    }
+
+    model = PTR32_AT_T(void, (u8*)owner, 0x24);
+
+    if ((s32)(node->flags & 1) == 1 && node->linkedEntryKey > 0) {
+        linked = wazaSequenceOwnerFindEntry(P32(node->sequence), node->linkedEntryKey);
+        if (linked->startTime <= node->startTime &&
+            linked->kind == 2 && P32(linked->model) != NULL)
+        {
+            model = P32(linked->model);
+            GSmodelForceAnimTransformUpdate(model);
+        }
+    }
+
+    GSmodelGetPosition(model, position);
+    GSmodelGetRotation(model, rotation);
+    wazaSequenceGetEffectScale(P32(node->sequence), scale, *(s32*)((u8*)owner + 0x10));
+
+    if (resource == NULL) {
+        if (GSgetVersionMinor() == 2) {
+            wazaViewerSetErrorFlag(0x20);
+        }
+        return FALSE;
+    }
+
+    /* +0x8C: for a particle entry, the field-particle node (a 32-bit slot; +0x90 is a separate flag) */
+    PTR32_AT_SET_T(void, (u8*) node, 0x8C,
+        gsParticleCreate(P32(node->resource), node->field_80,
+                    (u32) node->animationMode & 1));
+    *(u32*)((u8*) node + 0x90) = 0;
+
+    if (PTR32_AT_T(void, (u8*) node, 0x8C) == NULL) {
+        if (GSgetVersionMinor() == 2) {
+            wazaViewerSetErrorFlag(0x20);
+        }
+        return FALSE;
+    }
+
+    if (((u32)node->animationMode & 0x4) != 0) {
+        fn_80118D3C(PTR32_AT_T(void, (u8*) node, 0x8C), 1,
+                    ((u32)node->animationMode >> 4) & 1);
+    }
+    if (((u32)node->animationMode & 0x8) != 0) {
+        fn_80118D60(PTR32_AT_T(void, (u8*) node, 0x8C), 1);
+    }
+    if (((u32)node->animationMode & 0x80) != 0) {
+        fn_80118D18(PTR32_AT_T(void, (u8*) node, 0x8C), 1);
+    }
+    if (((u32)node->animationMode & 0x800) != 0) {
+        fn_80118CD0(PTR32_AT_T(void, (u8*) node, 0x8C), 1);
+    }
+    if (((u32)node->animationMode & 0x1000) != 0) {
+        fn_80118CAC(PTR32_AT_T(void, (u8*) node, 0x8C), 1);
+    }
+    animationMode = (u32)node->animationMode;
+    applyToGenerator = (animationMode >> 5) & 1;
+    angleRadiusScale = (u8)((animationMode >> 9) & 1);
+    fn_80118CF4(PTR32_AT_T(void, (u8*) node, 0x8C),
+                (animationMode >> 8) & 1,
+                (animationMode >> 10) & 1,
+                (animationMode >> 5) & 1);
+    fn_80118F7C(PTR32_AT_T(void, (u8*) node, 0x8C), offset);
+    *(u32*)((u8*) node + 0x90) = 0;
+
+    if ((s32)(node->flags & 4) == 4) {
+        clear__5GSvecFv(offset);
+        gsParticleSetVecB(PTR32_AT_T(void, (u8*) node, 0x8C), offset);
+        fn_80118E8C(PTR32_AT_T(void, (u8*) node, 0x8C), offset);
+
+        if ((s32)(node->flags & 8) == 8) {
+            battleGridGetNormalisedScale(scale);
+            fn_80118DE0(PTR32_AT_T(void, (u8*) node, 0x8C), scale,
+                        applyToGenerator, angleRadiusScale);
+        } else {
+            set__5GSvecFfff(scale, 1.0f, 1.0f, 1.0f);
+            fn_80118DE0(PTR32_AT_T(void, (u8*) node, 0x8C), scale,
+                        applyToGenerator, angleRadiusScale);
+        }
+        return TRUE;
+    }
+
+    part = wazaSequenceEntryGetAttachPart(node);
+    if (part != NULL) {
+        if (selector != 0) {
+            gsParticleLinkToJObj(PTR32_AT_T(void, (u8*) node, 0x8C), part, selector,
+                        (node->flags >> 1) & 1, 1,
+                        ((u32) node->animationMode >> 1) & 1);
+            *(u32*)((u8*) node + 0x90) = 1;
+
+            GSpartGetTransform(part, NULL, NULL, temp);
+            fn_800E0108(temp, temp, scale);
+
+            switch (selector) {
+            case 7:
+                offset[0] *= temp[0] - 1.0f;
+                offset[1] *= temp[1] - 1.0f;
+                offset[2] *= temp[2] - 1.0f;
+                gsParticleSetVecB(PTR32_AT_T(void, (u8*) node, 0x8C), offset);
+                break;
+            case 4:
+                offset[0] *= scale[0] - 1.0f;
+                offset[1] *= scale[1] - 1.0f;
+                offset[2] *= scale[2] - 1.0f;
+                gsParticleSetVecB(PTR32_AT_T(void, (u8*) node, 0x8C), offset);
+                fn_80118DE0(PTR32_AT_T(void, (u8*) node, 0x8C), scale,
+                            applyToGenerator, angleRadiusScale);
+                break;
+            case 1:
+                offset[0] *= scale[0] - 1.0f;
+                offset[1] *= scale[1] - 1.0f;
+                offset[2] *= scale[2] - 1.0f;
+                gsParticleSetVecB(PTR32_AT_T(void, (u8*) node, 0x8C), offset);
+                fn_80118DE0(PTR32_AT_T(void, (u8*) node, 0x8C), scale,
+                            applyToGenerator, angleRadiusScale);
+                fn_80118E8C(PTR32_AT_T(void, (u8*) node, 0x8C), rotation);
+                break;
+            case 5:
+                offset[0] *= temp[0] - 1.0f;
+                offset[1] *= temp[1] - 1.0f;
+                offset[2] *= temp[2] - 1.0f;
+                GSvecAdd(offset, offset, position);
+                gsParticleSetVecB(PTR32_AT_T(void, (u8*) node, 0x8C), offset);
+                break;
+            case 2:
+                offset[0] *= scale[0] - 1.0f;
+                offset[1] *= scale[1] - 1.0f;
+                offset[2] *= scale[2] - 1.0f;
+                GSvecAdd(offset, offset, position);
+                gsParticleSetVecB(PTR32_AT_T(void, (u8*) node, 0x8C), offset);
+                fn_80118DE0(PTR32_AT_T(void, (u8*) node, 0x8C), scale,
+                            applyToGenerator, angleRadiusScale);
+                break;
+            case 6:
+                offset[0] *= temp[0] - 1.0f;
+                offset[1] *= temp[1] - 1.0f;
+                offset[2] *= temp[2] - 1.0f;
+                gsParticleSetVecB(PTR32_AT_T(void, (u8*) node, 0x8C), offset);
+                fn_80118E8C(PTR32_AT_T(void, (u8*) node, 0x8C), rotation);
+                break;
+            case 3:
+                offset[0] *= temp[0] - 1.0f;
+                offset[1] *= temp[1] - 1.0f;
+                offset[2] *= temp[2] - 1.0f;
+                GSvecAdd(offset, offset, position);
+                gsParticleSetVecB(PTR32_AT_T(void, (u8*) node, 0x8C), offset);
+                fn_80118E8C(PTR32_AT_T(void, (u8*) node, 0x8C), rotation);
+                break;
+            default:
+                if (GSgetVersionMinor() == 2) {
+                    wazaViewerSetErrorFlag(1);
+                }
+                GSlogWrite(lbl_80279658);
+                break;
+            }
+        } else {
+            offset[0] *= scale[0] - 1.0f;
+            offset[1] *= scale[1] - 1.0f;
+            offset[2] *= scale[2] - 1.0f;
+            GSvecAdd(offset, position, offset);
+            gsParticleSetVecB(PTR32_AT_T(void, (u8*) node, 0x8C), offset);
+            fn_80118E8C(PTR32_AT_T(void, (u8*) node, 0x8C), rotation);
+            fn_80118DE0(PTR32_AT_T(void, (u8*) node, 0x8C), scale,
+                        applyToGenerator, angleRadiusScale);
+        }
+
+        GSpartFree(part);
+    }
+    return TRUE;
+}
+#endif
+
+#if !defined(WAZA_SEQUENCE_PARTICLE_ENTRY_START_ONLY) && \
+    !defined(WAZA_SEQUENCE_POKEMON_MOTION_START_ONLY)
+#if !defined(WAZA_SEQUENCE_FN_801D97F0_ONLY)
+/**
+ * _wazaSequenceModelEntryStart / _wazaSequenceModelEntryStart - Model entry init.
+ * Address: 0x801D91EC | Size: 0x604
+ * Proposed name from symbols: _wazaSequenceModelEntryStart.
+ * Initializes a 3D model effect for a move animation.
+ */
+u8 _wazaSequenceModelEntryStart(WazaSequenceNode* node) {
+    s32 selector;
+    WazaEffect* owner;
+    void* model;
+    void* ownerModel;
+    void* sourceModel;
+    WazaSequenceNode* linked;
+    f32 scale[3];
+    f32 rotation[3];
+    f32 position[3];
+    f32 temp[3];
+    s32 positionType;
+    s32 textureAnimation;
+
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelGetPosition(void* model, void* out);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelGetRotation(void* model, void* out);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetPosition(void* model, void* position);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetRotation(void* model, void* rotation);
+#endif
+    extern void GSmodelSetScale(void* model, void* scale);
+    extern void* GSmodelGetBound(void* model);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSlerpGetLinearInterpolationVector(void* dst, void* src,
+                                                   void* target, f32 t);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSvecAdd(void* dst, void* lhs, void* rhs);
+#endif
+    extern void fn_800E00E0(void* dst, void* src);
+    extern void GSmodelAttachToGSpart(void* model, void* part, s32 arg2,
+                                      s32 arg3, s32 arg4);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetVisibility(void* model, u8 visible);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_800E3CC8(void* model, u8 enable);
+#endif
+    extern void GSmodelSet60fpsAnimFlag(void* model, u8 enable);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u8 GSmodelCanAnimate(void* model);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetAnimIndex(void* model, s32 index);
+#endif
+    extern void GSmodelSetAnimType(void* model, s32 type);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetAnimRate(void* model, f32 rate);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetAnimFrame(void* model, f32 frame);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelStartAnimation(void* model);
+#endif
+    extern u8 GSmodelCanTexAnimate(void* model);
+    extern void GSmodelSetTexAnimIndex(void* model, s32 index);
+    extern void GSmodelSetTexAnimType(void* model, s32 type);
+    extern void GSmodelSetTexAnimRate(void* model, f32 rate);
+    extern void GSmodelSetTexAnimFrame(void* model, f32 frame);
+    extern void GSmodelStartTexAnimation(void* model);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetShadowFlags(void* model, u32 flags);
+    extern void GSmodelSetShadowLight(struct GSmodel* model,
+                                      struct GSlight* light);
+    extern void GSmodelSetShadowSurface(struct GSmodel* model, s32 count,
+                                        const void* vertices);
+    extern void GSmodelSetBoundCheck(void* model, u8 enable);
+#endif
+    extern void fn_800E3B44(void* model, u8 enable);
+    extern const char lbl_80279694[];
+    extern const char lbl_802796CC[];
+    extern f32 lbl_8047E348;
+    extern f32 lbl_8047E350;
+
+    positionType = node->positionType;
+    owner = P32(P32(node->sequence)->owner);
+    model = P32(node->model);
+
+    switch ((u32)positionType) {
+    case 1: selector = 1; break;
+    case 2: selector = 2; break;
+    case 3: selector = 3; break;
+    case 4: selector = 4; break;
+    case 5: selector = 5; break;
+    case 6: selector = 6; break;
+    case 7: selector = 7; break;
+    default: selector = 0; break;
+    }
+
+    ownerModel = P32(owner->model);
+    if (model == NULL) {
+        return FALSE;
+    }
+
+    sourceModel = ownerModel;
+    if ((s32)(node->flags & 1) == 1 && node->linkedEntryKey > 0) {
+        linked = wazaSequenceOwnerFindEntry(P32(node->sequence), node->linkedEntryKey);
+        if (linked->startTime <= node->startTime &&
+            linked->kind == 2 && P32(linked->model) != NULL)
+        {
+            sourceModel = P32(linked->model);
+            GSmodelForceAnimTransformUpdate(sourceModel);
+        }
+    }
+
+    GSmodelGetPosition(sourceModel, position);
+    GSmodelGetRotation(sourceModel, rotation);
+    wazaSequenceGetEffectScale(P32(node->sequence), scale, owner->scale_selector);
+    node->attached = 0;
+
+    if ((s32)(node->flags & 4) == 4) {
+        if ((s32)(node->flags & 8) == 8) {
+            battleGridGetNormalisedScale(scale);
+            if ((s32)(node->flags & 0x10) == 0x10) {
+                scale[1] = 1.0f;
+            }
+            GSmodelSetScale(model, scale);
+        }
+    } else if (*(s32*)((u8*)node + 0x94) != 0) {
+        GSpart* part;
+
+        part = GSmodelGetPart(model, *(s32*)((u8*)node + 0x98));
+        GSmodelSetPosition(model, position);
+        GSmodelSetRotation(model, rotation);
+
+        if (selector != 7 && selector != 3 && selector != 5 && selector != 6)
+        {
+            GSmodelSetScale(model, scale);
+        }
+
+        if ((s32)(*(u32*)((u8*)node + 0x9C) & 0x10) == 0x10) {
+            if (part != NULL && selector != 0) {
+                void* bound = GSmodelGetBound(ownerModel);
+
+                GSlerpGetLinearInterpolationVector(
+                    temp, (u8*)bound + GS_BOUND_OFF_MIN, (u8*)bound + GS_BOUND_OFF_MAX, lbl_8047E348);
+                GSvecAdd(position, position, temp);
+                GSmodelSetPosition(model, position);
+                fn_800E00E0(temp, temp);
+                GSmodelAddNull(ownerModel, (GSvec*)temp, NULL, NULL);
+                GSmodelAttachToGSpart(ownerModel, part, selector, 0, 1);
+                node->attached = 1;
+            }
+            GSpartFree(part);
+        } else {
+            if (part != NULL && selector != 0) {
+                GSmodelAttachToGSpart(ownerModel, part, selector, 0, 1);
+                node->attached = 1;
+            }
+            GSpartFree(part);
+
+            switch (selector) {
+            case 1:
+            case 6:
+                GSmodelSetRotation(ownerModel, rotation);
+                break;
+            case 2:
+            case 5:
+                GSmodelSetPosition(ownerModel, position);
+                break;
+            case 3:
+                GSmodelSetRotation(ownerModel, rotation);
+                GSmodelSetPosition(ownerModel, position);
+                break;
+            case 0:
+                GSmodelSetRotation(ownerModel, rotation);
+                GSmodelSetPosition(ownerModel, position);
+                break;
+            case 4:
+            case 7:
+                break;
+            default:
+                if (GSgetVersionMinor() == 2) {
+                    wazaViewerSetErrorFlag(1);
+                }
+                GSlogWrite(lbl_80279694);
+                break;
+            }
+        }
+    } else if (selector != 0) {
+        GSpart* part;
+
+        part = wazaSequenceEntryGetAttachPart(node);
+        if (part != NULL) {
+            GSmodelAttachToGSpart(model, part, selector,
+                                  (node->flags >> 1) & 1, 1);
+            node->attached = 1;
+
+            switch (selector) {
+            case 4:
+                GSmodelSetScale(model, scale);
+                break;
+            case 1:
+                GSmodelSetScale(model, scale);
+                GSmodelSetRotation(model, rotation);
+                break;
+            case 5:
+                GSmodelSetPosition(model, position);
+                break;
+            case 2:
+                GSmodelSetScale(model, scale);
+                GSmodelSetPosition(model, position);
+                break;
+            case 6:
+                GSmodelSetRotation(model, rotation);
+                break;
+            case 3:
+                GSmodelSetPosition(model, position);
+                GSmodelSetRotation(model, rotation);
+                break;
+            case 7:
+                break;
+            default:
+                if (GSgetVersionMinor() == 2) {
+                    wazaViewerSetErrorFlag(1);
+                }
+                GSlogWrite(lbl_802796CC);
+                break;
+            }
+            GSpartFree(part);
+        }
+    }
+
+    GSmodelSetVisibility(model, 1);
+    fn_800E3CC8(model, *(u32*)((u8*)node + 0x9C) & 1);
+    GSmodelSet60fpsAnimFlag(
+        model, (*(u32*)((u8*)node + 0x9C) >> 2) & 1);
+
+    if (*(s32*)((u8*)node + 0x88) >= 0) {
+        if (GSmodelCanAnimate(model)) {
+            GSmodelSetAnimIndex(model, *(s32*)((u8*)node + 0x88));
+            GSmodelSetAnimType(model, *(s32*)((u8*)node + 0x84));
+            GSmodelSetAnimRate(model, lbl_8047E348);
+            GSmodelSetAnimFrame(model, lbl_8047E350);
+            GSmodelStartAnimation(model);
+        } else {
+            if (GSgetVersionMinor() == 2) {
+                wazaViewerSetErrorFlag(0x200);
+            }
+            *(s32*)((u8*)node + 0x88) = -1;
+        }
+    }
+
+    if (*(s32*)((u8*)node + 0x88) !=
+            (textureAnimation = *(s32*)((u8*)node + 0x90)) &&
+        textureAnimation >= 0)
+    {
+        if (GSmodelCanTexAnimate(model)) {
+            GSmodelSetTexAnimIndex(model, *(s32*)((u8*)node + 0x90));
+            GSmodelSetTexAnimType(model, *(s32*)((u8*)node + 0x8C));
+            GSmodelSetTexAnimRate(model, lbl_8047E348);
+            GSmodelSetTexAnimFrame(model, lbl_8047E350);
+            GSmodelStartTexAnimation(model);
+        } else {
+            if (GSgetVersionMinor() == 2) {
+                wazaViewerSetErrorFlag(0x400);
+            }
+            *(s32*)((u8*)node + 0x90) = -1;
+        }
+    }
+
+    if ((s32)(*(u32*)((u8*)node + 0x9C) & 0x20) == 0x20 &&
+        (u32)wazaSequenceSysGetModelShadowLight__Fv() != 0 &&
+        wazaSequenceSysGetModelShadowCount__Fv() != 0)
+    {
+        GSmodelSetShadowFlags(model, 1);
+        GSmodelSetShadowLight(
+            model, (void*)PC_PTR(wazaSequenceSysGetModelShadowLight__Fv()));
+        GSmodelSetShadowSurface(
+            model, wazaSequenceSysGetModelShadowCount__Fv(),
+            wazaSequenceSysGetModelShadowList__Fv());
+        GSmodelSetBoundCheck(model, 1);
+        fn_800E3B44(model, 1);
+    }
+
+    return TRUE;
+}
+#endif
+#endif
+
+#if !defined(WAZA_SEQUENCE_PARTICLE_ENTRY_START_ONLY) && \
+    !defined(WAZA_SEQUENCE_MODEL_ENTRY_START_ONLY)
+#if !defined(WAZA_SEQUENCE_POKEMON_MOTION_START_ONLY)
+#if defined(WAZA_SEQUENCE_PARTICLE_TO_SCALE_ONLY)
+/* RULE-EXCEPTION(title-path): preserve wazaSequenceEntryGetAttachPart's original prologue mode;
+ * see docs/RULE_EXCEPTIONS.md. */
+#endif
+/**
+ * wazaSequenceEntryGetAttachPart - Return the model part (GSpart) a sequence entry attaches to: for a linked
+ * entry, the part of the linked model entry; otherwise the owner's part chosen by the entry's selector from the
+ * owner's part table (selector 0x10: the model's centre null). NULL if there is none.
+ * Address: 0x801D97F0 | Size: 0x160
+ */
+/* NAME-T3 fn_801D97F0 */
+void* wazaSequenceEntryGetAttachPart(void* entry) {
+    WazaSequenceNode* linked;
+    WazaSequenceNode* node = entry;
+    void* part = NULL;
+    u8* owner;
+    s32 (*table)[1];
+    s32 partIndex;
+    s32 selector;
+    s32 linkedKey;
+
+    extern const char lbl_80279700[];
+
+    if ((s32)(node->flags & 1) == 1) {
+        linkedKey = node->linkedEntryKey;
+        if (linkedKey <= 0) {
+            goto failed;
+        }
+        linked = wazaSequenceOwnerFindEntry(P32(node->sequence), linkedKey);
+        if (linked->startTime > node->startTime) {
+            GSlogWrite(lbl_80279700);
+        }
+        if (linked->kind == 2) {
+            if (P32(linked->model) != NULL) {
+                part = GSmodelGetPart(P32(linked->model), node->partIndex);
+                if (GSgetVersionMinor() == 2 && part == NULL) {
+                    wazaViewerSetErrorFlag(2);
+                }
+                return part;
+            }
+            goto failed;
+        }
+        return NULL;
+    }
+
+    selector = *(s32*)((u8*)node + 0x20);
+    owner = (u8*)P32(P32(node->sequence)->owner);
+    table = (s32 (*)[1])(((u8*)PTR32_AT(owner, 0x2C)) +
+                         *(u16*)(owner + 0x32) * 0xD4);
+    if (selector == 0x10) {
+        if (GSmodelCenterNull(PTR32_AT_T(void, owner, 0x24))) {
+            partIndex = GSmodelWalkJObjs(PTR32_AT_T(void, owner, 0x24)) - 1;
+        } else {
+            partIndex = *(s32*)((u8*)table + 0x54);
+        }
+    } else {
+        partIndex = table[selector][0x13];
+    }
+    if (partIndex >= 0) {
+        part = GSmodelGetPart(PTR32_AT_T(void, owner, 0x24), partIndex);
+    }
+    if (GSgetVersionMinor() == 2 && part == NULL) {
+        wazaViewerSetErrorFlag(2);
+    }
+
+failed:
+    return part;
+}
+#if defined(WAZA_SEQUENCE_PARTICLE_TO_SCALE_ONLY)
+/* RULE-EXCEPTION(user-approved): local compiler-control pragma (use_lmw_stmw on) needed for the byte match of the code it covers - see docs/RULE_EXCEPTIONS.md */
+#endif
+#endif
+
+#if !defined(WAZA_SEQUENCE_FN_801D97F0_ONLY)
+#if !defined(WAZA_SEQUENCE_POKEMON_MOTION_START_ONLY)
+/**
+ * wazaSequenceGetEffectScale - Fill a scale vector for a sequence's effect entries: from the owner's size class
+ * (-2..3), then adjusted for a few specific moves (by the sequence's move id at +0x2C and variant at +0x2E).
+ * Used when particle and model entries start.
+ * Corrected 2026-11-08: this was described as "Pokemon motion during move" with the proposed name
+ * wazaSequencePokemonMotionStart; that is a different function (0x801D9C1C) called by wazaSequenceStart.
+ * Address: 0x801D9950 | Size: 0x2CC
+ */
+/* NAME-T3 fn_801D9950 */
+void wazaSequenceGetEffectScale(void* owner, f32* scale, s32 selector) {
+    typedef struct WazaSequenceScaleCtx {
+        u8 pad_00[0x2C];
+        u16 field_2C;
+        u16 field_2E;
+    } WazaSequenceScaleCtx;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void vecScale(void* dst, void* src, f32 scaleValue);
+#endif
+    extern f32 lbl_8047E348;
+    extern const f32 lbl_8047E354;
+    extern const f32 lbl_8047E358;
+    extern const f32 lbl_8047E35C;
+    extern const f32 lbl_8047E360;
+    extern const f32 lbl_8047E364;
+    extern const f32 lbl_8047E368;
+    extern const f32 lbl_8047E36C;
+    extern const f32 lbl_8047E370;
+    extern const f32 lbl_8047E374;
+    extern const f32 lbl_8047E378;
+    extern const f32 lbl_8047E37C;
+    WazaSequenceScaleCtx* ctx = owner;
+    u16 variant;
+
+    switch (selector) {
+    case -2:
+        set__5GSvecFfff(scale, lbl_8047E348, lbl_8047E348, lbl_8047E348);
+        break;
+    case -1:
+        set__5GSvecFfff(scale, lbl_8047E354, lbl_8047E354, lbl_8047E354);
+        break;
+    case 1:
+        set__5GSvecFfff(scale, lbl_8047E358, lbl_8047E358, lbl_8047E358);
+        break;
+    case 2:
+        set__5GSvecFfff(scale, lbl_8047E35C, lbl_8047E35C, lbl_8047E35C);
+        break;
+    case 3:
+        set__5GSvecFfff(scale, lbl_8047E360, lbl_8047E360, lbl_8047E360);
+        break;
+    default:
+        set__5GSvecFfff(scale, 1.0f, 1.0f, 1.0f);
+        break;
+    }
+
+    switch (ctx->field_2C) {
+    case 0x8F:
+        if (ctx->field_2E == 2) {
+            vecScale(scale, scale, lbl_8047E364);
+        }
+        return;
+    case 0xB1:
+        vecScale(scale, scale, lbl_8047E348);
+        return;
+    case 0xC4:
+        variant = ctx->field_2E;
+        if (variant == 1) {
+            vecScale(scale, scale, lbl_8047E368);
+            return;
+        }
+        if (variant == 2) {
+            vecScale(scale, scale, lbl_8047E348);
+            return;
+        }
+        break;
+    case 0xFA:
+        variant = ctx->field_2E;
+        if (variant == 1) {
+            vecScale(scale, scale, lbl_8047E36C);
+            return;
+        }
+        if (variant == 2) {
+            vecScale(scale, scale, lbl_8047E370);
+            return;
+        }
+        break;
+    case 0x119:
+        vecScale(scale, scale, lbl_8047E374);
+        return;
+    case 0x133:
+        if (ctx->field_2E == 2) {
+            vecScale(scale, scale, lbl_8047E374);
+            return;
+        }
+        break;
+    case 0x13B:
+        if (ctx->field_2E == 2) {
+            vecScale(scale, scale, lbl_8047E374);
+            return;
+        }
+        break;
+    case 0x143:
+        if (ctx->field_2E == 2) {
+            vecScale(scale, scale, lbl_8047E378);
+            return;
+        }
+        break;
+    case 0x149:
+        if (ctx->field_2E == 2) {
+            vecScale(scale, scale, lbl_8047E37C);
+            return;
+        }
+        break;
+    case 0x162:
+        if (ctx->field_2E == 2) {
+            vecScale(scale, scale, lbl_8047E37C);
+        }
+        break;
+    }
+}
+#endif
+
+#if !defined(WAZA_SEQUENCE_PARTICLE_TO_SCALE_ONLY)
+/**
+ * wazaSequencePokemonMotionStart - Pokemon motion update.
+ * Address: 0x801D9C1C | Size: 0x200
+ */
+u8 wazaSequencePokemonMotionStart(void* ownerPtr, BOOL enabled) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void fn_800E3CC8(void* model, s32 enable);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelLinkTexAnimToAnim(void* model, s32 enable);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetAnimIndex(void* model, s32 index);
+#endif
+    extern void GSmodelSetAnimType(void* model, s32 type);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetAnimRate(void* model, f32 rate);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelGetFrameCount(void* model, f32* frameCount,
+                                     f32* texFrameCount);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelSetAnimFrame(void* model, f32 frame);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void GSmodelStartAnimation(void* model);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void wazaSequenceOwnerStartMotion(void* owner);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void wazaSequenceOwnerPlayMotion(void* owner, s32 arg1, s32 arg2);
+#endif
+    extern const char lbl_80279740[];
+    extern f32 lbl_8047E348;
+    extern f64 lbl_8047E380;
+    u8* owner = ownerPtr;
+    void* model = PTR32_AT_T(void, owner, 0x24);
+    u8* table;
+    s32 duration;
+    s32 animIndex;
+    s32 frameCountInt;
+    s32 halfDuration;
+    f32 frameCount;
+    f32 texFrameCount;
+
+    if (*(u8*)(owner + 0x16) != 0) {
+        return FALSE;
+    }
+    if (model != NULL) {
+        fn_800E3CC8(model, enabled);
+        table = ((u8*)PTR32_AT(owner, 0x2C)) +
+                *(u16*)(owner + 0x32) * 0xD4 + 0x8C;
+        if ((*(u8*)(owner + 0x18) & 8) == 8) {
+            return TRUE;
+        }
+
+        duration = *(s32*)(table + 0x04);
+        if (duration == 0) {
+            if (*(u16*)(owner + 0x32) == 10) {
+                wazaSequenceOwnerStartMotion(owner);
+                return TRUE;
+            }
+            *(u16*)(owner + 0x34) = 1;
+            if (*(s32*)(table + 0x08) == 0) {
+                wazaSequenceOwnerPlayMotion(owner, *(s32*)(table + 0x0C), 0);
+            } else {
+                wazaSequenceOwnerPlayIdle(owner, 0, 0);
+            }
+            goto done;
+        }
+
+        *(u16*)(owner + 0x34) = 0;
+        animIndex = wazaSequenceOwnerFindAnim(owner);
+        if ((*(u8*)(owner + 0x18) & 4) != 4) {
+            *(u8*)(owner + 0x19) = 0;
+            GSmodelLinkTexAnimToAnim(model, 1);
+        }
+        GSmodelSetAnimIndex(model, animIndex);
+        GSmodelSetAnimType(model, 0);
+        GSmodelSetAnimRate(model, lbl_8047E348);
+        GSmodelGetFrameCount(model, &frameCount, &texFrameCount);
+
+        halfDuration = duration >> 1;
+        *(s32*)(table + 0x04) = halfDuration / (s32)frameCount;
+        frameCountInt = (s32)frameCount;
+        halfDuration %= frameCountInt;
+        if (halfDuration == 0 && *(s32*)(table + 0x04) != 0) {
+            halfDuration = frameCountInt;
+            *(s32*)(table + 0x04) -= 1;
+        }
+
+        GSmodelSetAnimFrame(model, frameCount - (f32)halfDuration);
+        GSmodelStartAnimation(model);
+done:
+        return TRUE;
+    }
+    if (GSgetVersionMinor() == 2) {
+        wazaViewerSetErrorFlag(4);
+    }
+    GSlogWrite(lbl_80279740);
+    return FALSE;
+}
+#endif
+
+#endif
+#endif
+#endif
+#endif
+#endif

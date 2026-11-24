@@ -1,0 +1,13 @@
+# P05 (sitting 015_20261021_0224): logged resyncs for the second pass (2026-10-28; match ledger, P05 rows).
+#
+# 1. Pad line 8186 (a hand edit of the generated pad, not a spec line): the fade-in anchor `@0x3038f+0~87` becomes
+#    `@0x3000f+0~87`. In the menu room's 23rd visit the PC's room hook reports that fade-in in room 0xF, where the
+#    recorder still shows the menu room's id 0x38F, so the step otherwise waits out its 87-frame limit (60 frames late).
+#
+# 2. The wanderer in slot 12 placed on the console's route in the same visit (npc_resync_spec.py on replay_12's npc
+#    probe, PLAYREC_NPC=0x38F,-1,4300,23; absolute PC frames from the reference run p2_P05rs7, which starts the visit
+#    at frame 132318). Apply with: pad_resync.py <run>/sitting.pad P05_015.txt --log <p2_P05rs7>/run.log
+@135735 npc 12 -7.708294 0 -215.7881 0.1855098 0 -242.9989 0 2.859244 4 2  # capture frame 3417, walks
+@135835 npc 12 0.1855098 0 -242.9989 0.1855098 0 -242.9989 3.779236 2.859244 4 0  # capture frame 3517, stops
+@136065 npc 12 0.5432236 0 -242.5415 14.60171 0 -224.5663 0 0.6637342 4 2  # capture frame 3747, walks
+@136145 npc 12 14.60171 0 -224.5663 14.60171 0 -224.5663 6.983948 0.6637342 4 0  # capture frame 3827, stops

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 32" width="56" height="32">
+<!-- The settings switch's 1.5-unit edge (2026-11-23, with tog-fill.svg): the pill and the same pill 1.5 inside it, as a
+     ring (even-odd); white, tinted at draw time (settings.rcss .tog .te). -->
+<path fill="#FFFFFF" fill-rule="evenodd" d="M16 0 H40 Q46.627 0 51.314 4.686 Q56 9.373 56 16 Q56 22.627 51.314 27.314 Q46.627 32 40 32 H16 Q9.373 32 4.686 27.314 Q0 22.627 0 16 Q0 9.373 4.686 4.686 Q9.373 0 16 0 Z M16 1.5 H40 Q46.006 1.5 50.253 5.747 Q54.5 9.994 54.5 16 Q54.5 22.006 50.253 26.253 Q46.006 30.5 40 30.5 H16 Q9.994 30.5 5.747 26.253 Q1.5 22.006 1.5 16 Q1.5 9.994 5.747 5.747 Q9.994 1.5 16 1.5 Z"/>
+</svg>

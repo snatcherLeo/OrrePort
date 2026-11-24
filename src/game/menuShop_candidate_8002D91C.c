@@ -1,0 +1,299 @@
+/* World-map arrival dialog, 0x8002D91C-0x8002DC6C. menuShopOpen follows in menuShop_exact_8002DC6C.c. */
+#include "dolphin/types.h"
+
+typedef struct ShopLocationEntry {
+    u8 field_0;
+    u8 type;
+    u8 field_2[2];
+} ShopLocationEntry;
+
+typedef struct ShopTravelState {
+    u32 location;
+    u32 active;
+} ShopTravelState;
+
+/* lbl_8047A3FC: the 8-byte travel request in .sbss (sda-addressed under -sdata 8). */
+extern ShopTravelState lbl_8047A3FC;
+extern ShopLocationEntry* lbl_80478E54;
+extern void* lbl_8047A3DC;
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern s32 menuOpen(s32 menu, s32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuClose(s32 menu);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void menuCloseSync(s32 menu, s32 flag);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 heroGetStatus(u8* ptr, u32 selector, u32 index);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fn_8002A0B8(u8* buffer, s32 location, s32 field, s32 value, ...);
+#endif
+extern u32 fn_80029FAC(u8* buffer, s32 location, s32 field, s32 value, ...);
+extern void fn_8002A1C4(u8* location, s32 message, s32 terminator, ...);
+extern void fn_8002A2CC(u8* location, s32 message, s32 terminator, ...);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_80018F54(u32 a, u32 b, u32 c);
+#endif
+extern void fn_8002CE6C(u8* location, u8 type);
+extern void shopBuyMain__FiUc(s32 location, u8 type);
+extern void fn_8002C408(s32 location, u8 type);
+extern void fn_8002C284(u32 location, u8 type);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void winMsgOpenWithSE(s32 kind, u32 message, s32 arg2, s32 arg3,
+                             u8 format);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void winMsgClose(s32 mode);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 _toolentryAlloc__FUl(u32 size);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* GSmemLock(u32 handle);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void fn_800E24B0(u32 handle);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void GSmemFree(u32 handle);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void floorBattleEndTerminateScripts(void);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void floorSetFadeScript(s32 mode, u32 value);
+#endif
+
+/* These menu helpers are also expanded in fn_8002D5D4. */
+static inline s32 shopQueryMenu(s32 menu)
+{
+    s32 result = menuOpen(menu, 1);
+
+    menuClose(menu);
+    menuCloseSync(menu, 1);
+    return result;
+}
+
+static inline void shopNormalizeMenu62(s32 result, s32* selection)
+{
+    if (result == -1 || result == 2) {
+        *selection = 2;
+    } else if (result == 0) {
+        *selection = 0;
+    } else {
+        *selection = 1;
+    }
+}
+
+static inline s32 shopNormalizeMenu83(s32 result)
+{
+    switch (result) {
+    case 0:
+        return 0;
+    case 1:
+        return 1;
+    case 2:
+        return 2;
+    default:
+        return 3;
+    }
+}
+
+#ifdef TARGET_PC /* PC: our pre-merge copy (PC fixes); the GameCube keeps the merged copy */
+static inline u32 shopMemoryAlloc(void) /* PC: the helper our copy calls (the merged copy calls the allocator directly) */
+{
+    return _toolentryAlloc__FUl(0x7198);
+}
+
+void fn_8002D91C(u32 location_index)
+{
+    ShopLocationEntry* location_entry;
+    s32 location;
+    ShopTravelState* state;
+    s32 menu_result;
+    u8 type;
+    u32 memory;
+    s32 done;
+    s32 selection;
+    u8 text1;
+    u8 text0;
+
+    location = location_index;
+    location_entry = lbl_80478E54;
+    location_entry += location;
+    state = (ShopTravelState*)&lbl_8047A3FC;
+    state->location = location_index;
+    state->active = 0;
+    type = location_entry->type;
+
+    switch (type) {
+    case 0: {
+        u32 value = heroGetStatus(NULL, 0xC, 0);
+        u32 message = fn_8002A0B8(&text1, location, 0, 0x4B, value, -1);
+        winMsgOpenWithSE(2, message, 1, 0, text1);
+        while ((menu_result = shopQueryMenu(0x62),
+                shopNormalizeMenu62(menu_result, &selection), selection != 2)) {
+            winMsgClose(1);
+            switch (selection) {
+            case 0:
+                shopBuyMain__FiUc(location, type);
+                break;
+            case 1:
+                fn_80018F54(3, location, 0);
+                break;
+            }
+            message = fn_8002A0B8(&text1, location, 1, -1);
+            winMsgOpenWithSE(2, message, 1, 0, text1);
+        }
+
+        fn_8002A2CC((u8*)PC_PTR(location), 2, -1);
+        break;
+    }
+    case 1:
+        fn_8002CE6C((u8*)PC_PTR(location), type);
+        break;
+    default: {
+        u32 message;
+
+        done = 0;
+        memory = shopMemoryAlloc();
+        lbl_8047A3DC = GSmemLock(memory);
+        message = fn_80029FAC(&text0, location, 0, -1);
+        winMsgOpenWithSE(2, message, 1, 0, text0);
+        while ((menu_result = shopNormalizeMenu83(shopQueryMenu(0x83))) != 3) {
+            winMsgClose(1);
+            switch (menu_result) {
+            case 0:
+                fn_8002C408(location, type);
+                break;
+            case 1:
+                fn_8002C284(location, type);
+                break;
+            case 2:
+                fn_8002A1C4((u8*)PC_PTR(location), 0xB, -1);
+                break;
+            case 3:
+                done = 1;
+                break;
+            }
+            if (done != 0) {
+                break;
+            }
+            message = fn_80029FAC(&text0, location, 1, -1);
+            winMsgOpenWithSE(2, message, 1, 0, text0);
+        }
+
+        if (type != 3 && type != 2) {
+            fn_8002A1C4((u8*)PC_PTR(location), 2, -1);
+        } else {
+            winMsgClose(1);
+        }
+        fn_800E24B0(memory);
+        GSmemFree(memory);
+        break;
+    }
+    }
+
+    if ((s32)state->active != 0) {
+        floorBattleEndTerminateScripts();
+        floorSetFadeScript(0, 0);
+    }
+}
+#else
+void fn_8002D91C(u32 location_index)
+{
+    ShopLocationEntry* location_entry;
+    s32 location;
+    ShopTravelState* state;
+    s32 menu_result;
+    u8 type;
+    u32 memory;
+    s32 done;
+    s32 selection;
+    u8 text1;
+    u8 text0;
+
+    location = location_index;
+    lbl_8047A3FC.location = location_index;
+    /* RULE-EXCEPTION(user-approved): assignment inside the store chosen for codegen - see docs/RULE_EXCEPTIONS.md */
+    (state = &lbl_8047A3FC)->active = 0;
+    location_entry = &lbl_80478E54[location];
+    type = location_entry->type;
+
+    switch (type) {
+    case 0: {
+        u32 value = heroGetStatus(NULL, 0xC, 0);
+        u32 message = fn_8002A0B8(&text1, location, 0, 0x4B, value, -1);
+        winMsgOpenWithSE(2, message, 1, 0, text1);
+        while ((menu_result = shopQueryMenu(0x62),
+                shopNormalizeMenu62(menu_result, &selection), selection != 2)) {
+            winMsgClose(1);
+            switch (selection) {
+            case 0:
+                shopBuyMain__FiUc(location, type);
+                break;
+            case 1:
+                fn_80018F54(3, location, 0);
+                break;
+            }
+            message = fn_8002A0B8(&text1, location, 1, -1);
+            winMsgOpenWithSE(2, message, 1, 0, text1);
+        }
+
+        fn_8002A2CC((u8*)PC_PTR(location), 2, -1);
+        break;
+    }
+    case 1:
+        fn_8002CE6C((u8*)location_index, type);
+        break;
+    default: {
+        u32 message;
+
+        done = 0;
+        memory = _toolentryAlloc__FUl(0x7198);
+        lbl_8047A3DC = GSmemLock(memory);
+        message = fn_80029FAC(&text0, location, 0, -1);
+        winMsgOpenWithSE(2, message, 1, 0, text0);
+        while ((menu_result = shopNormalizeMenu83(shopQueryMenu(0x83))) != 3) {
+            winMsgClose(1);
+            switch (menu_result) {
+            case 0:
+                fn_8002C408(location, type);
+                break;
+            case 1:
+                fn_8002C284(location, type);
+                break;
+            case 2:
+                fn_8002A1C4((u8*)PC_PTR(location), 0xB, -1);
+                break;
+            case 3:
+                done = 1;
+                break;
+            }
+            if (done != 0) {
+                break;
+            }
+            message = fn_80029FAC(&text0, location, 1, -1);
+            winMsgOpenWithSE(2, message, 1, 0, text0);
+        }
+
+        if (type != 3 && type != 2) {
+            fn_8002A1C4((u8*)PC_PTR(location), 2, -1);
+        } else {
+            winMsgClose(1);
+        }
+        fn_800E24B0(memory);
+        GSmemFree(memory);
+        break;
+    }
+    }
+
+    if ((s32)state->active != 0) {
+        floorBattleEndTerminateScripts();
+        floorSetFadeScript(0, 0);
+    }
+}
+#endif

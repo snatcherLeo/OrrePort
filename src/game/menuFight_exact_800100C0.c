@@ -1,0 +1,174 @@
+/**
+ * @file menuFight_exact_800100C0.c
+ * @brief menuFightCtrlBall and _menuFightIsUse, 0x800100C0 - 0x80010294.
+ *
+ * Function-boundary carve of the menuFight TU (see menuFight.c): the
+ * ball window control and the move-usability check. GC/1.3
+ * -O4,p with the TU's unit-wide -opt nopeephole, no pragmas.
+ */
+#include "dolphin/types.h"
+#include "crt/string.h"
+#include "game/constants/battle_messages.h"
+#include "game/constants/pokemon_status.h"
+
+/* =========================================================================
+ * External declarations
+ * ========================================================================= */
+
+/* renamed symbols referenced by asm incs (symbolmap port) */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 _menuFightIsUse__FP16MENU_WAZA_STATUSUs();
+#endif
+extern void* menuSubCalcColor(void*, void*);
+
+/* NPC/People system */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  winSpriteSetDisp(void* npc, s32 direction);  /* Set NPC facing */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* menuItemBiosGetPtr(s16 npcId);                  /* Lookup NPC data by ID */
+#endif
+
+/* Text/dialog system */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  windowDrawSprite();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  winSeqSetMenu(void* ctx, s32 state);       /* Set dialog state */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  fn_801081F8(void* ctx, s32 msgId, s32 flags); /* Display message */
+#endif
+
+/* Rendering */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32   GSmsgGetRect();                           /* Get model dimensions */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  GSmsgPrintColor();
+#endif
+
+/* Map/warp */
+extern u8    fightFloorCheckFightActionFightOutPokemonIrekaeSelect(s32 p1, void* warpId, void* outDest);
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void* fightOutPokemonGetNicknamePtr(void* mapData);              /* Get map name string */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  winMsgOpen(s32 slot, s32 msgId, s32 p3, s32 p4);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  winMsgClose(s32 slot);                   /* Close message box */
+#endif
+
+/* Input/frame */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u8    fn_801F18DC(s32 controller);             /* Check input ready */
+#endif
+extern u8    fightFloorIsUseFightTimerCommand(s32 controller);             /* Check button pressed */
+extern u8    fightTimerCommandIsOver(void);                       /* Check A button */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u16   std103_battleGetResult(void);                       /* Get input state */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void  _threadSwitch(void);                       /* Frame advance */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32   GSinputButtonsChanged(s32 slot);                   /* Get render flags */
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32   fn_800F7BC4(s32 slot);                   /* Get VSync flags */
+#endif
+
+/* Battle bridge */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern void msgctrlSetValue(u32 id, u32 value);
+extern u8 fightFloorSetStatus(u32 p1, u16 p2, u32 p3, u16 p4, u32 p5);
+extern void menuClose();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern f64 atan2(f64, f64);
+#endif
+
+/* menuFightCtrlBall - 0x800100C0 | size: 0x68 */
+u32 menuFightCtrlBall(u8* ptr) {
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowGetFreeWork(u8* a);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern void* windowGetParam(u8* a, u32 b);
+#endif
+    void* dst = windowGetFreeWork(ptr);
+    if ((s8)ptr[1] == 0) {
+        memcpy(dst, PC_PTR(windowGetParam(ptr, 0)), 6);
+    }
+    return 0;
+}
+
+/* _menuFightIsUse__FP16MENU_WAZA_STATUSUs - 0x80010128 | size: 0x16c */
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fightOutPokemonCheckCanOutOkWazaBanme();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+extern u32 fightOutPokemonGetSoubiItemDataId();
+#endif
+u32 _menuFightIsUse__FP16MENU_WAZA_STATUSUs(ctx, arg)
+u8* ctx;
+u16 arg;
+{
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightOutPokemonGetPokemonPtr(void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 fightOutPokemonCheckCanOutOkWazaBanme(void*, u16, s32, void*);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u16 pokemonGetStatus(u32, s32, s32, u16);
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 wazaGetStatus();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern u32 GSmsgGetGSchar();
+#endif
+#ifndef TARGET_PC /* PC: canonical prototype in pc/prototypes.h */
+    extern s32 fightOutPokemonGetSoubiItemDataId(void*);
+#endif
+    u16 stackValue;
+    u8* obj;
+    u32 battle;
+    u32 state;
+    u32 result;
+    u32 msg;
+    u32 item;
+
+    obj = *(u8**)(ctx + 0x40);
+    battle = PC_PTR32_IMPLICIT(fightOutPokemonGetPokemonPtr(obj));
+    state = fightOutPokemonCheckCanOutOkWazaBanme(obj, arg, 1, &stackValue);
+    result = pokemonGetStatus(PC_PTR(battle), 0, POKEMON_STATUS_MOVE, arg);
+    if ((u8)state != 0) {
+        msgctrlSetValue(0x11, (s32)PC_PTR32(obj));
+        msg = wazaGetStatus(0, result, 1, 0);
+        msgctrlSetValue(0x28, PC_PTR32_IMPLICIT(GSmsgGetGSchar(msg)));
+        item = fightOutPokemonGetSoubiItemDataId(obj);
+        fightFloorSetStatus(0, 0, 0x56, 0, (u16)item);
+    }
+    if ((u8)state == 6) {
+        msg = BATTLE_MSG_NO_PP_LEFT;
+    } else if ((u8)state == 5) {
+        msgctrlSetValue(0x28, PC_PTR32_IMPLICIT(GSmsgGetGSchar(wazaGetStatus(0, stackValue, 1, 0))));
+        msg = 0x76BB;
+    } else if ((u8)state == 4) {
+        msg = 0x7600;
+    } else if ((u8)state == 3) {
+        msg = BATTLE_MSG_TAUNT_BLOCKS_MOVE;
+    } else if ((u8)state == 2) {
+        msg = 0x75FE;
+    } else if ((u8)state == 1) {
+        msg = 0x75FD;
+    }
+    if ((u8)state != 0) {
+        return msg;
+    }
+    return 0;
+}
+
