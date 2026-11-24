@@ -7,19 +7,14 @@
 
 # OrrePort
 
-<!-- Discord button (approved, item a): added on release day with the server's invite link -->
-
 **Pokémon Colosseum, running natively on PC, with tools for modding it.** You need your own copy of the game.
 
 ## Download
 
 **[Download OrrePort for Windows](https://github.com/snatcherLeo/OrrePort/releases/latest)**
 
-<!-- Screenshot (approved, item b): one 16:9 shot taken in OrrePort, picked by snatcherLeo from the laptop sitting -->
-
 **Status: first playtest (Beta 0.1).** Playable from New Game into the story on Windows 10 and 11 (64-bit), with bugs
 still to find. Linux and macOS are planned. Your saves are kept with their earlier versions.
-<!-- Item c: "into the story" becomes "to the end of the story" once the full replay check and the laptop sitting pass -->
 
 ## Getting started
 
@@ -37,7 +32,6 @@ Updates are offered inside the app; nothing is installed until you choose to.
 
 **Playtesting?** Press **F8** in the game when something goes wrong, and OrrePort makes a report for you to share on
 the Discord. [What OrrePort adds](docs/what-orreport-adds.md) lists every change from the original game.
-<!-- Item e: the tester guide (PDF on each release) and the two-minute video, linked here once they're published -->
 
 ## What it is
 
