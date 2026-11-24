@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out every branch and tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5   # v5: GitHub retires the Node 20 that v4 runs on (its warning, 2026-11-24)
         with:
           fetch-depth: 0
           # without this, checkout leaves the workflow's own token in git's settings for every github.com address, and

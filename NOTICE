@@ -47,3 +47,11 @@ license. The executable built from those files links an external pinned
 ModernGekko/RecompCore dependency tree and may be subject to the aggregate
 GPLv3 terms documented by that upstream tree. It is not linked into the game
 build or the MIT Python tooling and is invoked only as a separate process.
+
+OrrePort
+========
+
+OrrePort's own code (the PC port, its hub and OrrePort Studio):
+Copyright (c) 2026 snatcherLeo and OrrePort contributors, under the same
+MIT license as in LICENSE. The text above and LICENSE are kept unchanged
+from the pkmn-colosseum decompilation this project is built on.

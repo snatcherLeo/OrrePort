@@ -13,8 +13,7 @@
 <!-- Screenshot (approved, item b): one 16:9 shot taken in OrrePort, picked by snatcherLeo from the laptop sitting -->
 
 **Status: first playtest (Beta 0.1).** Playable from New Game into the story on Windows 10 and 11 (64-bit), with bugs
-still to find. Linux and macOS are planned. Your saves are kept with their earlier versions, but keep a copy of any save
-you care about.
+still to find. Linux and macOS are planned. Your saves are kept with their earlier versions.
 <!-- Item c: "into the story" becomes "to the end of the story" once the full replay check and the laptop sitting pass -->
 
 ## Getting started
@@ -38,8 +37,9 @@ the Discord. [What OrrePort adds](docs/what-orreport-adds.md) lists every change
 ## What it is
 
 - **The game's own code, running natively.** Pokémon Colosseum's code was decompiled to C (from the
-  [pkmn-colosseum decompilation](https://github.com/dougchansan/pkmn-colosseum)) and built for the PC, with a layer that
-  stands in for the GameCube's hardware. It is not an emulator.
+  [pkmn-colosseum decompilation](https://github.com/dougchansan/pkmn-colosseum)) and compiled for the PC.
+  [Aurora](https://github.com/encounter/aurora) stands in for the GameCube's hardware, drawing through Vulkan or
+  Direct3D 12, so OrrePort is a native PC program, not an emulator.
 - **GameCube-accurate mode.** A save can be kept exactly as the console plays it, for speedrunners and RNG players:
   see [accurate mode](docs/accurate-mode.md).
 - **Your saves stay yours.** OrrePort reads and writes GameCube memory card saves (`.gci`), so a save can move between
