@@ -1,0 +1,40 @@
+# The nightly backup: copies every branch and tag of this repo into the private repo snatcherLeo/OrrePort-backup.
+#
+# Why: the public repo is where code work happens from Beta 0.1 on, so a second copy that its own settings or an
+# accident can't reach keeps the history safe.
+#
+# Why a plain push and not a mirror: a mirror would copy damage too (a branch deleted or history rewritten here would be
+# deleted or rewritten in the backup the same night). A plain push only adds; if history here is ever rewritten, the
+# push fails, the run turns red, and the backup keeps the old history untouched.
+#
+# Needs: a fine-grained token that can write only OrrePort-backup's contents, stored in this repo's
+# Settings -> Secrets and variables -> Actions as BACKUP_TOKEN (the owner makes it; it is never written anywhere else).
+# Runs on GitHub's Linux runners, so nothing here depends on the developer's own system.
+name: Nightly backup
+
+on:
+  schedule:
+    - cron: "17 7 * * *"   # once a day, 07:17 UTC (an odd minute: the hour's start is GitHub's busiest)
+  workflow_dispatch:        # and by hand, from the Actions tab
+
+permissions:
+  contents: read            # this repo is only read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out every branch and tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push them to the backup repo
+        env:
+          BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
+        run: |
+          if [ -z "$BACKUP_TOKEN" ]; then echo "BACKUP_TOKEN is not set: nothing backed up"; exit 1; fi
+          git remote add backup "https://x-access-token:${BACKUP_TOKEN}@github.com/snatcherLeo/OrrePort-backup.git"
+          for b in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin | grep -v '^origin/HEAD$' | sed 's#^origin/##'); do
+            git push backup "refs/remotes/origin/$b:refs/heads/$b"
+          done
+          git push backup --tags
