@@ -5,6 +5,10 @@
   </picture>
 </p>
 
+<p align="center">
+  <a href="https://discord.gg/BY6CJpvbQF"><img src="https://img.shields.io/badge/Discord-join%20the%20server-5865F2?logo=discord&amp;logoColor=white" alt="Discord: join the server"></a>
+</p>
+
 # OrrePort
 
 **Pokémon Colosseum, running natively on PC, with tools for modding it.** You need your own copy of the game.
@@ -33,7 +37,7 @@ Updates are offered inside the app; nothing is installed until you choose to.
 ## For testers
 
 **Playtesting?** Press **F8** in the game when something goes wrong, and OrrePort makes a report for you to share on
-the Discord. [What OrrePort adds](docs/what-orreport-adds.md) lists every change from the original game.
+the [Discord](https://discord.gg/BY6CJpvbQF). [What OrrePort adds](docs/what-orreport-adds.md) lists every change from the original game.
 
 ## What it is
 
