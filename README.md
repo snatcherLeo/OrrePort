@@ -36,7 +36,7 @@ Updates are offered inside the app; nothing is installed until you choose to.
 
 ## For testers
 
-**Playtesting?** Press **F8** in the game when something goes wrong, and OrrePort makes a report for you to share on
+**Playtesting?** Read the [tester guide](https://github.com/snatcherLeo/OrrePort/releases/latest/download/OrrePort-tester-guide.pdf) (PDF, five minutes). Press **F8** in the game when something goes wrong, and OrrePort makes a report for you to share on
 the [Discord](https://discord.gg/BY6CJpvbQF). [What OrrePort adds](docs/what-orreport-adds.md) lists every change from the original game.
 
 ## What it is
