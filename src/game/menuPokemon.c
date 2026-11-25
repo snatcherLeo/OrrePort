@@ -2938,6 +2938,32 @@ void menuPokemonDrawItem(u8* ctx, u8* pane) {
                 return;
             }
         }
+#ifdef TARGET_PC
+        /* OrreHook_ItemLabel (0.1.2's stone label, snatcherLeo 2026-11-24; pc/orre_hooks.h): for an item that isn't a TM, a
+         * label in the TM label's place, drawn the same way (printed at the frame pane 0x3BC / 0x12A1, that pane and the
+         * HP bar fill 0x3BE / 0x12A2 hidden), when the hook gives one (the evolution stones: ABLE / NOT ABLE). Look only.
+         * NULL or 0: the row as on the GameCube. All platforms */
+        else {
+            switch (*(s16*)(pane + 6)) {
+            case 0x3BC:
+            case 0x12A1:
+            case 0x3BE:
+            case 0x12A2: {
+                void* row = menuPokemonGetPokemon(*(s32*)(lbl_803A1D40 + 0x8), index,
+                                                  PTR32_AT_T(void, lbl_803A1D40, 0xC));
+                const u32 label = ORRE_ITEM_LABEL(*(u16*)(lbl_803A1D40 + 0x12), row, lbl_803A1D40[0]);
+                if (label != 0) {
+                    if (*(s16*)(pane + 6) == 0x3BC || *(s16*)(pane + 6) == 0x12A1) {
+                        GSmsgPrintColor(0, -4, color, label);
+                    }
+                    winSpriteSetDisp(pane, 0);
+                    return;
+                }
+                break;
+            }
+            }
+        }
+#endif
     }
 
     switch (*(s16*)(pane + 6)) {

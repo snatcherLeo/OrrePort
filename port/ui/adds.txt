@@ -49,6 +49,7 @@ row options_back sub always off
 row use_only sub always off
 row keep_using sub always off
 row tm_learned sub always off
+row stone_label sub always off
 row scents sub always off
 row relic sub always off
 row portraits sub always off

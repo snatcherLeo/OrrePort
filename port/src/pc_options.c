@@ -266,6 +266,7 @@ static const PcAccurateRow s_accurate_rows[] = {
     /* step 3.7's item tweaks (2026-11-20; pc_bag_tweaks.cpp) */
     {PC_ACCURATE_OFF, "accurate.what_off.keep_using_item"}, /* pc_options.c: the party list after a use or a give */
     {PC_ACCURATE_OFF, "accurate.what_off.tm_party_list"},   /* pc_options.c: LEARNED (the TM loop: keep_using_item) */
+    {PC_ACCURATE_OFF, "accurate.what_off.stone_label"},     /* pc_bag_tweaks.cpp piece 6: stones' ABLE / NOT ABLE (0.1.2) */
     {PC_ACCURATE_OFF, "accurate.what_off.infinite_tms"},    /* pc_options.c: infinite TMs */
     {PC_ACCURATE_OFF, "accurate.what_off.scent_memory"},    /* pc_options.c: the scents' order and remembered cursors */
     {PC_ACCURATE_OFF, "accurate.what_off.bag_options"},     /* pc_bag_tweaks.cpp: READ, CHECK, TOSS on TMs, no useless USE */

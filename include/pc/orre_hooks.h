@@ -645,6 +645,14 @@ extern u32 (*OrreHook_TmUsedCount)(u16 item, u32 count);
  * (0x2B64 ABLE, 0x2B65 NOT ABLE), the Pokémon's record and the item, the key to print (OrrePort's LEARNED for a Pokémon
  * that already knows the move). Look only. NULL: the game's label. */
 extern u32 (*OrreHook_TmLabel)(u32 key, void* pokemon, u16 item);
+/* *Added 2026-11-24 (0.1.2's stone label; port/src/pc_bag_tweaks.cpp sets it; the project notes):*
+ * menuPokemon.c, menuPokemonDrawItem, for an item that is NOT a TM or HM in the party list's item modes (3 the field,
+ * 4 battle), at the two panes where the TM label goes: given the item, the row's Pokémon record and the mode, a label
+ * key to print in the TM label's place (the game's own 0x2B64 ABLE / 0x2B65 NOT ABLE, drawn and placed exactly as the
+ * TM's), or 0 for none. Look only. NULL or 0: the row as on the GameCube (no label for such items). Why a hook: the
+ * game shows ABLE / NOT ABLE only for TMs; snatcherLeo (2026-11-24) wanted evolution stones to show it too, built in. All
+ * platforms (plain C function pointer). */
+extern u32 (*OrreHook_ItemLabel)(u16 item, void* pokemon, s32 mode);
 /* menuPokemon.c, fn_80019754 (the Cologne Case's scent list, menu 0x5F), before it opens: the scents the player owns
  * (ids, count of them; the list's CANCEL after them is not passed). The hook may reorder them and returns the row the
  * cursor starts on, or -1 for no start (the game's own: the first). NULL: the game's order and start. */
@@ -769,6 +777,8 @@ extern void* (*OrreHook_FaceStandIn)(u16 key, u32 resourceId);
     (OrreHook_TmUsedCount != NULL ? OrreHook_TmUsedCount((u16)(item), (count)) : (count))
 #define ORRE_TM_LABEL(key, pokemon, item) \
     (OrreHook_TmLabel != NULL ? OrreHook_TmLabel((key), (pokemon), (u16)(item)) : (key))
+#define ORRE_ITEM_LABEL(item, pokemon, mode) \
+    (OrreHook_ItemLabel != NULL ? OrreHook_ItemLabel((u16)(item), (pokemon), (s32)(mode)) : 0u)
 
 #endif /* TARGET_PC */
 

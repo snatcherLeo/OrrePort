@@ -142,6 +142,7 @@ s32 (*OrreHook_PartyCursorStart)(s32 mode, u16 item);
 s32 (*OrreHook_TmSkipAsk)(u16 item);
 u32 (*OrreHook_TmUsedCount)(u16 item, u32 count);
 u32 (*OrreHook_TmLabel)(u32 key, void* pokemon, u16 item);
+u32 (*OrreHook_ItemLabel)(u16 item, void* pokemon, s32 mode); /* 0.1.2's stone label (2026-11-24) */
 s32 (*OrreHook_ScentListOpen)(u16* ids, s32 count);
 void (*OrreHook_ScentUsed)(u16 item, s32 slot);
 s32 (*OrreHook_BagOptions)(void* out, s32 count, s32 max, s32 page, s32 mode, u16 item);

@@ -148,6 +148,7 @@ accurate.what_off.options_b = B que conserva tus elecciones en la pantalla de Op
 accurate.what_off.smooth = La pantalla del equipo muestra todos los retratos a la vez
 accurate.what_off.keep_using_item = La lista del equipo que sigue abierta después de usar o dar un objeto, y que empieza en el último Pokémon elegido
 accurate.what_off.tm_party_list = La etiqueta LA SABE en la lista del equipo de una MT
+accurate.what_off.stone_label = Las etiquetas de la lista del equipo con una piedra evolutiva
 accurate.what_off.infinite_tms = MT infinitas
 accurate.what_off.scent_memory = Los aromas con Vivid primero, que recuerdan el último
 accurate.what_off.bag_options = LEER, VER, TIRAR para las MT, y sin USAR en objetos que no se pueden usar

@@ -147,6 +147,7 @@ accurate.what_off.options_b = B behält deine Wahl im Optionen-Bildschirm
 accurate.what_off.smooth = Die Team-Ansicht zeigt alle Porträts auf einmal
 accurate.what_off.keep_using_item = Die Team-Liste bleibt offen, nachdem du ein Item benutzt oder gibst, und beginnt beim zuletzt gewählten Pokémon
 accurate.what_off.tm_party_list = Die Anzeige GELERNT in der Team-Liste einer TM
+accurate.what_off.stone_label = Die Anzeige in der Team-Liste eines Entwicklungssteins
 accurate.what_off.infinite_tms = Unendliche TMs
 accurate.what_off.scent_memory = Düfte mit Vivid zuerst, die sich den letzten merken
 accurate.what_off.bag_options = LESEN, PRÜFEN, MÜLL für TMs und kein BENUTZEN bei unbenutzbaren Items

@@ -730,6 +730,7 @@ extern s32 itemFieldUseNotNow();
 extern s32 itemFieldUseForbidden();
 extern s32 itemFieldUseMeaningless();
 extern s32 itemFieldUseReadEinFile();
+extern s32 menuUseItemEvolution(); /* the evolution stones' bag use (gs_title.c): the stone label's test, below */
 enum { BAG_PAGES = 6, BAG_PAGE_SIZE = 0x4C, BAG_MODES = 5, BAG_OPTION_SIZE = 0x0C };
 static u8* bag_list(int32_t page, u16* count)
 {
@@ -803,6 +804,27 @@ static int32_t pokemon_knows_move(void* pokemon, uint16_t item)
     for (i = 0; i < 4; i++)
         if ((u16)pokemonBiosGetPokemonWazaDataId(pokemon, i) == move) return 1;
     return 0;
+}
+/* *Added 2026-11-24 (0.1.2's stone label, snatcherLeo: "USABLE only shows up for that specific Pokemon if it can use that to
+ * evolve"; port/src/pc_bag_tweaks.cpp; the project notes):* whether using an evolution item on
+ * this Pokémon would evolve it, asked the way the stone's own use asks (menuUseItemEvolution, then itemUse2Pokemon):
+ * first a Shadow Pokémon is refused (pokemonIsDarkPokemon, the "can't be used on a SHADOW POKéMON" check, which comes
+ * before anything else), then the game's evolution check in its item mode (pokemonEvolutionCheck mode 1: the species'
+ * kind-7 evolution slots against this item, and none at all while an Everstone is held; 0xFFFF = no valid Pokémon).
+ * So the label can never disagree with what pressing A does, and a mod that changes a species' evolution item or adds
+ * its own stone is followed with no list in OrrePort. Read only: the check only reads the record and the species data
+ * (verified from the code, pokemon_range_80128524.c) and draws no random numbers. Plain C, all platforms. */
+static int32_t stone_able(void* pokemon, uint16_t item, uint16_t* species)
+{
+    u16 extra = 0;
+    u8 evolution[4] = {0, 0, 0, 0};
+    u16 result;
+    if (species != NULL) *species = 0;
+    if (pokemon == NULL) return 0;
+    if (species != NULL) *species = (uint16_t)pokemonBiosGetPokemonDataId((u8*)pokemon);
+    if (pokemonIsDarkPokemon((u8*)pokemon) != 0) return -1;
+    result = pokemonEvolutionCheck((u8*)pokemon, 1, item, &extra, evolution);
+    return result != 0 && result != 0xFFFF ? 1 : 0;
 }
 static void bag_message(uint32_t key)
 {
@@ -1117,6 +1139,8 @@ __attribute__((constructor)) static void pc_game_ui_register(void)
     pc_game_ui.item_price = item_price;
     pc_game_ui.item_doc = item_doc;
     pc_game_ui.pokemon_knows_move = pokemon_knows_move;
+    pc_game_ui.item_use_evolution_addr = (uint32_t)(uintptr_t)&menuUseItemEvolution;
+    pc_game_ui.stone_able = stone_able;
     pc_game_ui.bag_message = bag_message;
     pc_game_ui.current_room = current_room;
     pc_game_ui.menu_queue_add = menu_queue_add;

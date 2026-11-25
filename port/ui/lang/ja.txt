@@ -151,6 +151,7 @@ accurate.what_off.options_b = オプション画面でBを押しても選んだ�
 accurate.what_off.smooth = 手持ち画面で すべての顔を 一度に表示
 accurate.what_off.keep_using_item = 道具を使ったり持たせたりした後も手持ちリストが開いたままになり、最後に選んだポケモンから始まる設定
 accurate.what_off.tm_party_list = わざマシンの手持ちリストの「おぼえている」表示
+accurate.what_off.stone_label = 進化の石の手持ちリストの表示
 accurate.what_off.infinite_tms = わざマシンが無くならない設定
 accurate.what_off.scent_memory = コロンをビビッドから並べ、最後に使ったものを覚える設定
 accurate.what_off.bag_options = 「よむ」「しらべる」、わざマシンの「すてる」、使えない道具の「つかう」を出さない設定

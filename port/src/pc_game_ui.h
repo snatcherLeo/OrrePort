@@ -255,6 +255,14 @@ struct PcGameUi {
     uint32_t (*item_price)(uint16_t item);
     uint32_t (*item_doc)(uint16_t item);
     int32_t (*pokemon_knows_move)(void* pokemon, uint16_t item);
+    /* *Added 2026-11-24 (0.1.2's stone label, pc_bag_tweaks.cpp):* the evolution stones' bag use function as a 32-bit
+     * address (menuUseItemEvolution: the items that get the label are the ones whose bag use is this, a mod item
+     * included), and stone_able: 1 when using that item on this party Pokémon would evolve it, asked as the stone's
+     * own use asks (a Shadow Pokémon first, then the game's evolution check in its item mode, which also refuses an
+     * Everstone holder), -1 when refused for being a Shadow Pokémon, else 0; *species (NULL allowed) gets the
+     * Pokémon's species for the log. Read only */
+    uint32_t item_use_evolution_addr;
+    int32_t (*stone_able)(void* pokemon, uint16_t item, uint16_t* species);
     void (*bag_message)(uint32_t key);
     /* *Added 2026-11-20 (step 3.7's Relic Forest shortcuts: port/src/pc_relic_forest.cpp; src/game/pc_game_ui.c says
      * how):* the room the game is in now (std092_getCurrentRoomID: inside a menu room such as the party screen's 0x38F

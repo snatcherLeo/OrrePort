@@ -59,6 +59,7 @@ This list is for **OrrePort Beta 0.1**. It grows with each update.
 | **"Use" only where it can do something:** the bag and battle menus offer Use only for items that can be used there; READ on the Ein Files, CHECK on key items that can't be used, and TOSS on TMs and HMs | always on | off |
 | **Keep using an item:** after you use or give an item from the bag, the party list stays open while you have more, and moves on to your next stack of the same item | always on | off |
 | **TMs show LEARNED** on the party list for Pokémon that already know the move | always on | off |
+| **Evolution stones show ABLE / NOT ABLE** on the party list: ABLE where the stone would evolve that Pokémon, NOT ABLE for a Shadow Pokémon, one holding an Everstone or one the stone doesn't evolve (from 0.1.2) | always on | off |
 | **Scents remember the last one:** the cursors stay where you left them, with Vivid Scent first | always on | off |
 | **Relic Forest shortcuts:** PURIFY in the party menu and the Time Flute anywhere in the Relic Forest | always on | off |
 | **The party screen shows every portrait at once**, instead of them popping in one by one | always on | off |

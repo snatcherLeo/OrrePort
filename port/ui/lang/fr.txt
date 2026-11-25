@@ -148,6 +148,7 @@ accurate.what_off.options_b = B qui garde vos choix sur l’écran Options
 accurate.what_off.smooth = L’écran d’équipe affiche tous les portraits à la fois
 accurate.what_off.keep_using_item = La liste de l’équipe qui reste ouverte après avoir utilisé ou donné un objet, et qui s’ouvre sur le dernier Pokémon choisi
 accurate.what_off.tm_party_list = La mention « Appris » sur la liste de l’équipe d’une CT
+accurate.what_off.stone_label = Les mentions sur la liste de l’équipe d’une pierre d’évolution
 accurate.what_off.infinite_tms = CT infinies
 accurate.what_off.scent_memory = Les parfums avec Vivid en premier, qui retiennent le dernier
 accurate.what_off.bag_options = LIRE, VOIR, JETER pour les CT, et pas d’UTILISER sur les objets inutilisables

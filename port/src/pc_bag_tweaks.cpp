@@ -31,8 +31,11 @@
  *      marks "information only" (the Small Tablet, Data ROM, Steel Teeth, Powerup Part: ui/game/item_menu.ini) read CHECK,
  *      which shows the item's description again; TMs and HMs get TOSS (USE, GIVE, TOSS, CANCEL) through the game's own
  *      toss flow ("Toss out how many?", "Is it okay to toss out ...?").
+ *   6. The stone label (0.1.2, built in, no switch; 2026-11-24): with an evolution stone (any item whose bag use is the
+ *      stones'), each party row shows the game's ABLE / NOT ABLE in the TM label's place; ABLE only when the stone would
+ *      evolve that Pokémon (not a Shadow Pokémon, no Everstone, its own evolution data names the item). Below.
  *
- * GameCube-accurate mode: all five off (pieces 1-4 through pc_option, which is 0 there; piece 5 asks the mode itself), so
+ * GameCube-accurate mode: all six off (pieces 1-4 through pc_option, which is 0 there; pieces 5-6 ask the mode itself), so
  * accurate saves get the game's own menus and presses. Automated runs (recordings driving the pad) get the entries'
  * automated value 0 and piece 5 off, so recorded presses keep their meaning; test switches turn each on: ORRE_KEEP_USING_ITEM,
  * ORRE_TM_PARTY_LIST, ORRE_INFINITE_TMS, ORRE_SCENT_MEMORY (=1) and ORRE_BAG_OPTIONS=1.
@@ -78,6 +81,7 @@ namespace {
 
 /* the game's message keys this file swaps or borrows the font of (extracted pocket_menu text; research 1d) */
 constexpr u32 kKeyAble = 0x2B64;      /* ABLE on the party list with a TM */
+constexpr u32 kKeyNotAble = 0x2B65;   /* NOT ABLE on the party list with a TM (the stone label borrows both) */
 /* OrrePort's own message keys (0xFFF000nn: OrrePort's range; 0x30-0x34 are PC MENU's and the save notice's) */
 constexpr u32 kKeyRead = 0xFFF00040;    /* READ, the Ein Files' USE */
 constexpr u32 kKeyCheck = 0xFFF00041;   /* CHECK, the information-only key items' USE */
@@ -294,6 +298,60 @@ u32 tm_label(u32 key, void* pokemon, u16 item) {
     return kKeyLearned;
 }
 
+/* ---- piece 6: the stone label (0.1.2, 2026-11-24) ----
+ * snatcherLeo (2026-11-24): "If you tried using a water stone on Growlithe, it will say "NOT USABLE", because, from the game
+ * database/evolutionary database, "Fire Stone" is the item that evolves Growlithe. USABLE only shows up for that
+ * specific Pokemon if it can use that to evolve"; then "ABLE / NOT ABLE then, matching the TMs"; built in, no switch.
+ * The party list in the field's item-use mode shows the game's own ABLE / NOT ABLE (the TMs' words, translated on each
+ * region's disc) for every item whose bag use is the evolution stones' (menuUseItemEvolution): no item list here, so a
+ * mod stone that picks that use gets the label. ABLE exactly when the stone's own use would evolve the Pokémon
+ * (pc_game_ui.stone_able: Shadow first, then the evolution check, which also refuses an Everstone holder).
+ * Off in GameCube-accurate mode (the game's own screen there, like LEARNED) and in automated runs unless
+ * ORRE_STONE_LABEL=1 (recorded runs compare frames against the game's own screen). Look only, no random numbers. */
+bool stone_label_on() {
+    if (!pc_game_ui.ready || pc_option_gamecube_accurate()) return false;
+    if (!pc_platform_automated_run()) return true;
+    const char* force = SDL_getenv("ORRE_STONE_LABEL");
+    return force != nullptr && force[0] == '1';
+}
+
+/* The log line (snatcherLeo, 2026-11-24, after the hand check: "does logger show what you're looking for?"): one line per party
+ * Pokémon when its label first shows or changes (the list redraws every frame), so a log, and an automated run with
+ * ORRE_STONE_LABEL=1, can check the label without a screenshot. Keyed by the record's address and the item; six rows */
+struct LabelSeen {
+    void* pokemon;
+    u16 item;
+    s32 result;
+};
+LabelSeen s_labelSeen[6] = {};
+
+/* OrreHook_ItemLabel */
+u32 item_label(u16 item, void* pokemon, s32 mode) {
+    if (mode != kModeItemUse || pokemon == nullptr || !stone_label_on()) return 0;
+    if (pc_game_ui.item_field_use == nullptr || pc_game_ui.stone_able == nullptr) return 0;
+    if (pc_game_ui.item_use_evolution_addr == 0 || pc_game_ui.item_field_use(item) != pc_game_ui.item_use_evolution_addr)
+        return 0;
+    u16 species = 0;
+    const s32 able = pc_game_ui.stone_able(pokemon, item, &species);
+    LabelSeen* free_row = nullptr;
+    bool seen = false;
+    for (LabelSeen& s : s_labelSeen) {
+        if (s.pokemon == pokemon) {
+            seen = s.item == item && s.result == able;
+            free_row = &s;
+            break;
+        }
+        if (s.pokemon == nullptr && free_row == nullptr) free_row = &s;
+    }
+    if (!seen) {
+        if (free_row == nullptr) free_row = &s_labelSeen[0];
+        *free_row = LabelSeen{pokemon, item, able};
+        std::printf("[bag_tweaks] stone label: item %u on species %u: %s\n", (unsigned)item, (unsigned)species,
+                    able > 0 ? "ABLE" : able < 0 ? "NOT ABLE (Shadow)" : "NOT ABLE");
+    }
+    return able > 0 ? kKeyAble : kKeyNotAble;
+}
+
 /* ---- piece 4: the scents ---- */
 
 /* OrreHook_ScentListOpen: strongest first (highest price first; the game lists them by id: Joy, Excite, Vivid), and the
@@ -490,6 +548,7 @@ extern "C" void pc_bag_tweaks_start(void) {
     OrreHook_TmSkipAsk = tm_skip_ask;
     OrreHook_TmUsedCount = tm_used_count;
     OrreHook_TmLabel = tm_label;
+    OrreHook_ItemLabel = item_label;
     OrreHook_ScentListOpen = scent_list_open;
     OrreHook_ScentUsed = scent_used;
     OrreHook_BagOptions = bag_options;
